@@ -1,24 +1,45 @@
 import disnake
 import logging
-logging.basicConfig(level=logging.INFO)
 import requests
 import auraxium
-from auraxium import ps2
-from disnake.ext import commands
 import os
 import census
-#from census import getChar
+
+from auraxium import ps2
+from disnake.ext import commands
+
+"""
+Variables
+LOGLEVEL
+DISCORDTOKEN
+INFLUXDB_TOKEN
+
+"""
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ModuleNotFoundError as err:
+    """
+    This is an expected error when not running locally using dotenv
+    """
+    logging.exception(err)
 
 
-#discordClientToken = os.getenv('discordClientToken')
-discordClientToken = ""
 
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'))
+discordClientToken = os.getenv('DISCORDTOKEN')
+Botdescription = "The serious bot for the casual Discord."
 
+"""
+Discord Intents
+"""
 intents = disnake.Intents.default()
 intents.members = True
 intents.message_content = True
-Botdescription = "The serious bot for the casual Discord."
 
+"""
+Initialize the bot
+"""
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
@@ -33,20 +54,9 @@ async def on_ready():
     print("The bot is ready!")
     print("------")
 
-@bot.slash_command()
-async def ping(inter):
-    await inter.response.send_message("Pong!")
-
-@bot.command()
-async def repeat(ctx, times: int, content="repeating..."):
-    """Repeats a message multiple times. [repeat # message]"""
-    for i in range(times):
-        await ctx.send(content)
-
-@bot.command()
-async def whoami(ctx):
-    """Helps you with those existential crises you keep having"""
-    await ctx.send(ctx.author)
+# @bot.slash_command()
+# async def ping(inter):
+#     await inter.response.send_message("Pong!")
 
 @bot.slash_command()
 async def playercard(inter, charactername):
@@ -61,7 +71,7 @@ async def playercard(inter, charactername):
 
     async with auraxium.Client(service_id="s:fuofficers") as client:
 
-        faction = await client.get_by_id(auraxium.ps2.Faction, char.faction_id)
+        faction = await client.get_by_id(ps2.Faction, char.faction_id)
         Message = disnake.Embed(
             title="__Player Card for "+str(char.name)+":__",
             color=3166138,
@@ -86,12 +96,20 @@ async def playercard(inter, charactername):
 
     try:
         await inter.edit_original_message(" ",embed=Message)
-        #result = requests.post(discord_webhook_url, json=Message)
     except requests.exceptions.HTTPError as err:
         logging.exception(err)
         await inter.edit_original_message('Oops! Something went wrong.')
 
     logging.info("Playercard for "+charactername+" delivered successfully.")
 
+@bot.slash_command()
+async def outfit(inter, name, tag):
+    """Get Outfit information for a given outfit"""
+    await inter.response.send_message("Getting outfit details for "+name+" ...")
+    outfit = await census.getOutfit(name)
+    if outfit is not None:
+        await inter.edit_original_message("Found sumfin")
+    else:
+        await inter.edit_original_message("Could not find outfit:"+name+".")
 
 bot.run(discordClientToken)
