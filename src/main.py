@@ -1,5 +1,6 @@
 import disnake
 import logging
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 import requests
 import auraxium
 import os
@@ -50,9 +51,8 @@ bot = commands.Bot(
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    print("The bot is ready!")
-    print("------")
+    logging.info("Logged in as "+str(bot.user)+" (ID: "+str(bot.user.id)+")" )
+    logging.info("FUBot is ready!")
 
 # @bot.slash_command()
 # async def ping(inter):
@@ -69,7 +69,7 @@ async def playercard(inter, charactername):
         await inter.edit_original_message("Player "+charactername+" cannot be found.")
         raise ValueError("Player could not be found.", charactername)
 
-    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
+    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
 
         faction = await client.get_by_id(ps2.Faction, char.faction_id)
         Message = disnake.Embed(

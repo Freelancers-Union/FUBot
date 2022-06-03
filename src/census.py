@@ -1,5 +1,8 @@
 import auraxium
 import asyncio
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+import os
 from auraxium import ps2
 
 try:
@@ -12,8 +15,7 @@ except ModuleNotFoundError as err:
     logging.exception(err)
 
 async def getChar(charname):
-    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
-        
+    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
         char = await client.get_by_name(ps2.Character, charname)  
         if char is not None:
             outfit = await client.get_by_id(ps2.OutfitMember, char.character_id)
@@ -29,7 +31,7 @@ async def getChar(charname):
         
 
 async def getOutfit(outfitTag):
-    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
+    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
         
         outfit = await client.get(ps2.Outfit, name_lower=outfitTag)
         print(await outfit.members())
