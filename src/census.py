@@ -9,16 +9,20 @@ async def getChar(charname):
         if char is not None:
             outfit = await client.get_by_id(ps2.OutfitMember, char.character_id)
             if outfit is not None:
-                return char, outfit
+                #Returns for characters that exist and are in an outfit
+                return char, outfit 
             else:
-                return char, None
+                #Returns for characters that exists but are not in an outfit
+                return char, None 
         else:
-            return None, None
+            # Returns for characters that don't exist
+            return None, None 
         
 
-async def getOutfit(outfitname):
+async def getOutfit(outfitTag):
     async with auraxium.Client(service_id="fuofficers") as client:
         
-        outfit = await client.get_by_name(ps2.OutfitMember, char.id)
+        outfit = await client.get(ps2.Outfit, name_lower=outfitTag)
+        print(await outfit.members())
         return outfit
 
