@@ -23,7 +23,7 @@ except ModuleNotFoundError as err:
     """
     This is an expected error when not running locally using dotenv
     """
-    logging.exception(err)
+    logging.warning(err)
 
 
 
@@ -59,15 +59,15 @@ async def on_ready():
 #     await inter.response.send_message("Pong!")
 
 @bot.slash_command()
-async def playercard(inter, charactername):
+async def player_card(inter, character_name):
     """Get character information for a given character"""
 
-    await inter.response.send_message("Getting player stats for "+charactername+" ...")
+    await inter.response.send_message("Getting player stats for "+character_name+" ...")
 
-    char, outfit = await census.getChar(charactername)
+    char, outfit = await census.getChar(character_name)
     if char is None:
-        await inter.edit_original_message("Player "+charactername+" cannot be found.")
-        raise ValueError("Player could not be found.", charactername)
+        await inter.edit_original_message("Player "+character_name+" cannot be found.")
+        raise ValueError("Player could not be found.", character_name)
 
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
 
@@ -100,16 +100,26 @@ async def playercard(inter, charactername):
         logging.exception(err)
         await inter.edit_original_message('Oops! Something went wrong.')
 
-    logging.info("Playercard for "+charactername+" delivered successfully.")
+    logging.info("Playercard for "+character_name+" delivered successfully.")
 
 @bot.slash_command()
-async def outfit(inter, name, tag):
-    """Get Outfit information for a given outfit"""
-    await inter.response.send_message("Getting outfit details for "+name+" ...")
-    outfit = await census.getOutfit(name)
+async def outfit(
+    inter: disnake.CommandInteraction, 
+    name: str = 0, 
+    tag: str = 0,
+):
+    """Get Outfit information for a given outfit
+
+    Parameters
+    ----------
+    name: Full outfit name
+    tag: Outfit tag (no [])
+    """
+    await inter.response.send_message("Getting outfit details ...")
+    outfit = await census.getOutfit(tag, name)
     if outfit is not None:
-        await inter.edit_original_message("Found sumfin")
+        await inter.edit_original_message("Found outfit! but my maker hasn't told me how to show you the details :sadge:")
     else:
-        await inter.edit_original_message("Could not find outfit:"+name+".")
+        await inter.edit_original_message("Could not find outfit.")
 
 bot.run(discordClientToken)

@@ -12,7 +12,7 @@ except ModuleNotFoundError as err:
     """
     This is an expected error when not running locally using dotenv
     """
-    logging.exception(err)
+    logging.warning(err)
 
 async def getChar(charname):
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
@@ -30,10 +30,24 @@ async def getChar(charname):
             return None, None 
         
 
-async def getOutfit(outfitTag):
+async def getOutfit(outfitTag, outfitName):
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
-        
-        outfit = await client.get(ps2.Outfit, name_lower=outfitTag)
-        print(await outfit.members())
-        return outfit
+        if outfitTag is not 0:
+            outfitTag=outfitTag.lower()
+            outfit = await client.get(ps2.Outfit, alias_lower=outfitTag)
+            try:
+                member_ids = await outfit.members()
+                return outfit
+            except AttributeError as err:
+                logging.exception(outfitTag, err)
+                return None
+        elif outfitName is not 0:
+            outfitName=outfitName.lower()
+            outfit = await client.get(ps2.Outfit, name_lower=outfitName)
+            try:
+                member_ids = await outfit.members()
+                return outfit
+            except AttributeError as err:
+                logging.exception(outfitName, err)
+                return None
 
