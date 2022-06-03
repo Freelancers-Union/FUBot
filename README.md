@@ -28,7 +28,7 @@ docker run --env-file src/.env fubot
 Alternatively, you can use the package manager [pip](https://pip.pypa.io/en/stable/) to install `src/requirements.txt` and use the python-dotenv package to handle reading in env vars.
 
 ```bash
-pip install src/requirements.txt
+pip install -r src/requirements.txt
 ```
 
 ## Contributing

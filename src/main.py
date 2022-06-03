@@ -1,21 +1,14 @@
+import os
 import disnake
 import logging
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
 import requests
 import auraxium
-import os
 import census
 
 from auraxium import ps2
 from disnake.ext import commands
 
-"""
-Variables
-LOGLEVEL
-DISCORDTOKEN
-INFLUXDB_TOKEN
-
-"""
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -23,13 +16,8 @@ except ModuleNotFoundError as err:
     """
     This is an expected error when not running locally using dotenv
     """
-    logging.exception(err)
+    logging.warning(err)
 
-
-
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'))
-discordClientToken = os.getenv('DISCORDTOKEN')
-Botdescription = "The serious bot for the casual Discord."
 
 """
 Discord Intents
@@ -41,75 +29,83 @@ intents.message_content = True
 """
 Initialize the bot
 """
+discordClientToken = os.getenv('DISCORDTOKEN')
+Botdescription = "The serious bot for the casual Discord."
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
     intents=intents, 
     test_guilds=[914185528268689428],
     sync_commands_debug=False
-)
+    )
 
 @bot.event
 async def on_ready():
     logging.info("Logged in as "+str(bot.user)+" (ID: "+str(bot.user.id)+")" )
     logging.info("FUBot is ready!")
 
-# @bot.slash_command()
-# async def ping(inter):
-#     await inter.response.send_message("Pong!")
+@bot.command()
+async def add(ctx, left: int, right: int):
+    """Adds two numbers together."""
+    await ctx.send(left + right)
 
 @bot.slash_command()
-async def playercard(inter, charactername):
-    """Get character information for a given character"""
-
-    await inter.response.send_message("Getting player stats for "+charactername+" ...")
-
-    char, outfit = await census.getChar(charactername)
-    if char is None:
-        await inter.edit_original_message("Player "+charactername+" cannot be found.")
-        raise ValueError("Player could not be found.", charactername)
-
+async def player_card(
+    inter: disnake.CommandInteraction, 
+    character_name: str,
+    ):
+    """Get character information for a given character
+    
+    Parameters
+    ----------
+    character_name: character name to search for
+    """
+    await inter.response.send_message("Getting player stats for "+character_name+" ...")
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
+        char, outfit = await census.getChar(character_name, client)
+        if char is None:
+            await inter.edit_original_message("Player "+character_name+" cannot be found.")
+            raise ValueError("Player could not be found.", character_name)
 
-        faction = await client.get_by_id(ps2.Faction, char.faction_id)
         Message = disnake.Embed(
-            title="__Player Card for "+str(char.name)+":__",
+            title="__Player Card for "+str(char[0].name)+":__",
             color=3166138,
-            description="[Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char.name)+")\n\n \
-            **Faction:** "+str(faction)+"\n \
-            **Battle rank:** "+str(char.battle_rank.value)+"\n \
-            **ASP level:** "+str(char.data.prestige_level)+"\n \
-            **Played since:** "+str(char.times.creation_date)[:16]+"\n \
-            **Last online:** "+str(char.times.last_save_date)[:16]+"\n \
-            **Playtime:** "+str(round(char.times.minutes_played/60))+" Hours\n \
-",
-        )
-        if outfit is not None:
-            outfitName = await client.get_by_id(auraxium.ps2.Outfit, outfit.outfit_id)
-            Message.add_field(
-                name="Outfit",
-                value="**"+str(outfitName)+"**\n \
-                    **Rank:** "+str(outfit.rank)+"\n \
-                    **Joined:** "+str(outfit.member_since_date)[:16]+" ",
-                inline=True
+            description="[Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")\n\n**Online:** "+str("<:red_circle:982747951006908456>" if char[1]==0 else "<:green_circle:982747951006908456>")+"\n**Faction:** `"+str(await client.get_by_id(ps2.Faction, char[0].faction_id))+"`\n**Battle rank:** `"+str(char[0].battle_rank.value)+"`\n**ASP level:** "+str(char[0].data.prestige_level)+"\n**Played since:** `"+str(char[0].times.creation_date)[:16]+"`\n**Last online:** `"+str(char[0].times.last_save_date)[:16]+"`\n**Playtime:** "+str(round(char[0].times.minutes_played/60))+" Hours\n",
             )
-
-    try:
+        if outfit is not None:
+            Message.add_field(
+                name="__Outfit__",
+                value="**"+str(await client.get_by_id(auraxium.ps2.Outfit, outfit.outfit_id))+"**\n**Rank:** "+str(outfit.rank)+"\n**Joined:** "+str(outfit.member_since_date)[:16]+" ",
+                inline=False
+                )
         await inter.edit_original_message(" ",embed=Message)
-    except requests.exceptions.HTTPError as err:
-        logging.exception(err)
-        await inter.edit_original_message('Oops! Something went wrong.')
-
-    logging.info("Playercard for "+charactername+" delivered successfully.")
 
 @bot.slash_command()
-async def outfit(inter, name, tag):
-    """Get Outfit information for a given outfit"""
-    await inter.response.send_message("Getting outfit details for "+name+" ...")
-    outfit = await census.getOutfit(name)
-    if outfit is not None:
-        await inter.edit_original_message("Found sumfin")
-    else:
-        await inter.edit_original_message("Could not find outfit:"+name+".")
+async def outfit(
+    inter: disnake.ApplicationCommandInteraction, 
+    tag: str = 0, 
+    name: str = 0,
+    ):
+    """Get Outfit information for a given outfit
+
+    Parameters
+    ----------
+    name: Full outfit name
+    tag: Outfit tag
+    """
+    await inter.response.send_message("Getting outfit details ...")
+    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
+        outfit = await census.getOutfit(tag, name, client)
+        if outfit is None:
+            await inter.edit_original_message("Could not find outfit.")
+
+        outfitLeader=await client.get_by_id(auraxium.ps2.Character, outfit[0].leader_character_id)
+        Message = disnake.Embed(
+            title="__Outfit details for "+str(outfit[0].name)+":__",
+            color=3166138,
+            description="   [Fisu Stats](https://ps2.fisu.pw/outfit/?name="+str(outfit[0].alias_lower)+")\n\n**Faction:** "+str(await client.get_by_id(ps2.Faction, outfitLeader.faction_id))+"\n**Leader:** "+str(outfitLeader.name)+"\n**Members:** "+str(outfit[0].member_count)+"\n**Online:** "+str(outfit[1])+"\n**Created:** "+str(outfit[0].time_created_date)[:10]+"\n",
+            )
+    await inter.edit_original_message("",embeds=[Message])
+    inter.is_expired()
 
 bot.run(discordClientToken)
