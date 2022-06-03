@@ -69,7 +69,7 @@ async def playercard(inter, charactername):
         await inter.edit_original_message("Player "+charactername+" cannot be found.")
         raise ValueError("Player could not be found.", charactername)
 
-    async with auraxium.Client(service_id="s:fuofficers") as client:
+    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
 
         faction = await client.get_by_id(ps2.Faction, char.faction_id)
         Message = disnake.Embed(

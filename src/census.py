@@ -2,8 +2,17 @@ import auraxium
 import asyncio
 from auraxium import ps2
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ModuleNotFoundError as err:
+    """
+    This is an expected error when not running locally using dotenv
+    """
+    logging.exception(err)
+
 async def getChar(charname):
-    async with auraxium.Client(service_id="s:fuofficers") as client:
+    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
         
         char = await client.get_by_name(ps2.Character, charname)  
         if char is not None:
@@ -20,7 +29,7 @@ async def getChar(charname):
         
 
 async def getOutfit(outfitTag):
-    async with auraxium.Client(service_id="fuofficers") as client:
+    async with auraxium.Client(service_id=os.getenv('CENSUS_TOKEN')) as client:
         
         outfit = await client.get(ps2.Outfit, name_lower=outfitTag)
         print(await outfit.members())
