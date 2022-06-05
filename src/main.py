@@ -6,11 +6,11 @@ import requests
 import auraxium
 import census
 
-from dotenv import load_dotenv
 from auraxium import ps2
 from disnake.ext import commands
 
 try:
+    from dotenv import load_dotenv
     load_dotenv()
 except ModuleNotFoundError as err:
     """
