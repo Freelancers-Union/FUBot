@@ -108,4 +108,26 @@ async def outfit(
     await inter.edit_original_message("",embeds=[Message])
     inter.is_expired()
 
+
+@bot.event
+async def on_message(message: disnake.Message):
+    """
+    Do things when a message is sent in discord channel
+
+    Parameters
+    ----------
+    message: Received Discord message
+
+    """
+    # all messages below this will be ignored by bot
+    if message.author.id == bot.user.id:
+        return
+    # react to message if any line starts with "React With EMOJI"
+    # if after "React with" does not fallow emoji, it will fail with warning in console
+    for line in message.content.splitlines():
+        if line.lower().startswith("react with"):
+            emoji = line.split(" ")[2]
+            await message.add_reaction(emoji)
+
+
 bot.run(discordClientToken)
