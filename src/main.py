@@ -70,7 +70,7 @@ async def player_card(
         Message = disnake.Embed(
             title="__Player Card for "+str(char[0].name)+":__",
             color=3166138,
-            description="[Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")\n\n**Online:** "+str("<:red_circle:982747951006908456>" if char[1]==0 else "<:green_circle:982747951006908456>")+"\n**Faction:** `"+str(await client.get_by_id(ps2.Faction, char[0].faction_id))+"`\n**Battle rank:** `"+str(char[0].battle_rank.value)+"`\n**ASP level:** "+str(char[0].data.prestige_level)+"\n**Played since:** `"+str(char[0].times.creation_date)[:16]+"`\n**Last online:** "+str(char[0].times.last_save_date)[:16]+"\n**Playtime:** "+str(round(char[0].times.minutes_played/60))+" Hours\n",
+            description="[Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")\n\n**Online:** "+str("<:red_circle:982747951006908456>" if char[1]==0 else "<:green_circle:982747951006908456>")+"\n**Faction:** `"+str(await client.get_by_id(ps2.Faction, char[0].faction_id))+"`\n**Battle rank:** `"+str(char[0].battle_rank.value)+"`\n**ASP level:** "+str(char[0].data.prestige_level)+"\n**Played since:** `"+str(char[0].times.creation_date)[:16]+"`\n**Last online:** `"+str(char[0].times.last_save_date)[:16]+"`\n**Playtime:** "+str(round(char[0].times.minutes_played/60))+" Hours\n",
             )
         if outfit is not None:
             Message.add_field(
