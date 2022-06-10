@@ -1,0 +1,5 @@
+.vscode
+**/*.log
+.env
+__pycache__
+fubot-env
