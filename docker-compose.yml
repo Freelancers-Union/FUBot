@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+    - DISCORDTOKEN=${DISCORDTOKEN}
+    - CENSUS_TOKEN=${CENSUS_TOKEN}
