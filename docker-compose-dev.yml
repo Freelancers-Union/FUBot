@@ -1,0 +1,12 @@
+services:
+  fubot-dev:
+    build: .
+    image: fubot${ENVIRONMENT}
+    container_name: fubot-${ENVIRONMENT}
+    ports:
+    - "80:80"
+    restart: unless-stopped
+    environment:
+    - LOGLEVEL=${LOGLEVEL}
+    - DISCORDTOKEN=${DISCORDTOKEN}
+    - CENSUS_TOKEN=${CENSUS_TOKEN}
