@@ -21,7 +21,7 @@ jobs:
       LOGLEVEL: "WARNING"
       DISCORDTOKEN: ${{ secrets.DISCORDTOKEN }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
-      GUILD_ID: ${{ secrets.GUILD_ID }}
+      GUILD_ID: None
       ENVIRONMENT: "prod"
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
