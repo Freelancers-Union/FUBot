@@ -12,4 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag fubot:$(date +%s)
+      run: |
+        docker build . --file Dockerfile --tag fubot:$(date +%s)
+        docker stop $(docker ps | grep fubot | cut -d ' ' -f 1)
+        docker run -d --env-file /opt/FUBot/src/.env fubot:1654899236
