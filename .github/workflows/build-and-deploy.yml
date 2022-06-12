@@ -31,4 +31,4 @@ jobs:
         run: docker compose build
         # update to latest container:
       - name: update containers
-        run: docker compose --force-recreate up -d
+        run: docker compose up -d --force-recreate
