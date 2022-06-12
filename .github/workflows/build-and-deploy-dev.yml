@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: build images
-        run: docker compose build
+        run: docker compose -f docker-compose-dev.yml build
 
       - name: update containers
-        run: docker compose up -d --force-recreate
+        run: docker compose -f docker-compose-dev.yml up -d --force-recreate
