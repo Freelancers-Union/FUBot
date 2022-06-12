@@ -21,9 +21,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
-      - name: build bot container image
+      - name: build bot image
         #  -f to make sure it rebuilds, --pull to make sure that built from the latest container
-        run: docker compose -f build --pull
+        run: docker compose build
         # update to latest container:
       - name: update containers
-        run: docker compose -f  up -d
+        run: docker compose --force-recreate up -d
