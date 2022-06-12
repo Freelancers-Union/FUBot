@@ -31,6 +31,7 @@ Initialize the bot
 """
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
+logging.info(os.getenv('GUILD_ID'))
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
