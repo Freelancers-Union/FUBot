@@ -66,15 +66,48 @@ async def player_card(
         if char is None:
             await inter.edit_original_message("Player "+character_name+" cannot be found.")
             raise ValueError("Player could not be found.", character_name)
-
+        faction_logo=['https://census.daybreakgames.com/files/ps2/images/static/12.png',
+        'https://census.daybreakgames.com/files/ps2/images/static/18.png',
+        'https://census.daybreakgames.com/files/ps2/images/static/94.png',
+        'https://wiki.planetside-universe.com/ps/images/3/3d/Logo_ns.png']
+        faction_id=int(char[0].faction_id)
         Message = disnake.Embed(
             title="__Player Card for "+str(char[0].name)+":__",
             color=3166138,
-            description="[Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")\n\n**Online:** "+str("<:red_circle:982747951006908456>" if char[1]==0 else "<:green_circle:982747951006908456>")+"\n**Faction:** `"+str(await client.get_by_id(ps2.Faction, char[0].faction_id))+"`\n**Battle rank:** `"+str(char[0].battle_rank.value)+"`\n**ASP level:** "+str(char[0].data.prestige_level)+"\n**Played since:** `"+str(char[0].times.creation_date)[:16]+"`\n**Last online:** `"+str(char[0].times.last_save_date)[:16]+"`\n**Playtime:** "+str(round(char[0].times.minutes_played/60))+" Hours\n",
+            description="[Click here for Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")",
+            #description="[Click here for Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")\n\n**Online:** "+str("<:red_circle:982747951006908456>" if char[1]==0 else "<:green_circle:982747951006908456>")+"\n**Faction:** `"+str(await client.get_by_id(ps2.Faction, char[0].faction_id))+"`\n**Battle rank:** `"+str(char[0].battle_rank.value)+"`\n**ASP level:** "+str(char[0].data.prestige_level)+"\n**Played since:** `"+str(char[0].times.creation_date)[:16]+"`\n**Last online:** `"+str(char[0].times.last_save_date)[:16]+"`\n**Playtime:** "+str(round(char[0].times.minutes_played/60))+" Hours\n",
+            )
+        Message.set_thumbnail(
+            url=faction_logo[faction_id-1]
+        )
+        Message.add_field(
+            name="Last Seen",
+            value=str(char[0].times.last_save_date)[:16],
+            inline=True
+            )
+        Message.add_field(
+            name="Battle Rank",
+            value=str(char[0].battle_rank.value),
+            inline=False
+            )
+        Message.add_field(
+            name="ASP",
+            value=str(char[0].data.prestige_level),
+            inline=False
+            )
+        Message.add_field(
+            name="Created",
+            value=str(char[0].times.creation_date)[:16],
+            inline=True
+            )
+        Message.add_field(
+            name="Playtime",
+            value=str(round(char[0].times.minutes_played/60))+" Hours",
+            inline=True
             )
         if outfit is not None:
             Message.add_field(
-                name="__Outfit__",
+                name="Outfit",
                 value="**"+str(await client.get_by_id(auraxium.ps2.Outfit, outfit.outfit_id))+"**\n**Rank:** "+str(outfit.rank)+"\n**Joined:** "+str(outfit.member_since_date)[:16]+" ",
                 inline=False
                 )
