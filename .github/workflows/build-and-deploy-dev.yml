@@ -2,10 +2,8 @@ name: Development FUBot
 
 on:
   push:
-  pull_request:
     branches: [ "develop", "deployment" ]
   workflow_dispatch:
-  pull_request_review:
 
 jobs:
   build:
