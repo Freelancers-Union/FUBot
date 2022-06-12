@@ -35,7 +35,7 @@ bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
     intents=intents, 
-    test_guilds=[914185528268689428,282514718445273089],
+    test_guilds=[os.getenv('GUILD_ID')],
     sync_commands_debug=False
     )
 

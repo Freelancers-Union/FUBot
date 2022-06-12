@@ -2,6 +2,7 @@ version: "3"
 
 services:
   fubot:
+    image: fubot${ENVIRONEMNT}
     ports:
     - "80:80"
     build:
@@ -9,6 +10,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-    - LOGLEVEL=WARNING
+    - GUILD_ID=${GUILD_ID}
+    - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
