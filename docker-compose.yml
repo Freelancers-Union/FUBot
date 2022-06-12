@@ -1,7 +1,7 @@
 services:
   fubot:
     build: .
-    image: fu/bot/${ENVIRONMENT}
+    image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
     ports:
     - "80:80"
