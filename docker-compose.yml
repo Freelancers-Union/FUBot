@@ -2,7 +2,7 @@ version: "3"
 
 services:
   fubot:
-    image: fubot${ENVIRONEMNT}
+    image: fubot${ENVIRONMENT}
     ports:
     - "80:80"
     build:
