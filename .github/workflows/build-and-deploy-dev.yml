@@ -15,7 +15,7 @@ jobs:
       DISCORDTOKEN: ${{ secrets.DISCORDTOKEN }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
       GUILD_ID: ${{ secrets.GUILD_ID_DEV}}
-      ENVIRONMENT: "DEV"
+      ENVIRONMENT: "dev"
     steps:
       - uses: actions/checkout@v3
 
