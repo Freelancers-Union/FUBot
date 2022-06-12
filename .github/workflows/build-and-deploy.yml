@@ -33,4 +33,4 @@ jobs:
 
         # update to latest container:
       - name: update containers
-        run: docker compose up -p fubot-prod -d
+        run: docker compose up -d

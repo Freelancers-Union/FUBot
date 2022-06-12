@@ -23,4 +23,4 @@ jobs:
         run: docker compose build
 
       - name: update containers
-        run: docker compose up -p fubot-dev -d --force-recreate
+        run: docker compose up -d --force-recreate
