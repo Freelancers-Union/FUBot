@@ -21,7 +21,6 @@ jobs:
       LOGLEVEL: "WARNING"
       DISCORDTOKEN: ${{ secrets.DISCORDTOKEN }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
-      GUILD_ID: None
       ENVIRONMENT: "prod"
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -33,4 +32,4 @@ jobs:
 
         # update to latest container:
       - name: update containers
-        run: docker compose up -d
+        run: docker compose up -d --force-recreate

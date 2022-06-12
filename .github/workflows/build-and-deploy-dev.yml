@@ -14,7 +14,6 @@ jobs:
       LOGLEVEL: "DEBUG"
       DISCORDTOKEN: ${{ secrets.DISCORDTOKEN }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
-      GUILD_ID: 914185528268689428
       ENVIRONMENT: "dev"
     steps:
       - uses: actions/checkout@v3
