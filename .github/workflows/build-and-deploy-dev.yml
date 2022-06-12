@@ -12,7 +12,7 @@ jobs:
     runs-on: self-hosted
     env:
       LOGLEVEL: "DEBUG"
-      DISCORDTOKEN: ${{ secrets.DISCORDTOKEN }}
+      DISCORDTOKEN: ${{ secrets.DISCORDTOKEN_DEV }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
       ENVIRONMENT: "dev"
     steps:
