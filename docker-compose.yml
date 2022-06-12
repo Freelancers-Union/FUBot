@@ -9,5 +9,6 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+    - LOGLEVEL=WARNING
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
