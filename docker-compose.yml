@@ -1,11 +1,11 @@
 version: "3"
 
 services:
-  worker:
+  fubot:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-    - DISCORDTOKEN=${DISCORDTOKEN}
-    - CENSUS_TOKEN=${CENSUS_TOKEN}
+    - DISCORDTOKEN=${{ secrets.DISCORDTOKEN }}
+    - CENSUS_TOKEN=${{ secrets.CENSUS_TOKEN }}
