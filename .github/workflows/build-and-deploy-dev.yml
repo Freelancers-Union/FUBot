@@ -1,0 +1,23 @@
+name: Development FUBot
+
+on:
+  push:
+    branches: [ "develop" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    env:
+      LOGLEVEL: "DEBUG"
+      DISCORDTOKEN: ${{ secrets.DISCORDTOKEN_DEV }}
+      CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
+      ENVIRONMENT: "dev"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build images
+        run: docker compose -f docker-compose-dev.yml build
+
+      - name: update containers
+        run: docker compose -f docker-compose-dev.yml up -d --force-recreate
