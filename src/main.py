@@ -31,12 +31,11 @@ Initialize the bot
 """
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
-GuildId=int(os.getenv('GUILD_ID'))
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
     intents=intents, 
-    test_guilds=[GuildId],
+    test_guilds=[914185528268689428],
     sync_commands_debug=False
     )
 

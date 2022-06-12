@@ -3,6 +3,7 @@ version: "3"
 services:
   fubot:
     image: fubot-${ENVIRONMENT}
+    container_name: fubot-${ENVIRONMENT}
     ports:
     - "80:80"
     build:
