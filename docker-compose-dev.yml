@@ -8,5 +8,5 @@ services:
     restart: unless-stopped
     environment:
     - LOGLEVEL=${LOGLEVEL}
-    - DISCORDTOKEN=${DISCORDTOKEN_DEV}
+    - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
