@@ -1,14 +1,10 @@
-version: "3"
-
 services:
   fubot:
-    image: fubot:${ENVIRONMENT}
+    build: .
+    image: fu/bot/${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
     ports:
     - "80:80"
-    build:
-      context: .
-      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
     - LOGLEVEL=${LOGLEVEL}
