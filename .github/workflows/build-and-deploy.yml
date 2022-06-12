@@ -23,7 +23,7 @@ jobs:
 
       - name: build bot container image
         #  -f to make sure it rebuilds, --pull to make sure that built from the latest container
-        run: docker-compose -f build --pull
+        run: docker compose -f build --pull
         # update to latest container:
       - name: update containers
         run: docker compose -f  up -d
