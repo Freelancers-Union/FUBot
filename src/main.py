@@ -5,6 +5,7 @@ logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(fu
 import requests
 import auraxium
 import census
+import random
 
 from auraxium import ps2
 from disnake.ext import commands
@@ -117,5 +118,31 @@ async def outfit(
             )
     await inter.edit_original_message("",embeds=[Message])
     inter.is_expired()
+
+@bot.slash_command()
+async def drill(
+    # TODO: specify which channel this should post into rather than posting into whichever channel it was called from
+    inter: disnake.CommandInteraction,
+    message_body: str = "Platoon is starting!\nJoin us in game."
+    ):
+    propaganda=["https://cdn.discordapp.com/attachments/567172242803523597/925515906556264528/platoon_copy_3.png",
+    "https://cdn.discordapp.com/attachments/567172242803523597/925515906178744401/platoon_copy_2.png",
+    "https://cdn.discordapp.com/attachments/567172242803523597/925515906866614282/platoon_copy_4.png",
+    "https://cdn.discordapp.com/attachments/567172242803523597/925515907239915550/platoon_copy.png",]
+    await inter.response.defer()
+    Message = disnake.Embed(
+            title="__Planetside 2 Drill__",
+            color=0x9E0B0F,
+            description=str(message_body),
+            )
+    Message.set_image(
+        url=random.choice(propaganda)
+    )
+    Message.add_field(
+            name="Join the conversation on TeamSpeak",
+            value="ts.fugaming.org\n`futs`",
+            inline=True
+            )
+    await inter.edit_original_message("<@&914188301764812820>",embed=Message)
 
 bot.run(discordClientToken)
