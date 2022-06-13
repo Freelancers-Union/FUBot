@@ -7,7 +7,6 @@ services:
     - "443:80"
     restart: unless-stopped
     environment:
-    - TEST_GUILD_ID=''
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}

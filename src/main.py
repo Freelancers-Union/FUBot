@@ -32,7 +32,7 @@ Initialize the bot
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
-if os.getenv('TEST_GUILD_ID') is not '':
+if os.getenv('TEST_GUILD_ID') is not None:
     bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"), 
     description=Botdescription, 
