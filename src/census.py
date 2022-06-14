@@ -3,7 +3,8 @@ import logging
 import requests
 from auraxium import ps2
 
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
+                    datefmt='%m/%d/%Y %I:%M:%S %p')
 
 try:
     from dotenv import load_dotenv
@@ -15,7 +16,7 @@ except ModuleNotFoundError as err:
     logging.warning(err)
 
 
-async def getChar(charname, client):
+async def get_char(charname, client):
     """
     Char object is array with elements:
     [0] ps2.Character(class)
@@ -26,12 +27,12 @@ async def getChar(charname, client):
     if char[0] is not None:
         char.insert(1, await char[0].online_status())
         outfit = await client.get_by_id(ps2.OutfitMember, char[0].character_id)
-        return char, outfit 
+        return char, outfit
     else:
         return None, None
 
 
-async def getOutfit(outfitTag, outfitName, client):
+async def get_outfit(outfitTag, outfitName, client):
     """
     outfit object is array with elements:
     [0] ps2.Outfit(class)
