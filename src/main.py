@@ -34,17 +34,17 @@ Botdescription = "The serious bot for the casual Discord."
 
 if os.getenv('TEST_GUILD_ID') is not None:
     bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or("?"), 
-    description=Botdescription, 
-    intents=intents, 
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
     test_guilds=[int(os.getenv('TEST_GUILD_ID'))],
     sync_commands_debug=False
     )
 else:
     bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or("?"), 
-    description=Botdescription, 
-    intents=intents, 
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
     sync_commands_debug=False
     )
 
@@ -61,7 +61,7 @@ async def add(ctx, left: int, right: int):
 
 @bot.slash_command()
 async def player_card(
-    inter: disnake.CommandInteraction, 
+    inter: disnake.CommandInteraction,
     character_name: str,
     ):
     """Get character information for a given character
@@ -92,8 +92,8 @@ async def player_card(
 
 @bot.slash_command()
 async def outfit(
-    inter: disnake.ApplicationCommandInteraction, 
-    tag: str = 0, 
+    inter: disnake.ApplicationCommandInteraction,
+    tag: str = 0,
     name: str = 0,
     ):
     """Get Outfit information for a given outfit
@@ -119,7 +119,6 @@ async def outfit(
     inter.is_expired()
 
 @bot.slash_command()
-@commands.has_role('PS2 Officer')
 async def drill(
     inter: disnake.CommandInteraction,
     message_body: str = "Find us in game."
@@ -132,12 +131,28 @@ async def drill(
 
     """
     await inter.response.defer(ephemeral=True)
-    channel = bot.get_channel(567172184913739787)
-    try:
-        await channel.send(embed=await ops.drill(message_body),delete_after=6000)
-        await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
-    except Exception as e:
-        await inter.edit_original_message("Looks like something went wrong." + str(e))
-        logging.exception(e)
+    chanel_list: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+    for ch in chanel_list:
+        if ch.name == "ps2-announcements":
+            channel = ch
+
+    # channel = bot.get_channel(567172184913739787)
+
+    if channel is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete. \n channel doesn't exist")
+    elif not channel.permissions_for(inter.author).send_messages:
+        await inter.edit_original_message(
+            "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
+            "\n You don't have the permission to announce, so I won't"
+            )
+    elif not channel.permissions_for(channel.guild.me).send_messages:
+        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
+    else:
+        try:
+            await channel.send(embed=await ops.drill(message_body),delete_after=6000)
+            await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
+        except Exception as e:
+            await inter.edit_original_message("Looks like something went wrong." + str(e))
+            logging.exception(e)
 
 bot.run(discordClientToken)
