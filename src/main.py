@@ -132,7 +132,7 @@ async def drill(
 
     """
     await inter.response.defer(ephemeral=True)
-    channel = bot.get_channel(986317590811017268)
+    channel = bot.get_channel(567172184913739787)
     try:
         await channel.send(embed=await ops.drill(message_body),delete_after=6000)
         await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
