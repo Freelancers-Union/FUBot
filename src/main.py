@@ -1,15 +1,13 @@
 import os
 import disnake
 import logging
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
-import requests
 import auraxium
 import census
-import random
 import commands.ops as ops
-
 from auraxium import ps2
 from disnake.ext import commands
+
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
 
 try:
     from dotenv import load_dotenv
