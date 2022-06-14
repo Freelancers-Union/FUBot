@@ -7,6 +7,7 @@ services:
     - "80:80"
     restart: unless-stopped
     environment:
+    - TEST_GUILD_ID=914185528268689428
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}

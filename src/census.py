@@ -26,7 +26,7 @@ async def getChar(charname, client):
     """
     char=[]
     char.insert(0, await client.get_by_name(ps2.Character, charname))
-    if char is not None:
+    if char[0] is not None:
         char.insert(1, await char[0].online_status())
         outfit = await client.get_by_id(ps2.OutfitMember, char[0].character_id)
         return char, outfit 

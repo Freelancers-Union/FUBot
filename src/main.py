@@ -1,13 +1,16 @@
 import os
 import disnake
 import logging
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
 import auraxium
 import census
-
+import commands.get_player as get_player
+import commands.get_outfit as get_outfit
+import random
+import commands.ops as ops
 from auraxium import ps2
 from disnake.ext import commands
 
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -28,13 +31,23 @@ intents.message_content = True
 
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
-bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or("?"), 
-    description=Botdescription, 
-    intents=intents, 
-    test_guilds=[914185528268689428],
+
+if os.getenv('TEST_GUILD_ID') is not None:
+    bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
+    test_guilds=[int(os.getenv('TEST_GUILD_ID'))],
     sync_commands_debug=False
     )
+else:
+    bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
+    sync_commands_debug=False
+    )
+
 
 @bot.event
 async def on_ready():
@@ -48,83 +61,26 @@ async def add(ctx, left: int, right: int):
 
 @bot.slash_command()
 async def player_card(
-    inter: disnake.CommandInteraction, 
+    inter: disnake.CommandInteraction,
     character_name: str,
     ):
     """Get character information for a given character
-    
+
     Parameters
     ----------
     character_name: character name to search for
     """
     await inter.response.defer()
-    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
-        char, outfit = await census.getChar(character_name, client)
-        if char is None:
-            await inter.edit_original_message("Player "+character_name+" cannot be found.")
-            raise ValueError("Player could not be found.", character_name)
-        faction_logo=['https://census.daybreakgames.com/files/ps2/images/static/94.png',
-        'https://census.daybreakgames.com/files/ps2/images/static/12.png',
-        'https://census.daybreakgames.com/files/ps2/images/static/18.png',
-        'https://wiki.planetside-universe.com/ps/images/3/3d/Logo_ns.png']
-        faction_color=[0x440E62, 0x004B80, 0x9E0B0F, 0x5B5B5B]
-        faction_id=int(char[0].faction_id)
-        Message = disnake.Embed(
-            title="__Player Card for "+str(char[0].name)+":__",
-            color=faction_color[faction_id-1],
-            description="[Click here for Fisu Stats](https://ps2.fisu.pw/player/?name="+str(char[0].name)+")",
-            )
-        Message.set_thumbnail(
-            url=faction_logo[faction_id-1]
-        )
-        Message.add_field(
-            name="Last Seen",
-            value=str(char[0].times.last_save_date)[:16],
-            inline=True
-            )
-        Message.add_field(
-            name="Battle Rank",
-            value=str(char[0].battle_rank.value),
-            inline=False
-            )
-        Message.add_field(
-            name="ASP",
-            value=str(char[0].data.prestige_level),
-            inline=False
-            )
-        Message.add_field(
-            name="Created",
-            value=str(char[0].times.creation_date)[:16],
-            inline=True
-            )
-        Message.add_field(
-            name="Playtime",
-            value=str(round(char[0].times.minutes_played/60))+" Hours",
-            inline=True
-            )
-        if outfit is not None:
-            outfit_details=await client.get_by_id(auraxium.ps2.Outfit, outfit.outfit_id)
-            Message.add_field(
-                name="Outfit",
-                value="[["+str(outfit_details.data.alias)+"]](https://ps2.fisu.pw/outfit/?name="+str(outfit_details.data.alias_lower)+") "+str(outfit_details.name),
-                inline=False
-                )
-            Message.add_field(
-            name="Rank",
-            value=str(outfit.rank),
-            inline=True
-            )
-            Message.add_field(
-            name="Joined",
-            value=str(outfit.member_since_date)[:16],
-            inline=True
-            )
-        await inter.edit_original_message(" ",embed=Message)
+    try:
+        await inter.edit_original_message(" ",embed=await get_player.get_player(character_name))
+    except Exception as e:
+        await inter.edit_original_message("Hmm, looks like something went wrong.")
+        logging.exception(e)
 
 @bot.slash_command()
 async def outfit(
-    inter: disnake.ApplicationCommandInteraction, 
-    tag: str = 0, 
+    inter: disnake.ApplicationCommandInteraction,
+    tag: str = 0,
     name: str = 0,
     ):
     """Get Outfit information for a given outfit
@@ -135,18 +91,72 @@ async def outfit(
     tag: Outfit tag
     """
     await inter.response.defer()
-    async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
-        outfit = await census.getOutfit(tag, name, client)
-        if outfit is None:
-            await inter.edit_original_message("Could not find outfit.")
+    try:
+        await inter.edit_original_message("",embed=await get_outfit.get_outfit(tag, name))
+    except Exception as e:
+        await inter.edit_original_message("Hmm, looks like something went wrong.")
+        logging.exception(e)
 
-        outfitLeader=await client.get_by_id(auraxium.ps2.Character, outfit[0].leader_character_id)
-        Message = disnake.Embed(
-            title="__Outfit details for "+str(outfit[0].name)+":__",
-            color=3166138,
-            description="   [Fisu Stats](https://ps2.fisu.pw/outfit/?name="+str(outfit[0].alias_lower)+")\n\n**Faction:** "+str(await client.get_by_id(ps2.Faction, outfitLeader.faction_id))+"\n**Leader:** "+str(outfitLeader.name)+"\n**Members:** "+str(outfit[0].member_count)+"\n**Online:** "+str(outfit[1])+"\n**Created:** "+str(outfit[0].time_created_date)[:10]+"\n",
+
+@bot.slash_command()
+async def drill(
+    inter: disnake.CommandInteraction,
+    message_body: str = "Find us in game."
+    ):
+    """Post a drill announcement to #ps2-announcements
+
+    Parameters
+    ----------
+    message_body: The message to attach to the announcement.'
+
+    """
+    required_role = "PS2 Officer"
+    channel_name = "ps2-announcements"
+    role_name = "Planetside 2"
+    await inter.response.defer(ephemeral=True)
+
+    # Check the user has the required role
+    user_roles = []
+    for role in inter.author.roles:
+        user = role.name
+        user_roles.append(user)
+    if required_role not in user_roles:
+        await inter.edit_original_message("I understand your command. Request denied.")
+        return
+
+    # find the channel, where to send the message
+    channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+    channel = None
+    for ch in channels:
+        if ch.name == channel_name:
+            channel = ch
+
+    # find PS2 role, that should be Tagged:
+    roles: [disnake.Role] = inter.guild.roles
+    role_to_ping = None
+    for r in roles:
+        if r.name == role_name:
+            role_to_ping = r
+
+    if channel is None or role_to_ping is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
+    elif not channel.permissions_for(inter.author).send_messages:
+        await inter.edit_original_message(
+            "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
+            "\n You don't have the permission to announce, so I won't"
             )
-    await inter.edit_original_message("",embeds=[Message])
-    inter.is_expired()
+    elif not channel.permissions_for(channel.guild.me).send_messages:
+        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
+    else:
+        try:
+            team_speak=disnake.ui.Button(style=disnake.ButtonStyle.url,
+            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=Planetside%202%2FOutfit%20drill", 
+            label="Open TeamSpeak")
+            await channel.send(role_to_ping.mention,embed=await ops.drill(message_body), components=team_speak, delete_after=18000)
+            await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
+        except Exception as e:
+            await inter.edit_original_message("Looks like something went wrong." + str(e))
+            logging.exception(e)
 
 bot.run(discordClientToken)
