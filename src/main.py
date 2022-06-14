@@ -6,6 +6,7 @@ import requests
 import auraxium
 import census
 import random
+import commands.ops as ops
 
 from auraxium import ps2
 from disnake.ext import commands
@@ -120,29 +121,25 @@ async def outfit(
     inter.is_expired()
 
 @bot.slash_command()
+@commands.has_role('PS2 Officer')
 async def drill(
-    # TODO: specify which channel this should post into rather than posting into whichever channel it was called from
     inter: disnake.CommandInteraction,
-    message_body: str = "Platoon is starting!\nJoin us in game."
+    message_body: str = "Find us in game."
     ):
-    propaganda=["https://cdn.discordapp.com/attachments/567172242803523597/925515906556264528/platoon_copy_3.png",
-    "https://cdn.discordapp.com/attachments/567172242803523597/925515906178744401/platoon_copy_2.png",
-    "https://cdn.discordapp.com/attachments/567172242803523597/925515906866614282/platoon_copy_4.png",
-    "https://cdn.discordapp.com/attachments/567172242803523597/925515907239915550/platoon_copy.png",]
-    await inter.response.defer()
-    Message = disnake.Embed(
-            title="__Planetside 2 Drill__",
-            color=0x9E0B0F,
-            description=str(message_body),
-            )
-    Message.set_image(
-        url=random.choice(propaganda)
-    )
-    Message.add_field(
-            name="Join the conversation on TeamSpeak",
-            value="ts.fugaming.org\n`futs`",
-            inline=True
-            )
-    await inter.edit_original_message("<@&914188301764812820>",embed=Message)
+    """Post a drill announcement
+
+    Parameters
+    ----------
+    message_body: The message to attach to the announcement.'
+
+    """
+    await inter.response.defer(ephemeral=True)
+    channel = bot.get_channel(986317590811017268)
+    try:
+        await channel.send(embed=await ops.drill(message_body),delete_after=6000)
+        await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
+    except Exception as e:
+        await inter.edit_original_message("Looks like something went wrong."+e)
+        logging.exception(e)
 
 bot.run(discordClientToken)
