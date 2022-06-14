@@ -137,7 +137,7 @@ async def drill(
         await channel.send(embed=await ops.drill(message_body),delete_after=6000)
         await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
     except Exception as e:
-        await inter.edit_original_message("Looks like something went wrong."+e)
+        await inter.edit_original_message("Looks like something went wrong." + str(e))
         logging.exception(e)
 
 bot.run(discordClientToken)
