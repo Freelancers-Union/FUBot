@@ -131,8 +131,9 @@ async def drill(
 
     """
     await inter.response.defer(ephemeral=True)
-    chanel_list: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
-    for ch in chanel_list:
+    channel_list: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+    channel = None
+    for ch in channel_list:
         if ch.name == "ps2-announcements":
             channel = ch
 
