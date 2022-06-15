@@ -130,17 +130,28 @@ async def drill(
     message_body: The message to attach to the announcement.'
 
     """
+    channel_name = "ps2-announcements"
+    role_name = "Planetside 2"
     await inter.response.defer(ephemeral=True)
-    channel_list: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+    # find the channel, where to send the message
+    channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
     channel = None
-    for ch in channel_list:
-        if ch.name == "ps2-announcements":
+    for ch in channels:
+        if ch.name == channel_name:
             channel = ch
+    # find PS2 role, that should be Tagged:
+    # find the channel, where to send the message
+    roles: [disnake.Role] = inter.guild.roles
+    role_to_ping = None
+    for r in roles:
+        if r.name == role_name:
+            role_to_ping = r
 
     # channel = bot.get_channel(567172184913739787)
 
-    if channel is None:
-        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete. \n channel doesn't exist")
+    if channel is None or role_to_ping is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
     elif not channel.permissions_for(inter.author).send_messages:
         await inter.edit_original_message(
             "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
@@ -150,7 +161,7 @@ async def drill(
         await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     else:
         try:
-            await channel.send(embed=await ops.drill(message_body),delete_after=6000)
+            await channel.send(content=role_to_ping.mention, embed=await ops.drill(message_body), delete_after=6000)
             await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
         except Exception as e:
             await inter.edit_original_message("Looks like something went wrong." + str(e))
