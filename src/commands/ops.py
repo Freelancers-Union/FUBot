@@ -15,7 +15,7 @@ async def drill(message_body):
         url=random.choice(propaganda)
     )
     Message.add_field(
-            name="Join the chatter on TeamSpeak",
+            name="Join the conversation on TeamSpeak",
             value="ts.fugaming.org\n`futs`",
             inline=True
             )

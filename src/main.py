@@ -170,7 +170,7 @@ async def drill(
         await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     else:
         try:
-            await channel.send(content=role_to_ping.mention, embed=await ops.drill(message_body), delete_after=6000)
+            await channel.send(role_to_ping.mention, embed=await ops.drill(message_body), delete_after=6000)
             await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
         except Exception as e:
             await inter.edit_original_message("Looks like something went wrong." + str(e))
