@@ -123,31 +123,40 @@ async def drill(
     inter: disnake.CommandInteraction,
     message_body: str = "Find us in game."
     ):
-    """Post a drill announcement
+    """Post a drill announcement to #ps2-announcements
 
     Parameters
     ----------
     message_body: The message to attach to the announcement.'
 
     """
+    required_role = "PS2 Officer"
     channel_name = "ps2-announcements"
     role_name = "Planetside 2"
     await inter.response.defer(ephemeral=True)
+
+    # Check the user has the required role
+    user_roles = []
+    for role in inter.author.roles:
+        user = role.name
+        user_roles.append(user)
+    if required_role not in user_roles:
+        await inter.edit_original_message("I understand your command. Request denied.")
+        return
+
     # find the channel, where to send the message
     channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
     channel = None
     for ch in channels:
         if ch.name == channel_name:
             channel = ch
+
     # find PS2 role, that should be Tagged:
-    # find the channel, where to send the message
     roles: [disnake.Role] = inter.guild.roles
     role_to_ping = None
     for r in roles:
         if r.name == role_name:
             role_to_ping = r
-
-    # channel = bot.get_channel(567172184913739787)
 
     if channel is None or role_to_ping is None:
         await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
