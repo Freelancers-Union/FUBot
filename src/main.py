@@ -1,13 +1,13 @@
 import os
 import disnake
 import logging
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
-import requests
 import auraxium
 import census
-
+import commands.ops as ops
 from auraxium import ps2
 from disnake.ext import commands
+
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
 
 try:
     from dotenv import load_dotenv
@@ -31,13 +31,23 @@ Initialize the bot
 """
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
-bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or("?"), 
-    description=Botdescription, 
-    intents=intents, 
-    test_guilds=[914185528268689428],
+
+if os.getenv('TEST_GUILD_ID') is not None:
+    bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
+    test_guilds=[int(os.getenv('TEST_GUILD_ID'))],
     sync_commands_debug=False
     )
+else:
+    bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
+    sync_commands_debug=False
+    )
+
 
 @bot.event
 async def on_ready():
@@ -51,7 +61,7 @@ async def add(ctx, left: int, right: int):
 
 @bot.slash_command()
 async def player_card(
-    inter: disnake.CommandInteraction, 
+    inter: disnake.CommandInteraction,
     character_name: str,
     ):
     """Get character information for a given character
@@ -82,8 +92,8 @@ async def player_card(
 
 @bot.slash_command()
 async def outfit(
-    inter: disnake.ApplicationCommandInteraction, 
-    tag: str = 0, 
+    inter: disnake.ApplicationCommandInteraction,
+    tag: str = 0,
     name: str = 0,
     ):
     """Get Outfit information for a given outfit
@@ -107,5 +117,63 @@ async def outfit(
             )
     await inter.edit_original_message("",embeds=[Message])
     inter.is_expired()
+
+@bot.slash_command()
+async def drill(
+    inter: disnake.CommandInteraction,
+    message_body: str = "Find us in game."
+    ):
+    """Post a drill announcement to #ps2-announcements
+
+    Parameters
+    ----------
+    message_body: The message to attach to the announcement.'
+
+    """
+    required_role = "PS2 Officer"
+    channel_name = "ps2-announcements"
+    role_name = "Planetside 2"
+    await inter.response.defer(ephemeral=True)
+
+    # Check the user has the required role
+    user_roles = []
+    for role in inter.author.roles:
+        user = role.name
+        user_roles.append(user)
+    if required_role not in user_roles:
+        await inter.edit_original_message("I understand your command. Request denied.")
+        return
+
+    # find the channel, where to send the message
+    channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+    channel = None
+    for ch in channels:
+        if ch.name == channel_name:
+            channel = ch
+
+    # find PS2 role, that should be Tagged:
+    roles: [disnake.Role] = inter.guild.roles
+    role_to_ping = None
+    for r in roles:
+        if r.name == role_name:
+            role_to_ping = r
+
+    if channel is None or role_to_ping is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
+    elif not channel.permissions_for(inter.author).send_messages:
+        await inter.edit_original_message(
+            "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
+            "\n You don't have the permission to announce, so I won't"
+            )
+    elif not channel.permissions_for(channel.guild.me).send_messages:
+        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
+    else:
+        try:
+            await channel.send(role_to_ping.mention, embed=await ops.drill(message_body), delete_after=6000)
+            await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
+        except Exception as e:
+            await inter.edit_original_message("Looks like something went wrong." + str(e))
+            logging.exception(e)
 
 bot.run(discordClientToken)
