@@ -3,6 +3,8 @@ import logging
 import requests
 from auraxium import ps2
 
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -11,7 +13,7 @@ except ModuleNotFoundError as err:
     This is an expected error when not running locally using dotenv
     """
     logging.warning(err)
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 async def getChar(charname, client):
     """
@@ -27,6 +29,7 @@ async def getChar(charname, client):
         return char, outfit 
     else:
         return None, None
+
 
 async def getOutfit(outfitTag, outfitName, client):
     """
