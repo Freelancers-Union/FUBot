@@ -92,7 +92,11 @@ async def outfit(
     """
     await inter.response.defer()
     try:
-        await inter.edit_original_message("",embed=await get_outfit.get_outfit(tag, name))
+        outfit_card=await get_outfit.get_outfit(tag, name)
+        if outfit_card is not None:
+            await inter.edit_original_message("",embed=outfit_card)
+        else:
+            await inter.edit_original_message("Could not find outfit: "+str(name)+str(tag))
     except Exception as e:
         await inter.edit_original_message("Hmm, looks like something went wrong.")
         logging.exception(e)

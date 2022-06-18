@@ -45,9 +45,12 @@ async def getOutfit(outfitTag, outfitName, client):
             outfit.insert(0, await client.get(ps2.Outfit, alias_lower=outfitTag.lower()))
         elif outfitName is not 0:
             outfit.insert(0, await client.get(ps2.Outfit, name_lower=outfitName.lower()))
-        online_members = await get_online_outfit(outfit[0].id)
-        outfit.insert(1, online_members)
-        return outfit
+        if outfit[0] is not None:
+            online_members = await get_online_outfit(outfit[0].id)
+            outfit.insert(1, online_members)
+            return outfit
+        else:
+            return None
     except AttributeError as err:
         logging.exception(err)
         return None

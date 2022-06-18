@@ -7,7 +7,7 @@ from auraxium import ps2
 async def get_outfit(tag,name):
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:
         outfit = await census.getOutfit(tag, name, client)
-        if outfit[0] is None:
+        if outfit is None:
             return None
 
         faction_color=[0x440E62, 0x004B80, 0x9E0B0F, 0x5B5B5B]
