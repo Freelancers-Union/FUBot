@@ -1,11 +1,6 @@
 import os
 import logging
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'),format='%(asctime)s %(funcName)s: %(message)s ' , datefmt='%m/%d/%Y %I:%M:%S %p')
-import json
-import auraxium
-import asyncio
 import requests
-
 from auraxium import ps2
 
 try:

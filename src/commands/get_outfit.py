@@ -1,8 +1,9 @@
+import os
 import disnake
 import auraxium
-import os
-import census
 from auraxium import ps2
+import census
+
 
 async def get_outfit(tag,name):
     async with auraxium.Client(service_id=str(os.getenv('CENSUS_TOKEN'))) as client:

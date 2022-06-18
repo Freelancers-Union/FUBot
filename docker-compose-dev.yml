@@ -8,9 +8,13 @@ services:
     restart: unless-stopped
     environment:
 <<<<<<< HEAD
+<<<<<<< HEAD
     - TEST_GUILD_ID=914185528268689428
 =======
 >>>>>>> 379ccc5509201e9fec2bf4ff0c7094732b65e4da
+=======
+    - TEST_GUILD_ID=914185528268689428
+>>>>>>> b6baaafc11114140c768533fd78fcf80f189c2f9
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
