@@ -7,7 +7,10 @@ services:
     - "80:80"
     restart: unless-stopped
     environment:
+<<<<<<< HEAD
     - TEST_GUILD_ID=914185528268689428
+=======
+>>>>>>> 379ccc5509201e9fec2bf4ff0c7094732b65e4da
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
