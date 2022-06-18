@@ -170,7 +170,10 @@ async def drill(
         await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     else:
         try:
-            await channel.send(role_to_ping.mention, embed=await ops.drill(message_body), delete_after=6000)
+            team_speak=disnake.ui.Button(style=disnake.ButtonStyle.url,
+            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=Planetside%202%2FOutfit%20drill", 
+            label="Open TeamSpeak")
+            await channel.send(role_to_ping.mention,embed=await ops.drill(message_body), components=team_speak, delete_after=18000)
             await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
         except Exception as e:
             await inter.edit_original_message("Looks like something went wrong." + str(e))

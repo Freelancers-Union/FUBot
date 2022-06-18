@@ -16,7 +16,7 @@ async def drill(message_body):
     )
     Message.add_field(
             name="Join the conversation on TeamSpeak",
-            value="ts.fugaming.org\n`futs`",
+            value="For chat, tactics and discussion.",
             inline=True
             )
     return Message
