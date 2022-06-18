@@ -130,7 +130,7 @@ async def drill(
     message_body: The message to attach to the announcement.'
 
     """
-    required_role = "PS2 Officer"
+    required_role = "PS2 Division Officer"
     channel_name = "ps2-announcements"
     role_name = "Planetside 2"
     await inter.response.defer(ephemeral=True)
