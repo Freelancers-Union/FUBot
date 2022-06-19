@@ -11,9 +11,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ModuleNotFoundError as err:
-    """
-    This is an expected error when not running locally using dotenv
-    """
+    # This is an expected error when not running locally using dotenv
     logging.warning(err)
 
 
