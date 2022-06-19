@@ -64,7 +64,8 @@ async def player_card(
         inter: disnake.CommandInteraction,
         character_name: str,
 ):
-    """Get character information for a given character
+    """
+    Get character information for a given character
 
     Parameters
     ----------
@@ -88,7 +89,8 @@ async def outfit(
         tag: str = 0,
         name: str = 0,
 ):
-    """Get Outfit information for a given outfit
+    """
+    Get Outfit information for a given outfit
 
     Parameters
     ----------
@@ -112,7 +114,8 @@ async def drill(
         inter: disnake.CommandInteraction,
         message_body: str = "Find us in game."
 ):
-    """Post a drill announcement to #ps2-announcements
+    """
+    Post a drill announcement to #ps2-announcements
 
     Parameters
     ----------
