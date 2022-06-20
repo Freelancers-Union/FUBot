@@ -172,5 +172,9 @@ async def drill(
             await inter.edit_original_message("Looks like something went wrong." + str(e))
             logging.exception(e)
 
+@bot.message_command()
+async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+               message: disnake.Message):
+    pass
 
 bot.run(discordClientToken)
