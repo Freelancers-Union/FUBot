@@ -8,6 +8,8 @@ import census
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
+import emoji
+import re
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -172,9 +174,24 @@ async def drill(
             await inter.edit_original_message("Looks like something went wrong." + str(e))
             logging.exception(e)
 
+
 @bot.message_command()
 async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
                message: disnake.Message):
-    pass
+    emoji_list: list
+
+    await inter.response.defer(ephemeral=True)
+    # Permission checks
+    if not message.channel.permissions_for(inter.author).add_reactions:
+        await inter.edit_original_message("I understand your concerns. Request denied.\n" +
+                                          "You don't have the permissions to react in " + message.channel.mention)
+        return
+
+    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some magic to delete duplicates
+    emoji_list = emoji.distinct_emoji_list(message.content) + discord_emojis
+
+    for item in emoji_list:
+        await message.add_reaction(item)
+    await inter.edit_original_message("reacted with:" + str(emoji_list))
 
 bot.run(discordClientToken)
