@@ -192,7 +192,7 @@ async def drill(
 @bot.slash_command()
 async def fugg(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Cleared for bombing run."
 ):
     """
     Post a FUGG announcement to #ps2-announcements
@@ -213,7 +213,7 @@ async def fugg(
 @bot.slash_command()
 async def fubg(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Relaxing Construction!"
 ):
     """
     Post a FUBG announcement to #ps2-announcements
@@ -234,7 +234,7 @@ async def fubg(
 @bot.slash_command()
 async def fuad(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Find us rolling out in game."
 ):
     """
     Post a FUAD announcement to #ps2-announcements
@@ -255,7 +255,7 @@ async def fuad(
 @bot.slash_command()
 async def fuel(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Line up and get ready to lead."
 ):
     """
     Post a FUEL announcement to #ps2-announcements
@@ -276,7 +276,7 @@ async def fuel(
 @bot.slash_command()
 async def huntsmen(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Find us dominating in game."
 ):
     """
     Post a Huntsmen announcement to #ps2-announcements
@@ -297,10 +297,10 @@ async def huntsmen(
 @bot.slash_command()
 async def casual(
         inter: disnake.CommandInteraction,
-        message_body: str = "Find us in game."
+        message_body: str = "Come and join the fun."
 ):
     """
-    Post a Huntsmen announcement to #ps2-announcements
+    Post a Casual squad announcement to #ps2-announcements
 
     Parameters
     ----------

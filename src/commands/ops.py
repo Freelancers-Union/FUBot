@@ -75,7 +75,7 @@ async def fubg(message_body):
     )
     Message.add_field(
             name="Join the conversation on TeamSpeak",
-            value="For chat, tactics and discussion.",
+            value="For relaxation, calm thoughts and stress free building.",
             inline=True
             )
     return Message
