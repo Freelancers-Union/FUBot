@@ -10,6 +10,8 @@ import census
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
+import emoji
+import re
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -171,7 +173,6 @@ async def event_message(
 
 EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen"]
 
-
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 
@@ -207,5 +208,29 @@ async def announce_event(
     await inter.response.defer(ephemeral=True)
     await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
 
+
+@bot.message_command(name="Add Reactions")
+@commands.default_member_permissions(manage_messages=True)
+async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+               message: disnake.Message):
+    emoji_list: list
+
+    await inter.response.defer(ephemeral=True)
+    # Permission checks
+    # this is as a catch just in case the default_members_permissions fail
+    if not message.channel.permissions_for(inter.author).manage_messages:
+        await inter.edit_original_message("Request denied.\n" +
+                                          "You don't have the permissions to remove unneeded reactions or spam in " +
+                                          message.channel.mention + "\nhttps://www.govloop.com/wp-content/uploads"
+                                                                    "/2015/02/data-star-trek-request-denied.gif"
+                                          )
+        return
+
+    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some magic to delete duplicates
+    emoji_list = emoji.distinct_emoji_list(message.content) + discord_emojis
+
+    for item in emoji_list:
+        await message.add_reaction(item)
+    await inter.edit_original_message("reacted with:" + str(emoji_list))
 
 bot.run(discordClientToken)
