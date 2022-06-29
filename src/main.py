@@ -1,6 +1,7 @@
 import os
 import logging
 import urllib.parse
+from typing import List
 import disnake
 from disnake.ext import commands
 import auraxium
@@ -168,151 +169,43 @@ async def event_message(
             logging.exception(e)
 
 
+EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen"]
+
+
+async def autocomplete_event(inter, string: str) -> List[str]:
+    return [event for event in EVENTS if string.lower() in event.lower()]
+
 @bot.slash_command()
-async def drill(
+async def announce_event(
         inter: disnake.CommandInteraction,
+        event: str = commands.Param(autocomplete=autocomplete_event),
         message_body: str = "Find us in game."
 ):
     """
-    Post a drill announcement to #ps2-announcements
+    Post an event announcement to #ps2-announcements
 
     Parameters
     ----------
     message_body: The message to attach to the announcement.'
 
     """
-    event = "drill"
-    teamspeak_channel = "Outfit drill"
+
+    ops_dict = {
+    "drill": ["Outfit Drill", "Planetside 2"],
+    "casual": ["Casual Play", "Planetside 2"],
+    "fuad": ["FUAD (Armoured Division)", "FUAD"],
+    "fubg": ["FUBG (Builders Group)", "FUBG"],
+    "fuel": ["FUEL (Emerging Leaders)", "Planetside 2"],
+    "fugg": ["FUGG (Galaxy Group)", "FUGG"],
+    "huntsmen": ["Huntsmen (not this outfit)", "Huntsmen"],
+    }
+    event = event.lower()
+    teamspeak_channel = ops_dict[event][0]
     required_role = "PS2 Division Officer"
     channel_name = "ps2-announcements"
-    role_name = "Planetside 2"
+    role_name = ops_dict[event][1]
     await inter.response.defer(ephemeral=True)
     await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
 
-@bot.slash_command()
-async def fugg(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Cleared for bombing run."
-):
-    """
-    Post a FUGG announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "fugg"
-    teamspeak_channel = "FUGG (Galaxy Group)"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "FUGG"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
-
-@bot.slash_command()
-async def fubg(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Relaxing Construction!"
-):
-    """
-    Post a FUBG announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "fubg"
-    teamspeak_channel = "FUBG (Builders Group)"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "FUBG"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
-
-@bot.slash_command()
-async def fuad(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Find us rolling out in game."
-):
-    """
-    Post a FUAD announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "fuad"
-    teamspeak_channel = "FUAD (Armoured Division)"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "FUAD"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
-
-@bot.slash_command()
-async def fuel(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Line up and get ready to lead."
-):
-    """
-    Post a FUEL announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "fuel"
-    teamspeak_channel = "FUEL (Emerging Leaders)"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "FUEL"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
-
-@bot.slash_command()
-async def huntsmen(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Find us dominating in game."
-):
-    """
-    Post a Huntsmen announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "huntsmen"
-    teamspeak_channel = "Huntsmen (not this outfit)"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "Huntsmen"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
-
-@bot.slash_command()
-async def casual(
-        inter: disnake.CommandInteraction,
-        message_body: str = "Come and join the fun."
-):
-    """
-    Post a Casual squad announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    message_body: The message to attach to the announcement.'
-
-    """
-    event = "casual"
-    teamspeak_channel = "Casual Play"
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "Planetside 2"
-    await inter.response.defer(ephemeral=True)
-    await event_message(inter, message_body, event, required_role, channel_name, role_name, teamspeak_channel)
 
 bot.run(discordClientToken)
