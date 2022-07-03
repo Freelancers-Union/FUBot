@@ -11,17 +11,23 @@ async def event_message(
 ):
 
     ops_dict = {
-    "Drill": ["Outfit Drill", "Planetside 2"],
-    "Casual": ["Casual Play", "Planetside 2"],
-    "FUAD": ["FUAD (Armoured Division)", "FUAD"],
-    "FUBG": ["FUBG (Builders Group)", "FUBG"],
-    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
-    "FUGG": ["FUGG (Galaxy Group)", "FUGG"],
-    "Huntsmen": ["Huntsmen (not this outfit)", "Huntsmen"],
+    "Drill": ["Outfit Drill", "Planetside 2", "Planetside 2"],
+    "Casual": ["Casual Play", "Planetside 2", "Planetside 2"],
+    "FUAD": ["FUAD (Armoured Division)", "FUAD", "Planetside 2"],
+    "FUBG": ["FUBG (Builders Group)", "FUBG", "Planetside 2"],
+    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2", "Planetside 2"],
+    "FUGG": ["FUGG (Galaxy Group)", "FUGG", "Planetside 2"],
+    "Huntsmen": ["Huntsmen (not this outfit)", "Huntsmen", "Planetside 2"],
+    "ArmaOps": ["", "Arma 3", "Arma 3"]
     }
+    game = ops_dict[event][2]
     teamspeak_channel = ops_dict[event][0]
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
+    if game == "Planetside 2":
+        required_role = "PS2 Division Officer"
+        channel_name = "ps2-announcements"
+    elif game == "Arma 3":
+        required_role = "Arma Division Officer"
+        channel_name = "a3-announcements"
     role_name = ops_dict[event][1]
 
     # Check the user has the required role
@@ -60,24 +66,24 @@ async def event_message(
     else:
         try:
             teamspeak_channel.encode('utf-8')
-            teamspeak_channel = urllib.parse.quote(str(teamspeak_channel), safe="")
+            teamspeak_channel = urllib.parse.quote(str(game + "/" + teamspeak_channel), safe="")
             team_speak = disnake.ui.Button(style=disnake.ButtonStyle.url,
-                                           url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=Planetside%202%2F"+str(teamspeak_channel),
+                                           url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel="+str(teamspeak_channel),
                                            label="Open TeamSpeak")
-            Message = await message_embed(message_body, event) #eval(str(event.lower()) + "(message_body)")
+            Message = await message_embed(message_body, game, event) #eval(str(event.lower()) + "(message_body)")
             Message.set_image(
                 file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/"+str(event.lower())+"/*.png")))
             )
             await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                delete_after=18000)
-            await inter.edit_original_message("Posted a " + str(event) + " announcement to <#986317590811017268>")
+            await inter.edit_original_message("Posted a " + str(event) + " announcement to " + str(channel.id))
         except Exception as e:
             raise e
 
 
-async def message_embed(message_body, event):
+async def message_embed(message_body, game, event):
     Message = disnake.Embed(
-            title="PlanetSide 2 - " + str(event) + " - Starting NOW!",
+            title=str(game) + " - " + str(event) + " - Starting NOW!",
             color=0x9E0B0F,
             description=str(message_body),
             )
@@ -134,6 +140,13 @@ async def huntsmen(Message):
 
 
 async def fuel(Message):
+    Message.add_field(
+            name="Join the conversation on TeamSpeak",
+            value="For chat, tactics and discussion.",
+            )
+    return Message
+
+async def armaops(Message):
     Message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
