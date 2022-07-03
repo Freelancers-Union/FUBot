@@ -148,7 +148,7 @@ async def fuel(Message):
 
 async def armaops(Message):
     Message.add_field(
-            name="Join the conversation on TeamSpeak",
-            value="For chat, tactics and discussion.",
+            name="Join us on TeamSpeak",
+            value="Get your TFAR's ready!",
             )
     return Message
