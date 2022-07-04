@@ -166,28 +166,5 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
-@bot.message_command(name="Add Reactions")
-@commands.default_member_permissions(manage_messages=True)
-async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
-               message: disnake.Message):
-    emoji_list: list
-
-    await inter.response.defer(ephemeral=True)
-    # Permission checks
-    # this is as a catch just in case the default_members_permissions fail
-    if not message.channel.permissions_for(inter.author).manage_messages:
-        await inter.edit_original_message("Request denied.\n" +
-                                          "You don't have the permissions to remove unneeded reactions or spam in " +
-                                          message.channel.mention + "\nhttps://www.govloop.com/wp-content/uploads"
-                                                                    "/2015/02/data-star-trek-request-denied.gif"
-                                          )
-        return
-
-    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some magic to delete duplicates
-    emoji_list = emoji.distinct_emoji_list(message.content) + discord_emojis
-
-    for item in emoji_list:
-        await message.add_reaction(item)
-    await inter.edit_original_message("reacted with:" + str(emoji_list))
 
 bot.run(discordClientToken)
