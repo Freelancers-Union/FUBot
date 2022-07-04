@@ -1,5 +1,4 @@
 import urllib.parse
-from typing import List
 import random
 import glob
 import disnake
@@ -23,21 +22,10 @@ async def event_message(
     game = ops_dict[event][2]
     teamspeak_channel = ops_dict[event][0]
     if game == "Planetside 2":
-        required_role = "PS2 Division Officer"
         channel_name = "ps2-announcements"
     elif game == "Arma 3":
-        required_role = "Arma Division Officer"
         channel_name = "a3-announcements"
     role_name = ops_dict[event][1]
-
-    # Check the user has the required role
-    user_roles = []
-    for role in inter.author.roles:
-        user = role.name
-        user_roles.append(user)
-    if required_role not in user_roles:
-        await inter.edit_original_message("I understand your command. Request denied.")
-        return
 
     # find the channel, where to send the message
     channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
@@ -53,14 +41,14 @@ async def event_message(
         if r.name == role_name:
             role_to_ping = r
 
-    if channel is None or role_to_ping is None:
-        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
-    elif not channel.permissions_for(inter.author).send_messages:
+    if not channel.permissions_for(inter.author).send_messages:
         await inter.edit_original_message(
             "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
             "\n You don't have the permission to announce, so I won't"
         )
+    elif channel is None or role_to_ping is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
     elif not channel.permissions_for(channel.guild.me).send_messages:
         await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     else:
@@ -76,7 +64,7 @@ async def event_message(
             )
             await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                delete_after=18000)
-            await inter.edit_original_message("Posted a " + str(event) + " announcement to " + str(channel.id))
+            await inter.edit_original_message("Posted a " + str(event) + " announcement to " + channel.mention)
         except Exception as e:
             raise e
 
