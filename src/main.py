@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import List
 import disnake
 from disnake.ext import commands
 import auraxium
@@ -111,69 +112,59 @@ async def outfit(
         logging.exception(e)
 
 
+
+
+EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+
+async def autocomplete_event(inter, string: str) -> List[str]:
+    return [event for event in EVENTS if string.lower() in event.lower()]
+
 @bot.slash_command()
-async def drill(
+async def announce_event(
         inter: disnake.CommandInteraction,
+        event: str = commands.Param(autocomplete=autocomplete_event),
         message_body: str = "Find us in game."
 ):
     """
-    Post a drill announcement to #ps2-announcements
+    Post an event announcement to #ps2-announcements
 
     Parameters
     ----------
     message_body: The message to attach to the announcement.'
 
     """
-    required_role = "PS2 Division Officer"
-    channel_name = "ps2-announcements"
-    role_name = "Planetside 2"
-    await inter.response.defer(ephemeral=True)
 
-    # Check the user has the required role
-    user_roles = []
-    for role in inter.author.roles:
-        user = role.name
-        user_roles.append(user)
-    if required_role not in user_roles:
-        await inter.edit_original_message("I understand your command. Request denied.")
+    await inter.response.defer(ephemeral=True)
+    try:
+        await ops.event_message(inter, message_body, event)
+    except Exception as e:
+        await inter.edit_original_message("Hmm, looks like something went wrong.")
+        logging.exception(e)
+
+
+@bot.message_command(name="Add Reactions")
+@commands.default_member_permissions(manage_messages=True)
+async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+               message: disnake.Message):
+    emoji_list: list
+
+    await inter.response.defer(ephemeral=True)
+    # Permission checks
+    # this is as a catch just in case the default_members_permissions fail
+    if not message.channel.permissions_for(inter.author).manage_messages:
+        await inter.edit_original_message("Request denied.\n" +
+                                          "You don't have the permissions to remove unneeded reactions or spam in " +
+                                          message.channel.mention + "\nhttps://www.govloop.com/wp-content/uploads"
+                                                                    "/2015/02/data-star-trek-request-denied.gif"
+                                          )
         return
 
-    # find the channel, where to send the message
-    channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
-    channel = None
-    for ch in channels:
-        if ch.name == channel_name:
-            channel = ch
+    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some magic to delete duplicates
+    emoji_list = emoji.distinct_emoji_list(message.content) + discord_emojis
 
-    # find PS2 role, that should be Tagged:
-    roles: [disnake.Role] = inter.guild.roles
-    role_to_ping = None
-    for r in roles:
-        if r.name == role_name:
-            role_to_ping = r
-
-    if channel is None or role_to_ping is None:
-        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
-    elif not channel.permissions_for(inter.author).send_messages:
-        await inter.edit_original_message(
-            "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
-            "\n You don't have the permission to announce, so I won't"
-        )
-    elif not channel.permissions_for(channel.guild.me).send_messages:
-        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
-    else:
-        try:
-            team_speak = disnake.ui.Button(style=disnake.ButtonStyle.url,
-                                           url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=Planetside%202%2FOutfit%20drill",
-                                           label="Open TeamSpeak")
-            await channel.send(role_to_ping.mention, embed=await ops.drill(message_body), components=team_speak,
-                               delete_after=18000)
-            await inter.edit_original_message("Posted a drill announcement to <#986317590811017268>")
-        except Exception as e:
-            await inter.edit_original_message("Looks like something went wrong." + str(e))
-            logging.exception(e)
-
+    for item in emoji_list:
+        await message.add_reaction(item)
+    await inter.edit_original_message("reacted with:" + str(emoji_list))
 
 @bot.message_command(name="Add Reactions")
 @commands.default_member_permissions(manage_messages=True)
