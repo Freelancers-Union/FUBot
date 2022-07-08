@@ -1,5 +1,6 @@
 import os
 import logging
+import datetime
 from typing import List
 import disnake
 from disnake.ext import commands
@@ -166,5 +167,49 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
+
+@bot.command()
+async def new_members(ctx):
+
+    all_ps2_members = []
+    all_a3_members = []
+    for member in bot.get_all_members():
+        roles: [disnake.Role] = member.roles
+        for r in roles:
+            if r.name == "Planetside 2":
+                all_ps2_members.append(member)
+            if r.name == "Arma 3":
+                all_a3_members.append(member)
+
+    date_delta = datetime.datetime.now() - datetime.timedelta(days=7)
+    new_ps2_members = []
+    new_a3_members = []
+    new_ps2_message = "---------------\n"
+    new_a3_message = "---------\n"
+    for i in all_ps2_members:
+        if i.joined_at.timestamp() > date_delta.timestamp():
+            new_ps2_members.append(i.name)
+            new_ps2_message = new_ps2_message + "<@" + str(i.id) + ">" + "\n"
+    for i in all_a3_members:
+        if i.joined_at.timestamp() > date_delta.timestamp():
+            new_a3_members.append(i.name)
+            new_a3_message = new_a3_message + "<@" + str(i.id) + ">" + "\n"
+    
+    Message = disnake.Embed(
+        title="New Discord Member Report",
+        color=0x9E0B0F,
+        description="Members who joined within the last 7 days",
+        )
+    Message.add_field(
+        name="PlanetSide 2",
+        value=new_ps2_message,
+        inline = True
+        )
+    Message.add_field(
+        name="Arma 3",
+        value=new_a3_message,
+        inline = True
+        )
+    await ctx.send(embed=Message)
 
 bot.run(discordClientToken)
