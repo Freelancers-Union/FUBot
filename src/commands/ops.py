@@ -2,11 +2,15 @@ import urllib.parse
 import random
 import glob
 import disnake
+import requests
+import imghdr
+
 
 async def event_message(
     inter,
     message_body,
-    event
+    event,
+    image_url
 ):
 
     ops_dict = {
@@ -59,9 +63,26 @@ async def event_message(
                                            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel="+str(teamspeak_channel),
                                            label="Open TeamSpeak")
             Message = await message_embed(message_body, game, event) #eval(str(event.lower()) + "(message_body)")
-            Message.set_image(
-                file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/"+str(event.lower())+"/*.png")))
-            )
+
+            if image_url:
+                # check if image_url contains an image:
+                img_request = requests.get(image_url)
+                supported_formats = "gif jpeg png webp"
+                img_type = imghdr.what(file=None, h=img_request.content)  # will return None of none
+                if img_type and img_type in supported_formats:
+                    Message.set_image(url=image_url)
+                else:
+                    await inter.edit_original_message(
+                        "That doesn't look like image Discord will understand \n supported files are: " +
+                        supported_formats +
+                        "\n Try again!"
+                    )
+                    return
+            else:
+                Message.set_image(
+                    file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/" + str(event.lower()) + "/*.png")))
+                )
+
             await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                delete_after=18000)
             await inter.edit_original_message("Posted a " + str(event) + " announcement to " + channel.mention)
