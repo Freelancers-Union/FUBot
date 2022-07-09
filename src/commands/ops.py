@@ -96,68 +96,68 @@ async def message_embed(message_body, game, event):
             color=0x9E0B0F,
             description=str(message_body),
             )
-    await globals()[event.lower()](Message)
+    await globals()[event.lower()](message)
     return Message
 
 
-async def drill(Message):
-    Message.add_field(
+async def drill(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
             )
-    return Message
+    return message
 
 
-async def casual(Message):
-    Message.add_field(
+async def casual(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
             )
-    return Message
+    return message
 
 
-async def fugg(Message):
-    Message.add_field(
+async def fugg(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
             )
-    return Message
+    return message
 
 
-async def fubg(Message):
-    Message.add_field(
+async def fubg(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For relaxation, calm thoughts and stress free building.",
             )
-    return Message
+    return message
 
 
-async def fuad(Message):
-    Message.add_field(
+async def fuad(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
             )
-    return Message
+    return message
 
 
-async def huntsmen(Message):
-    Message.add_field(
+async def huntsmen(message):
+    message.add_field(
             name="TeamSpeak is Mandatory!",
             value="Hit the button below to go straight there.",
             )
-    return Message
+    return message
 
 
-async def fuel(Message):
-    Message.add_field(
+async def fuel(message):
+    message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
             )
-    return Message
+    return message
 
-async def armaops(Message):
-    Message.add_field(
+async def armaops(message):
+    message.add_field(
             name="Join us on TeamSpeak",
             value="Get your TFAR's ready!",
             )
-    return Message
+    return message
