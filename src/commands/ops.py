@@ -8,6 +8,7 @@ import imghdr
 
 async def event_message(
     inter,
+    message_title,
     message_body,
     event,
     image_url
@@ -62,7 +63,7 @@ async def event_message(
             team_speak = disnake.ui.Button(style=disnake.ButtonStyle.url,
                                            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel="+str(teamspeak_channel),
                                            label="Open TeamSpeak")
-            Message = await message_embed(message_body, game, event) #eval(str(event.lower()) + "(message_body)")
+            Message = await message_embed(message_title, message_body, game, event)
 
             if image_url:
                 # check if image_url contains an image:
@@ -90,14 +91,15 @@ async def event_message(
             raise e
 
 
-async def message_embed(message_body, game, event):
-    Message = disnake.Embed(
-            title=str(game) + " - " + str(event) + " - Starting NOW!",
+async def message_embed(message_title, message_body, game, event):
+    title = message_title if message_title else str(game) + " - " + str(event) + " - Starting NOW!"
+    message = disnake.Embed(
+            title=title,
             color=0x9E0B0F,
             description=str(message_body),
             )
     await globals()[event.lower()](message)
-    return Message
+    return message
 
 
 async def drill(message):

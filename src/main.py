@@ -123,6 +123,7 @@ async def autocomplete_event(inter, string: str) -> List[str]:
 async def announce_event(
         inter: disnake.CommandInteraction,
         event: str = commands.Param(autocomplete=autocomplete_event),
+        message_title: str = None,
         message_body: str = "Find us in game.",
         image_url: str = None
 
@@ -141,7 +142,7 @@ async def announce_event(
 
     await inter.response.defer(ephemeral=True)
     try:
-        await ops.event_message(inter, message_body, event, image_url)
+        await ops.event_message(inter, message_title, message_body, event, image_url)
     except Exception as e:
         await inter.edit_original_message("Looks like something went wrong. May not help, but here is what I have:" +
                                           "\nmessage_body:" + message_body + "\nimage_url:" + image_url
