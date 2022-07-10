@@ -166,4 +166,5 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
+
 bot.run(discordClientToken)
