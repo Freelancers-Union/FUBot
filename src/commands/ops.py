@@ -35,7 +35,7 @@ async def event_message(
 
     if channel is None or role_to_ping is None:
         await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
+                                          f"\n channel `{channel_name}` or role `{event}` doesn't exist")
     elif not channel.permissions_for(channel.guild.me).send_messages:
         await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     elif not channel.permissions_for(inter.author).send_messages:
