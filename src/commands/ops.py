@@ -10,16 +10,16 @@ async def event_message(
 ):
 
     ops_dict = {
-    "Drill": ["Outfit Drill", "Planetside 2", "Planetside 2"],
-    "Casual": ["Casual Play", "Planetside 2", "Planetside 2"],
-    "FUAD": ["FUAD (Armoured Division)", "FUAD", "Planetside 2"],
-    "FUBG": ["FUBG (Builders Group)", "FUBG", "Planetside 2"],
-    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2", "Planetside 2"],
-    "FUGG": ["FUGG (Galaxy Group)", "FUGG", "Planetside 2"],
-    "Huntsmen": ["Huntsmen (not this outfit)", "Huntsmen", "Planetside 2"],
-    "ArmaOps": ["", "Arma 3", "Arma 3"]
+    "Drill": ["Outfit Drill", "Planetside 2"],
+    "Casual": ["Casual Play", "Planetside 2"],
+    "FUAD": ["FUAD (Armoured Division)", "Planetside 2"],
+    "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
+    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
+    "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
+    "Huntsmen": ["Huntsmen (not this outfit)", "Planetside 2"],
+    "ArmaOps": ["", "Arma 3"]
     }
-    game = ops_dict[event][2]
+    game = ops_dict[event][1]
     teamspeak_channel = ops_dict[event][0]
     if game == "Planetside 2":
         channel_name = "ps2-announcements"
