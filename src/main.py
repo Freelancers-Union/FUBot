@@ -168,9 +168,14 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
 
-@bot.command()
-async def new_members(ctx):
+async def new_members(inter, days: int = 7):
+    """
+    Gets new Discord Members
 
+    Parameters
+    ----------
+    Days: How many days in the past to search for new members
+    """
     all_ps2_members = []
     all_a3_members = []
     for member in bot.get_all_members():
@@ -181,11 +186,11 @@ async def new_members(ctx):
             if r.name == "Arma 3":
                 all_a3_members.append(member)
 
-    date_delta = datetime.datetime.now() - datetime.timedelta(days=7)
+    date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
     new_ps2_members = []
     new_a3_members = []
-    new_ps2_message = "---------------\n"
-    new_a3_message = "---------\n"
+    new_ps2_message = "\n---------------\n"
+    new_a3_message = "\n---------\n"
     for i in all_ps2_members:
         if i.joined_at.timestamp() > date_delta.timestamp():
             new_ps2_members.append(i.name)
@@ -198,18 +203,37 @@ async def new_members(ctx):
     Message = disnake.Embed(
         title="New Discord Member Report",
         color=0x9E0B0F,
-        description="Members who joined within the last 7 days",
+        description="Members who joined within the last "+ str(days) +" days",
         )
     Message.add_field(
         name="PlanetSide 2",
-        value=new_ps2_message,
+        value= "Count: " + str(len(new_ps2_members)) + new_ps2_message,
         inline = True
         )
     Message.add_field(
         name="Arma 3",
-        value=new_a3_message,
+        value= "Count: " + str(len(new_a3_members)) + new_a3_message,
         inline = True
         )
-    await ctx.send(embed=Message)
+    #channel = disnake.utils.get(bot.get_all_channels(), guild__name='Freelancers Union [FU]', name='Officers')
+    channel = disnake.utils.get(bot.get_all_channels(), guild__name='FU Demo/Testing Server', name='officers')
+    await channel.send(embed=Message)
+    await inter.response.edit_original_message("Report generated")
+
+
+@bot.slash_command()
+async def new_member_report(
+        inter: disnake.CommandInteraction,
+        days: int = 7,
+):
+    """
+    Display new Discord members
+
+    Parameters
+    ----------
+    Days: How many days in the past to search for new members
+    """
+    await inter.response.defer(ephemeral=True)
+    await new_members(inter, days)
 
 bot.run(discordClientToken)
