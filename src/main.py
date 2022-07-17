@@ -2,6 +2,7 @@ import os
 import logging
 import datetime
 from typing import List
+import aiocron
 import disnake
 from disnake.ext import commands
 import auraxium
@@ -10,6 +11,7 @@ import census
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
+import commands.new_discord_members as new_discord_members
 import emoji
 import re
 
@@ -113,10 +115,7 @@ async def outfit(
         logging.exception(e)
 
 
-
-
 EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
-
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 
@@ -167,73 +166,20 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
-
-async def new_members(inter, days: int = 7):
+@aiocron.crontab("0 17 * * 5")
+async def send_scheduled_message():
     """
-    Gets new Discord Members
-
-    Parameters
-    ----------
-    Days: How many days in the past to search for new members
+    Scheduled task to post new Discord members report.
+    Cron: Every Friday at 1700 UTC
     """
-    all_ps2_members = []
-    all_a3_members = []
-    for member in bot.get_all_members():
-        roles: [disnake.Role] = member.roles
-        for r in roles:
-            if r.name == "Planetside 2":
-                all_ps2_members.append(member)
-            if r.name == "Arma 3":
-                all_a3_members.append(member)
-
-    date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
-    new_ps2_members = []
-    new_a3_members = []
-    new_ps2_message = "\n---------------\n"
-    new_a3_message = "\n---------\n"
-    for i in all_ps2_members:
-        if i.joined_at.timestamp() > date_delta.timestamp():
-            new_ps2_members.append(i.name)
-            new_ps2_message = new_ps2_message + "<@" + str(i.id) + ">" + "\n"
-    for i in all_a3_members:
-        if i.joined_at.timestamp() > date_delta.timestamp():
-            new_a3_members.append(i.name)
-            new_a3_message = new_a3_message + "<@" + str(i.id) + ">" + "\n"
     
-    Message = disnake.Embed(
-        title="New Discord Member Report",
-        color=0x9E0B0F,
-        description="Members who joined within the last "+ str(days) +" days",
-        )
-    Message.add_field(
-        name="PlanetSide 2",
-        value= "Count: " + str(len(new_ps2_members)) + new_ps2_message,
-        inline = True
-        )
-    Message.add_field(
-        name="Arma 3",
-        value= "Count: " + str(len(new_a3_members)) + new_a3_message,
-        inline = True
-        )
-    #channel = disnake.utils.get(bot.get_all_channels(), guild__name='Freelancers Union [FU]', name='Officers')
-    channel = disnake.utils.get(bot.get_all_channels(), guild__name='FU Demo/Testing Server', name='officers')
-    await channel.send(embed=Message)
-    await inter.response.edit_original_message("Report generated")
+    weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
+    try:
+        await weeklyNewMemberReport.post_member_report()
+    except Exception as e:
+        logging.exception(e)
 
 
-@bot.slash_command()
-async def new_member_report(
-        inter: disnake.CommandInteraction,
-        days: int = 7,
-):
-    """
-    Display new Discord members
-
-    Parameters
-    ----------
-    Days: How many days in the past to search for new members
-    """
-    await inter.response.defer(ephemeral=True)
-    await new_members(inter, days)
+bot.load_extension("commands.new_discord_members")
 
 bot.run(discordClientToken)
