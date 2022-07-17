@@ -88,13 +88,30 @@ class NewDiscordMembers(commands.Cog):
         Days: How many days in the past to search for new members
         """
         await inter.response.defer(ephemeral=True)
-        try:
-            await self.post_member_report(days)
-        except Exception as e:
-            await inter.edit_original_message("Uh oh - an error occurred!")
-            logging.exception(e)
+        # find the channel, where to send the message
+        channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
+        channel = None
+        for ch in channels:
+            if ch.name == "officers":
+                channel = ch
+        if not channel.permissions_for(inter.author).send_messages:
+            await inter.edit_original_message(
+                "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
+                "\n You don't have the permission to announce, so I won't"
+            )
+        elif channel is None:
+            await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                            "\n I can't find #officers.")
+        elif not channel.permissions_for(channel.guild.me).send_messages:
+            await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
         else:
-            await inter.edit_original_message("Report posted to #officers channel")
+            try:
+                await self.post_member_report(days)
+            except Exception as e:
+                await inter.edit_original_message("Uh oh - an error occurred!")
+                logging.exception(e)
+            else:
+                await inter.edit_original_message("Report posted to #officers channel")
         
 
 def setup(bot: commands.Bot):
