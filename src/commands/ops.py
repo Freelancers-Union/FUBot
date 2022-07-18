@@ -10,47 +10,39 @@ async def event_message(
 ):
 
     ops_dict = {
-    "Drill": ["Outfit Drill", "Planetside 2", "Planetside 2"],
-    "Casual": ["Casual Play", "Planetside 2", "Planetside 2"],
-    "FUAD": ["FUAD (Armoured Division)", "FUAD", "Planetside 2"],
-    "FUBG": ["FUBG (Builders Group)", "FUBG", "Planetside 2"],
-    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2", "Planetside 2"],
-    "FUGG": ["FUGG (Galaxy Group)", "FUGG", "Planetside 2"],
-    "Huntsmen": ["Huntsmen (not this outfit)", "Huntsmen", "Planetside 2"],
-    "ArmaOps": ["", "Arma 3", "Arma 3"]
+    "Drill": ["Outfit Drill", "Planetside 2"],
+    "Casual": ["Casual Play", "Planetside 2"],
+    "FUAD": ["FUAD (Armoured Division)", "Planetside 2"],
+    "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
+    "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
+    "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
+    "Huntsmen": ["Huntsmen (not this outfit)", "Planetside 2"],
+    "ArmaOps": ["", "Arma 3"]
     }
-    game = ops_dict[event][2]
+    game = ops_dict[event][1]
     teamspeak_channel = ops_dict[event][0]
     if game == "Planetside 2":
         channel_name = "ps2-announcements"
     elif game == "Arma 3":
         channel_name = "a3-announcements"
-    role_name = ops_dict[event][1]
 
     # find the channel, where to send the message
-    channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
-    channel = None
-    for ch in channels:
-        if ch.name == channel_name:
-            channel = ch
+    channel = disnake.utils.get(inter.guild.text_channels, name = channel_name)
 
     # find PS2 role, that should be Tagged:
-    roles: [disnake.Role] = inter.guild.roles
-    role_to_ping = None
-    for r in roles:
-        if r.name == role_name:
-            role_to_ping = r
+    role_to_ping = disnake.utils.get(inter.guild.roles, name = ops_dict[event][1])
 
-    if not channel.permissions_for(inter.author).send_messages:
+
+    if channel is None or role_to_ping is None:
+        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                          f"\n channel `{channel_name}` or role `{event}` doesn't exist")
+    elif not channel.permissions_for(channel.guild.me).send_messages:
+        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
+    elif not channel.permissions_for(inter.author).send_messages:
         await inter.edit_original_message(
             "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol." +
             "\n You don't have the permission to announce, so I won't"
         )
-    elif channel is None or role_to_ping is None:
-        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                          f"\n channel `{channel_name}` or role `{role_name}` doesn't exist")
-    elif not channel.permissions_for(channel.guild.me).send_messages:
-        await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
     else:
         try:
             teamspeak_channel.encode('utf-8')
