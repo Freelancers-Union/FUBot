@@ -2,9 +2,11 @@ import datetime
 import disnake
 from disnake.ext import commands
 import logging
+import time
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 class NewDiscordMembers(commands.Cog):
     """
@@ -14,72 +16,77 @@ class NewDiscordMembers(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    async def post_member_report(self,
-        days: int = 7,):
+    async def post_member_report(self, guild: disnake.Guild, days: int = 7):
         date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
         all_new_members = []
         new_ps2_members = []
         new_a3_members = []
         new_other_members = []
-        for members in self.bot.get_all_members():
-            if members.joined_at.timestamp() > date_delta.timestamp():
-                all_new_members.append(members)
-        for member in all_new_members:
-            roles: [disnake.Role] = member.roles
-            for r in roles:
-                if r.name == "Planetside 2":
-                    new_ps2_members.append(member)
-                if r.name == "Arma 3":
-                    new_a3_members.append(member)
-                
-            if member not in new_a3_members and member not in new_ps2_members:
-                new_other_members.append(member)
-
+        members = guild.members
+        # start = time.time()
+        # for member in members:
+        while members:
+            member = members.pop()
+            if member.joined_at.timestamp() > date_delta.timestamp():
+                roles: [disnake.Role] = member.roles
+                no_game: bool = True
+                for r in roles:
+                    if r.name == "Planetside 2":
+                        new_ps2_members.append(member)
+                        no_game = False
+                    if r.name == "Arma 3":
+                        new_a3_members.append(member)
+                        no_game = False
+                if no_game:
+                    new_other_members.append(member)
+        # end = time.time()
 
         new_ps2_message = "\n---------------\n"
         new_a3_message = "\n---------------\n"
         new_other_message = "\n---------------\n"
-        for i in new_ps2_members:
-            new_ps2_message = new_ps2_message + "<@" + str(i.id) + ">" + "\n"
-        for i in new_a3_members:
-            new_a3_message = new_a3_message + "<@" + str(i.id) + ">" + "\n"
-        for i in new_other_members:
-            new_other_message = new_other_message + "<@" + str(i.id) + ">" + "\n"
+        for player in new_ps2_members:
+            new_ps2_message = new_ps2_message + player.mention + "\n"
+        for player in new_a3_members:
+            new_a3_message = new_a3_message + player.mention + "\n"
+        for player in new_other_members:
+            new_other_message = new_other_message + player.mention + "\n"
 
         Message = disnake.Embed(
             title="New Discord Member Report",
             color=0x9E0B0F,
-            description= str(len(all_new_members)) + " new members joined Discord in the last "+ str(days) +" days",
-            )
+            description=str(len(all_new_members)) + " new members joined Discord in the last " + str(days) + " days",
+        )
         Message.add_field(
             name="PlanetSide 2",
-            value= str(len(new_ps2_members)) + new_ps2_message,
-            inline = True
-            )
+            value=str(len(new_ps2_members)) + new_ps2_message,
+            inline=True
+        )
         Message.add_field(
             name="Arma 3",
-            value= str(len(new_a3_members)) + new_a3_message,
-            inline = True
-            )
+            value=str(len(new_a3_members)) + new_a3_message,
+            inline=True
+        )
         Message.add_field(
             name="No Game Role",
-            value= str(len(new_other_members)) + new_other_message,
-            inline = True
-            )
+            value=str(len(new_other_members)) + new_other_message,
+            inline=True
+        )
+        # Message.add_field(
+        #     name="time taken(playing with optimisation that is absolutely not needed)",
+        #     value=f"replacing if in game role list: {(end-start)*10**3}ms"
+        # )
         try:
-            #channel = disnake.utils.get(self.bot.get_all_channels(), guild__name='Freelancers Union [FU]', name='officers')
-            channel = disnake.utils.get(self.bot.get_all_channels(), guild__name='FU Demo/Testing Server', name='officers')
+            channel = disnake.utils.find(lambda chanel: chanel.name == 'officers', guild.channels)
         except AttributeError as e:
             raise e
         await channel.send(embed=Message)
-        
 
     @commands.slash_command()
     async def new_member_report(
-        self,
-        inter: disnake.ApplicationCommandInteraction,
-        days: int = 7,
-        ):
+            self,
+            inter: disnake.ApplicationCommandInteraction,
+            days: int = 7,
+    ):
         """
         Report of new Discord members.
 
@@ -101,18 +108,18 @@ class NewDiscordMembers(commands.Cog):
             )
         elif channel is None:
             await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                            "\n I can't find #officers.")
+                                              "\n I can't find #officers.")
         elif not channel.permissions_for(channel.guild.me).send_messages:
             await inter.edit_original_message("My lord, is that legal? \n I don't have the permissions to send there")
         else:
             try:
-                await self.post_member_report(days)
+                await self.post_member_report(inter.guild, days)
             except Exception as e:
                 await inter.edit_original_message("Uh oh - an error occurred!")
                 logging.exception(e)
             else:
                 await inter.edit_original_message("Report posted to #officers channel")
-        
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(NewDiscordMembers(bot))

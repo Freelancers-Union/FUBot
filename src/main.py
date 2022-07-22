@@ -166,6 +166,7 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
+
 @aiocron.crontab("0 17 * * 5")
 async def send_scheduled_message():
     """
@@ -175,7 +176,8 @@ async def send_scheduled_message():
     
     weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
     try:
-        await weeklyNewMemberReport.post_member_report()
+        for guild in bot.guilds:
+            await weeklyNewMemberReport.post_member_report(guild)
     except Exception as e:
         logging.exception(e)
 
