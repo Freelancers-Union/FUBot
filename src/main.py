@@ -1,6 +1,8 @@
 import os
 import logging
+import datetime
 from typing import List
+import aiocron
 import disnake
 from disnake.ext import commands
 import auraxium
@@ -9,6 +11,7 @@ import census
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
+import commands.new_discord_members as new_discord_members
 import emoji
 import re
 
@@ -112,10 +115,7 @@ async def outfit(
         logging.exception(e)
 
 
-
-
 EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
-
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 
@@ -166,5 +166,22 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(emoji_list))
 
+
+@aiocron.crontab("0 17 * * 5")
+async def send_scheduled_message():
+    """
+    Scheduled task to post new Discord members report.
+    Cron: Every Friday at 1700 UTC
+    """
+    
+    weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
+    try:
+        for guild in bot.guilds:
+            await weeklyNewMemberReport.post_member_report(guild)
+    except Exception as e:
+        logging.exception(e)
+
+
+bot.load_extension("commands.new_discord_members")
 
 bot.run(discordClientToken)
