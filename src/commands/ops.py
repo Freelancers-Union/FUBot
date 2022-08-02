@@ -13,7 +13,7 @@ async def event_message(
     "Drill": ["Outfit Drill", "Planetside 2"],
     "Casual": ["Casual Play", "Planetside 2"],
     "FUAD": ["FUAD (Armoured Division)", "Planetside 2"],
-    "FUAF": ["FUAF (Armoured Division)", "FUAF", "Planetside 2"],
+    "FUAF": ["FUAF (Armoured Division)", "Planetside 2"],
     "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
     "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
     "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
