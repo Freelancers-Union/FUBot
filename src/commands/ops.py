@@ -111,6 +111,13 @@ async def fuad(Message):
             )
     return Message
 
+async def fuaf(Message):
+    Message.add_field(
+            name="Join the conversation on TeamSpeak",
+            value="For chat, tactics and discussion.",
+            )
+    return Message
+
 
 async def huntsmen(Message):
     Message.add_field(
