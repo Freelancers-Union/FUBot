@@ -115,7 +115,7 @@ async def outfit(
         logging.exception(e)
 
 
-EVENTS = ["Drill", "Casual", "FUAD", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 

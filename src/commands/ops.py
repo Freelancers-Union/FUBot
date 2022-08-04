@@ -13,6 +13,7 @@ async def event_message(
     "Drill": ["Outfit Drill", "Planetside 2"],
     "Casual": ["Casual Play", "Planetside 2"],
     "FUAD": ["FUAD (Armoured Division)", "Planetside 2"],
+    "FUAF": ["FUAF (Air Force)", "Planetside 2"],
     "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
     "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
     "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
@@ -104,6 +105,13 @@ async def fubg(Message):
 
 
 async def fuad(Message):
+    Message.add_field(
+            name="Join the conversation on TeamSpeak",
+            value="For chat, tactics and discussion.",
+            )
+    return Message
+
+async def fuaf(Message):
     Message.add_field(
             name="Join the conversation on TeamSpeak",
             value="For chat, tactics and discussion.",
