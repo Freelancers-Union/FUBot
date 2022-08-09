@@ -18,16 +18,16 @@ class NewDiscordMembers(commands.Cog):
 
     async def post_member_report(self, guild: disnake.Guild, days: int = 7):
         date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
-        all_new_members = []
+        all_new_members = 0
         new_ps2_members = []
         new_a3_members = []
         new_other_members = []
         members = guild.members
-        # start = time.time()
-        # for member in members:
+
         while members:
             member = members.pop()
             if member.joined_at.timestamp() > date_delta.timestamp():
+                all_new_members += 1
                 roles: [disnake.Role] = member.roles
                 no_game: bool = True
                 for r in roles:
@@ -39,7 +39,6 @@ class NewDiscordMembers(commands.Cog):
                         no_game = False
                 if no_game:
                     new_other_members.append(member)
-        # end = time.time()
 
         new_ps2_message = "\n---------------\n"
         new_a3_message = "\n---------------\n"
@@ -54,7 +53,7 @@ class NewDiscordMembers(commands.Cog):
         Message = disnake.Embed(
             title="New Discord Member Report",
             color=0x9E0B0F,
-            description=str(len(all_new_members)) + " new members joined Discord in the last " + str(days) + " days",
+            description=str(all_new_members) + " new members joined Discord in the last " + str(days) + " days.\n",
         )
         Message.add_field(
             name="PlanetSide 2",
@@ -67,19 +66,18 @@ class NewDiscordMembers(commands.Cog):
             inline=True
         )
         Message.add_field(
-            name="No Game Role",
+            name="Other roles",
             value=str(len(new_other_members)) + new_other_message,
             inline=True
         )
-        # Message.add_field(
-        #     name="time taken(playing with optimisation that is absolutely not needed)",
-        #     value=f"replacing if in game role list: {(end-start)*10**3}ms"
-        # )
         try:
             channel = disnake.utils.find(lambda chanel: chanel.name == 'officers', guild.channels)
         except AttributeError as e:
             raise e
-        await channel.send(embed=Message)
+        discord_analytics_button = disnake.ui.Button(style=disnake.ButtonStyle.url,
+            url="https://discord.com/developers/servers/"+str(guild.id)+"/analytics",
+            label="Server Insights")
+        await channel.send(embed=Message, components=discord_analytics_button)
 
     @commands.slash_command()
     async def new_member_report(
