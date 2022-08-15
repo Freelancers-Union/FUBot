@@ -1,11 +1,14 @@
 import os
 import logging
+import json
+from pprint import pprint
 import auraxium
 from auraxium import event, ps2
 import asyncio
 import disnake
 from disnake.ext import commands
 import census
+import database_connector
 
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
@@ -43,7 +46,7 @@ class LinkPs2(commands.Cog):
         async def get_login(evt: event.PlayerLogin):
             char = await self.client.get_by_id(ps2.Character, evt.character_id)
             if str(char.name).lower() == str(self.characters[0].name).lower():
-                return True
+                return char
 
     async def run_login_check(self):
         try:
@@ -54,7 +57,7 @@ class LinkPs2(commands.Cog):
             raise
         else:
             if linked_account.character_id == self.characters[0].id:
-                return True
+                return linked_account
             else:
                 return None
 
@@ -63,6 +66,7 @@ class LinkPs2Discord(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.login_checks = {}
+        self.client = auraxium.event.EventClient(service_id=os.getenv('CENSUS_TOKEN'), no_ssl_certs=True)
 
     @commands.slash_command()
     async def link_planetside_account(
@@ -79,7 +83,6 @@ class LinkPs2Discord(commands.Cog):
         """
         await inter.response.defer(ephemeral=True)
         self.login_checks.update({account_name: LinkPs2(self.bot, account_name)})
-        print(self.login_checks.keys())
         await self.login_checks[account_name].get_characters()
         self.login_checks[account_name].create_trigger()
         try:
@@ -91,14 +94,46 @@ class LinkPs2Discord(commands.Cog):
             await inter.edit_original_message("Link timed out!\nYou must log in within 2 minutes.")
             del self.login_checks[account_name]
         else:
-            if account_linked is True:
+            if account_linked is not None:
                 await inter.edit_original_message("**" + str(self.login_checks[account_name].characters[0].name)
-                + "** has been successfully linked with your Discord user: **" + str(inter.author.name) + "** :tada:")
+                + "** Log in detected!")
+                char = await self.client.get_by_id(ps2.Character, account_linked.character_id)
+                await add_to_db(char, inter.author)
                 del self.login_checks[account_name]
             elif account_linked is None:
                 await inter.edit_original_message("Something went wrong.")
                 del self.login_checks[account_name]
 
+async def add_to_db(ps2_char, author):
+    # create a JSON object
+    discord_obj = {}
+    ps2_obj = {}
+    
+    discord_attrs = ["id", "name", "nick", "joined_at"]
+    for count, ele in enumerate(discord_attrs):
+        discord_obj[ele] = str(getattr(author, ele))
+
+    ps2_attrs = ["id", "name"]
+    for count, ele in enumerate(ps2_attrs):
+        ps2_obj[ele] = str(getattr(ps2_char, ele))
+
+    if await ps2_char.outfit_member() is not None:
+        ps2_outfit = await ps2_char.outfit_member()
+        ps2_outfit_obj = {}
+        outfit = await ps2_outfit.outfit()
+        ps2_outfit_obj["outfit_name"] = outfit.name
+        ps2_outfit_obj["outfit_alias"] = outfit.alias
+        ps2_outfit_obj["outfit_rank"] = ps2_outfit.rank
+        ps2_outfit_obj["joined_outfit"] = ps2_outfit.member_since_date
+        ps2_obj["outfit"]=ps2_outfit_obj
+
+    member_obj = {}
+    member_obj["ps2_char"] = ps2_obj
+    member_obj["discord_user"] = discord_obj
+
+    # Insert into member database
+    mongodb = database_connector.get_database()
+    mongodb.members.insert_one(member_obj)
 
 def setup(bot: commands.Bot):
     bot.add_cog(LinkPs2Discord(bot))
