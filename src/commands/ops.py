@@ -17,7 +17,7 @@ async def event_message(
     "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
     "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
     "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
-    "Huntsmen": ["Huntsmen (not this outfit)", "Planetside 2"],
+    "Huntsmen": ["Huntsmen", "Planetside 2"],
     "ArmaOps": ["", "Arma 3"]
     }
     game = ops_dict[event][1]
