@@ -4,9 +4,6 @@ from disnake.ext import commands
 import logging
 import time
 
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
-
 
 class NewDiscordMembers(commands.Cog):
     """
@@ -79,7 +76,7 @@ class NewDiscordMembers(commands.Cog):
             label="Server Insights")
         await channel.send(embed=Message, components=discord_analytics_button)
 
-    @commands.slash_command()
+    @commands.slash_command(dm_permission=False)
     async def new_member_report(
             self,
             inter: disnake.ApplicationCommandInteraction,

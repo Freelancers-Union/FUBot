@@ -4,8 +4,6 @@ import requests
 from auraxium import ps2, Client
 from typing import Tuple
 
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
 
 try:
     from dotenv import load_dotenv
