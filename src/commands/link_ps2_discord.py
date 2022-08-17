@@ -324,9 +324,12 @@ async def add_to_db(ps2_char, author, discord_db_check):
     # If the author doesn't have a record already, make one.
     if discord_db_check is not True:
         discord_obj = {}
-        discord_attrs = ["id", "name", "nick", "joined_at"]
+        discord_attrs = ["id", "name"]
         for count, ele in enumerate(discord_attrs):
             discord_obj[ele] = str(getattr(author, ele))
+        guild_member = await disnake.Guild.fetch_member(author.id)
+        discord_obj["nick"] = guild_member.nick
+        discord_obj["joined_at"] = guild_member.joined_at
         member_obj["discord_user"] = discord_obj
         try:
             mongodb.members.insert_one(member_obj)
