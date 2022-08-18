@@ -15,15 +15,17 @@ services:
     - CENSUS_TOKEN=${CENSUS_TOKEN}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
+    depends_on:
+      - mongodb
 
   mongodb:
     image: mongo:5
     container_name: mongodb
     volumes:
       - ${MONGO_DATA_DIR}:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
     environment:
-      # - MONGO_USERNAME=${MONGO_USERNAME}
-      # - MONGO_PASSWORD=${MONGO_PASSWORD}
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     restart: unless-stopped
