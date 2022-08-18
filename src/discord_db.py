@@ -1,3 +1,4 @@
+import logging
 import disnake
 import datetime
 from disnake.ext import commands
@@ -62,7 +63,7 @@ class DiscordMemberDB(commands.Cog):
 
         """
         await inter.response.defer(ephemeral=True)
-        all_mems = [None]
+        all_mems = []
         async for member in inter.guild.fetch_members():
             query = {"discord_user.id": str(member.id)}
             db_entry = Database.find_one("members", query)
@@ -77,9 +78,13 @@ class DiscordMemberDB(commands.Cog):
                 )
                 data["discord_user"] = disc_obj
                 all_mems.append(data)
-        if all_mems is not None:
-            Database.insert_many("members", all_mems)
-            await inter.edit_original_message("Complete. Added: " + str(len(all_mems)))
+        if len(all_mems) != 0:
+            try:
+                Database.insert_many("members", all_mems)
+            except TypeError:
+                logging.exception("Empty document submitted to DB")
+            else:
+                await inter.edit_original_message("Complete. Added: " + str(len(all_mems)))
         else:
             await inter.edit_original_message("No new members to add.")
 
