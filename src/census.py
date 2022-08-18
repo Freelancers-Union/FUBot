@@ -5,14 +5,6 @@ from auraxium import ps2, Client
 from typing import Tuple
 
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ModuleNotFoundError as err:
-    # This is an expected error when not running locally using dotenv
-    logging.warning(err)
-
-
 async def get_character(char_name: str, client: Client) -> Tuple[ps2.Character, int, ps2.OutfitMember]:
     """
     Gets character, world it is in and its outfit
