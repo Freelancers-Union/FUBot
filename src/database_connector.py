@@ -18,11 +18,11 @@ class Database(object):
         print(Database.URI)
         try:
             client = pymongo.MongoClient(Database.URI, serverSelectionTimeoutMS=5000)
-        except Exception as e:
-            print("Cannot connect to DB")
-            raise e
-        else:
             Database.DATABASE = client["freelancers_union"]
+            print(client.list_database_names())
+        except pymongo.errors.ServerSelectionTimeoutError:
+            logging.exception("DB server connection timed out.")
+        else:
             logging.info("Database Initialized")
 
     @staticmethod
