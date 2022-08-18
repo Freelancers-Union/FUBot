@@ -53,12 +53,12 @@ else:
         sync_commands_debug=False
     )
 
+Database.initialize()
 
 @bot.event
 async def on_ready():
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
-    Database.initialize()
 
 
 @bot.command()

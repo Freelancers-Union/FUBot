@@ -14,7 +14,7 @@ services:
     - CENSUS_TOKEN=${CENSUS_TOKEN}
 
   mongodb:
-    image: mongo:4.4
+    image: mongo:5
     container_name: mongodb
     ports:
     - ${MONGO_DB_PORT_MAPPING}

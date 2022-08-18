@@ -6,18 +6,20 @@ import pymongo
 class Database(object):
     URI = (
         "mongodb://"
-        + str(os.getenv("MONGO_USERNAME"))
+        + str(os.getenv('MONGO_USERNAME'))
         + ":"
-        + str(os.getenv("MONGO_PASSWORD"))
-        + "@localhost:27017/"
+        + str(os.getenv('MONGO_PASSWORD'))
+        + "@mongodb:27017/"
     )
     DATABASE = None
 
     @staticmethod
     def initialize():
+        print(Database.URI)
         try:
             client = pymongo.MongoClient(Database.URI, serverSelectionTimeoutMS=5000)
         except Exception as e:
+            print("Cannot connect to DB")
             raise e
         else:
             Database.DATABASE = client["freelancers_union"]
