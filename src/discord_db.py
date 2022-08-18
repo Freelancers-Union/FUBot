@@ -62,7 +62,7 @@ class DiscordMemberDB(commands.Cog):
 
         """
         await inter.response.defer(ephemeral=True)
-        all_mems = []
+        all_mems = [None]
         async for member in inter.guild.fetch_members():
             query = {"discord_user.id": str(member.id)}
             db_entry = Database.find_one("members", query)
