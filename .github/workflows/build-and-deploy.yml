@@ -21,7 +21,7 @@ jobs:
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
       ENVIRONMENT: "prod"
       PORT_MAPPING: 80:443
-      MONGO_DATA_DIR: "/var/lib/FUBot/mongodb"
+      MONGO_DATA_DIR: /var/lib/FUBot/mongodb
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     # Steps represent a sequence of tasks that will be executed as part of the job

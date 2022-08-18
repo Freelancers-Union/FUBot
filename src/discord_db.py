@@ -77,8 +77,11 @@ class DiscordMemberDB(commands.Cog):
                 )
                 data["discord_user"] = disc_obj
                 all_mems.append(data)
-        Database.insert_many("members", all_mems)
-        await inter.edit_original_message("Completed")
+        if all_mems is not None:
+            Database.insert_many("members", all_mems)
+            await inter.edit_original_message("Complete. Added: " + str(len(all_mems)))
+        else:
+            await inter.edit_original_message("No new members to add.")
 
 
 
