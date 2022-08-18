@@ -12,6 +12,7 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
+from database_connector import Database
 import emoji
 import re
 
@@ -57,6 +58,7 @@ else:
 async def on_ready():
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
+    Database.initialize()
 
 
 @bot.command()
@@ -184,5 +186,6 @@ async def send_scheduled_message():
 
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
+bot.load_extension("discord_db")
 
 bot.run(discordClientToken)

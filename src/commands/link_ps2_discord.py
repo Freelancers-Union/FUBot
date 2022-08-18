@@ -1,41 +1,17 @@
 import os
 import logging
-import re
 import flatdict
 import auraxium
 import disnake
 from disnake.ext import commands
 import census
-import database_connector
-
-
-logging.basicConfig(
-    level=logging.os.getenv("LOGLEVEL"),
-    format="%(asctime)s %(funcName)s: %(message)s ",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-)
+from database_connector import Database
 
 
 class LinkPs2(commands.Cog):
     """
 
     Class cog for linking PS2 and Discord accounts.
-
-    Attributes
-    ----------
-    says_str : str
-        a formatted string to print out what the animal says
-    name : str
-        the name of the animal
-    sound : str
-        the sound that the animal makes
-    num_legs : int
-        the number of legs the animal has (default 4)
-
-    Methods
-    -------
-    says(sound=None)
-        Prints the animals name and what sound it makes
 
     """
 
@@ -62,7 +38,6 @@ class LinkPs2(commands.Cog):
         self.login_trigger = None
 
     def create_trigger(self):
-
         self.login_trigger = auraxium.Trigger(
             auraxium.event.PlayerLogin,
             characters=self.characters,
@@ -72,14 +47,7 @@ class LinkPs2(commands.Cog):
         self.client.add_trigger(self.login_trigger)
         return self.login_trigger
 
-        # @self.login_trigger.callback
-        # async def get_login(evt: event.PlayerLogin):
-        #     char = await self.client.get_by_id(ps2.Character, evt.character_id)
-        #     if str(char.name).lower() == str(self.characters[0].name).lower():
-        #         return char
-
     async def login_check(self):
-
         try:
             get_login_trigger = self.client.get_trigger(
                 name=str(self.characters[0].name)
@@ -105,10 +73,8 @@ class InitiateDiscordPs2Link(commands.Cog):
             service_id=os.getenv("CENSUS_TOKEN"), no_ssl_certs=True
         )
         self.census_client = auraxium.Client(service_id=str(os.getenv("CENSUS_TOKEN")))
-        self.mongodb = database_connector.get_database()
 
     async def ps2_get_char(self, account_name):
-
         """Queries the PS2 Census API and checks if a character exists.
 
         Parameters
@@ -127,7 +93,6 @@ class InitiateDiscordPs2Link(commands.Cog):
         return character
 
     async def check_ps2_db(self, ps2_char):
-
         """Queries the mongoDB for existing ps2_char.
 
         Parameters
@@ -141,17 +106,19 @@ class InitiateDiscordPs2Link(commands.Cog):
             True if the character exists in the db.
         """
         try:
-            ps2_record = self.mongodb.members.find_one(
+            ps2_record = Database.find_one(
+                "members",
                 {
                     "$or": [
-                        {"ps2_char.name": str(ps2_char.name)},
-                        {"ps2_alt1.name": str(ps2_char.name)},
-                        {"ps2_alt2.name": str(ps2_char.name)},
-                        {"ps2_alt3.name": str(ps2_char.name)},
-                        {"ps2_alt4.name": str(ps2_char.name)},
-                        {"ps2_alt5.name": str(ps2_char.name)},
+                        {"ps2_char1.name": str(ps2_char.name)},
+                        {"ps2_char2.name": str(ps2_char.name)},
+                        {"ps2_char3.name": str(ps2_char.name)},
+                        {"ps2_char4.name": str(ps2_char.name)},
+                        {"ps2_char5.name": str(ps2_char.name)},
+                        {"ps2_char6.name": str(ps2_char.name)},
+                        {"ps2_char7.name": str(ps2_char.name)},
                     ]
-                }
+                },
             )
         except Exception as e:
             raise e
@@ -163,32 +130,6 @@ class InitiateDiscordPs2Link(commands.Cog):
                 if str(ps2_char.name) in db_dict.values():
                     return True
 
-    async def check_discord_db(self, author):
-        """Queries the mongoDB for existing author.
-
-        Parameters
-        ----------
-        author : class discord.Member
-            The Discord user to check.
-
-        Returns
-        ------
-        characters : bool
-            True if the user exists in the db.
-        """
-        try:
-            discord_record = self.mongodb.members.find_one(
-                {"discord_user.id": str(author.id)}
-            )
-        except Exception as TimeoutError:
-            raise
-        if discord_record is None:
-            return None
-        elif discord_record["discord_user"]["id"] == str(author.id):
-            return True
-        else:
-            return False
-
     @commands.slash_command()
     async def link_planetside_account(
         self, inter: disnake.ApplicationCommandInteraction, account_name
@@ -198,10 +139,9 @@ class InitiateDiscordPs2Link(commands.Cog):
 
         Parameters
         ----------
-        account_name: What account do you want to link?
+        account_name: PS2 Character name to link.
 
         """
-
         await inter.response.defer(ephemeral=True)
 
         # Check if this PS2 character exists, get the character object if it does.
@@ -219,9 +159,6 @@ class InitiateDiscordPs2Link(commands.Cog):
                     str(ps2_char.name) + " is already connected to another FU member!"
                 )
                 raise NameError
-
-            # Check if this Discord user already has a db entry.
-            discord_db_check = await self.check_discord_db(inter.author)
         except NameError:
             del self
             return
@@ -260,7 +197,7 @@ class InitiateDiscordPs2Link(commands.Cog):
                 )
                 try:
                     # Link the discord user and PS2 char in the db
-                    await add_to_db(ps2_char, inter.author, discord_db_check)
+                    await add_to_db(ps2_char, inter.author)
                 except Exception as e:
                     await inter.edit_original_message(
                         "Looks like something went wrong talking to the Database"
@@ -282,7 +219,7 @@ class InitiateDiscordPs2Link(commands.Cog):
                 return
 
 
-async def add_to_db(ps2_char, author, discord_db_check):
+async def add_to_db(ps2_char, author):
     """
     Inserts new Documents or updates existing ones in the MongoDB
 
@@ -294,12 +231,9 @@ async def add_to_db(ps2_char, author, discord_db_check):
     author : class interaction.author
         The discord Member class of the user
 
-    discord_db_check : bool
-        Whether the user already has a db entry.
-
     """
 
-    # Add the PS2 attrs we want to an object
+    # Add PS2 attrs to an object
     ps2_obj = {}
     ps2_attrs = ["id", "name"]
     for count, ele in enumerate(ps2_attrs):
@@ -316,48 +250,26 @@ async def add_to_db(ps2_char, author, discord_db_check):
         ps2_outfit_obj["joined_outfit"] = ps2_outfit.member_since_date
         ps2_obj["outfit"] = ps2_outfit_obj
 
-    # Combine PS2 and Discord objs into one
-    member_obj = {}
-    member_obj["ps2_char"] = ps2_obj
-
-    mongodb = database_connector.get_database()
-    # If the author doesn't have a record already, make one.
-    if discord_db_check is not True:
-        discord_obj = {}
-        discord_attrs = ["id", "name"]
-        for count, ele in enumerate(discord_attrs):
-            discord_obj[ele] = str(getattr(author, ele))
-        guild_member = await disnake.Guild.fetch_member(author.id)
-        discord_obj["nick"] = guild_member.nick
-        discord_obj["joined_at"] = guild_member.joined_at
-        member_obj["discord_user"] = discord_obj
-        try:
-            mongodb.members.insert_one(member_obj)
-        except Exception as e:
-            return False
-
-    # If the author does have a record, update it with the alt char
-    else:
-        try:
-            query = {"discord_user.id": str(author.id)}
-
-            existing_record = mongodb.members.find_one(query)
-            alt_count = 0
-            for i in existing_record.keys():
-                if i.startswith("ps2_"):
-                    alt_count += 1
-            if alt_count == 0:
-                alt = "ps2_char"
-            else:
-                alt = "ps2_alt" + str(alt_count)
-            new_values = {"$set": {str(alt): ps2_obj}}
-
-            mongodb.members.update_one(query, new_values)
-        except Exception as e:
-            print("summits fucked ay")
-            raise
+    try:
+        # find member record to append to
+        query = {"discord_user.id": str(author.id)}
+        existing_record = Database.find_one("members", query)
+        alt_count = 0
+        for i in existing_record.keys():
+            if i.startswith("ps2_char"):
+                alt_count += 1
+        if alt_count == 0:
+            char = "ps2_char1"
         else:
-            return
+            char = "ps2_char" + str(alt_count + 1)
+        new_values = {"$set": {str(char): ps2_obj}}
+
+        Database.update_one("members", query, new_values)
+    except Exception as e:
+        print("summits fucked ay")
+        raise e
+    else:
+        return
 
 
 def setup(bot: commands.Bot):

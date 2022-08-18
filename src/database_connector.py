@@ -1,31 +1,44 @@
 import os
-from pymongo import MongoClient
+import logging
+import pymongo
 
 
-def get_database():
-    """Creates connection to MongoDB.
-
-    Returns
-    ------
-    client : pymongo client
-    """
-    CONNECTION_STRING = (
+class Database(object):
+    URI = (
         "mongodb://"
         + str(os.getenv("MONGO_USERNAME"))
         + ":"
         + str(os.getenv("MONGO_PASSWORD"))
         + "@localhost:27017/"
     )
-    try:
-        client = MongoClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
-    except Exception as e:
-        raise e
-    else:
-        return client["freelancers_union"]
+    DATABASE = None
 
+    @staticmethod
+    def initialize():
+        try:
+            client = pymongo.MongoClient(Database.URI, serverSelectionTimeoutMS=5000)
+        except Exception as e:
+            raise e
+        else:
+            Database.DATABASE = client["freelancers_union"]
+            logging.info("Database Initialized")
 
-if __name__ == "__main__":
+    @staticmethod
+    def insert_one(collection, data):
+        Database.DATABASE[collection].insert_one(data)
 
-    # Get the database
-    dbname = get_database()
-    collection_name = dbname["members"]
+    @staticmethod
+    def insert_many(collection, data):
+        Database.DATABASE[collection].insert_many(data)
+
+    @staticmethod
+    def update_one(collection, query, data):
+        Database.DATABASE[collection].update_one(query, data)
+
+    @staticmethod
+    def find(collection, query):
+        return Database.DATABASE[collection].find(query)
+
+    @staticmethod
+    def find_one(collection, query):
+        return Database.DATABASE[collection].find_one(query)
