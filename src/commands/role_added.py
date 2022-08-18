@@ -46,11 +46,11 @@ class MemberRoleUpdate(commands.Cog):
     ps2_onboard_payload = disnake.Embed(
         title="Welcome to PlanetSide 2 with Freelancers Union!",
         color=13729282,
-        description="This message is a quick-start guide to help you get the most out of playing PlanetSide with FU.\nAny questions ping \n`@PS2 Division Officer`\n** **"
+        description="This message is a quick-start guide to help you get the most out of playing PlanetSide with FU.\nAny questions ping \n`@PS2 Division Officer`\n\n** **"
         )
     ps2_onboard_payload.add_field(
         name="Channels :newspaper:",
-        value="> [#ps2-general](https://discord.com/channels/282514718445273089/290929845788213249) : Main chatroom to talk with your fellow soldiers.\n> [#ps2-announcements](https://discord.com/channels/282514718445273089/567172184913739787) : Noticeboard for events.\n> [#ps2-roles](https://discord.com/channels/282514718445273089/983434676477775922) : Role menu for PS2.\n> [#ps2-loadouts](https://discord.com/channels/282514718445273089/803987308935643167) : Share and discuss class loadouts.\n** **",
+        value="> [#ps2-general](https://discord.com/channels/282514718445273089/290929845788213249) : Main chatroom to talk with your fellow soldiers.\n> [#ps2-announcements](https://discord.com/channels/282514718445273089/567172184913739787) : Noticeboard for events.\n> [#ps2-roles](https://discord.com/channels/282514718445273089/983434676477775922) : Role menu for PS2.\n> [#ps2-loadouts](https://discord.com/channels/282514718445273089/803987308935643167) : Share and discuss class loadouts.\n\n** **",
         inline=False
     )
     ps2_onboard_payload.add_field(
@@ -60,27 +60,27 @@ class MemberRoleUpdate(commands.Cog):
     )
     ps2_onboard_payload.add_field(
         name="TeamSpeak :speaking_head:",
-        value="We use [TeamSpeak](https://www.teamspeak.com/en/)  to chat as well as in-game comms\nIt's free and a great place to get to know the rest of the community.\n> `ts3server:` `ts.fugaming.org`\n> `password :` `futs           ` \nYou'll see a button to open TS automatically with every PS2 event announcement.\n** **",
+        value="We use [TeamSpeak](https://www.teamspeak.com/en/)  to chat as well as in-game comms\nIt's free and a great place to get to know the rest of the community.\n> `ts3server:` `ts.fugaming.org`\n> `password :` `futs           ` \nYou'll see a button to open TS automatically with every PS2 event announcement.\n\n** **",
         inline=False
     )
     ps2_onboard_payload.add_field(
         name="Specialist Squads :scientist:",
-        value="Armour, Galaxy bombing, Construction and more... *experimental* playstyles to keep the fight interesting.\nCheck out [#ps2-roles](https://discord.com/channels/282514718445273089/983434676477775922) to learn more.\n** **",
+        value="Armour, Galaxy bombing, Construction and more... *experimental* playstyles to keep the fight interesting.\nCheck out [#ps2-roles](https://discord.com/channels/282514718445273089/983434676477775922) to learn more.\n\n** **",
         inline=False
     )
     ps2_onboard_payload.add_field(
         name="Learning and Leadership :military_medal:",
-        value="> *\"Glory is loyalty, perfected.\"*\nFU Squads are cohesive and organised. We pride ourselves on being teachers as well as leaders.\n** **",
+        value="> *\"Glory is loyalty, perfected.\"*\nFU Squads are cohesive and organised. We pride ourselves on being teachers as well as leaders.\n\n** **",
         inline=False
     )
     ps2_onboard_payload.add_field(
         name="Connect to FUBot :robot:",
-        value="This bot is custom made by FU members!\nIt can do all sorts of cool things;\nTry it out by linking your PS2 character to FU with:\n`/link_planetside_account`\n> *Bot commands work in this DM channel too*\n** **",
+        value="This bot is custom made by FU members!\nIt can do all sorts of cool things;\nTry it out by linking your PS2 character to FU with:\n`/link_planetside_account`\n> *Bot commands work in this DM channel too*\n\n** **",
         inline=False
     )
     ps2_onboard_payload.add_field(
         name="What Next? :thinking:",
-        value="**1.** Say hello to your fellow soldiers in [Discord](https://discord.com/channels/282514718445273089/290929845788213249)\n\n**2.** Hop on [TeamSpeak](https://invite.teamspeak.com/ts.fugaming.org/?password=futs)\n**3.** and join us, ***Planetside***",
+        value="**1.** Say hello to your fellow soldiers in [Discord](https://discord.com/channels/282514718445273089/290929845788213249)\n\n**2.** Hop on [TeamSpeak](https://invite.teamspeak.com/ts.fugaming.org/?password=futs)\n\n**3.** And join us, ***Planetside***",
         inline=False
     )
     ps2_onboard_payload.set_thumbnail(
