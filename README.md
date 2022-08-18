@@ -14,7 +14,11 @@ FUBot is a python Discord Bot built exclusively for the FU Discord.
 
 
 # Development
-Utilises the [Auraxium](https://github.com/leonhard-s/auraxium) PS2 Census python wrapper and [disnake](https://docs.disnake.dev/en/latest/index.html), a fork of discordpy.
+
+Utilises the [Auraxium](https://github.com/leonhard-s/auraxium) PS2 Census python wrapper.
+[disnake](https://docs.disnake.dev/en/latest/index.html), a fork of discordpy.
+[MongoDB](https://www.mongodb.com/) as a document database.
+
 
 ## Requirements
 
@@ -24,47 +28,50 @@ Utilises the [Auraxium](https://github.com/leonhard-s/auraxium) PS2 Census pytho
 
 ## Getting Started
 ### Create a `.env` file
-Create a `.env` file to store local env vars (This MUST be included in `.gitignore`)
+
+Create a `.env` file to store local env vars in the root of the project (This MUST be included in `.gitignore`)
 
 ```
-LOGLEVEL=DEBUG/INFO/WARNING/EXCEPTION
+LOGLEVEL=[DEBUG/INFO/WARNING/EXCEPTION]
 DISCORDTOKEN= #This is a secret!
-CENSUS_TOKEN=<your PS2 census serivce ID> # s:example will work!
+CENSUS_TOKEN=s:yourtoken # s:example will work but is limited to 10reqs/m
+ENVIRONMENT=[dev/prod]
+PORT_MAPPING=443:80
+MONGO_DB_PORT_MAPPING=127.0.0.1:27017:27017 # This if running locally
+MONGO_DATA_DIR=D:/var/lib/FUBot/mongodb # You can change this if required
+MONGO_USERNAME=FUBot
+MONGO_PASSWORD= #This is a secret but if running locally you can set your own
+
 ```
 ### Local
 Docker is cool and all, but running it locally is much faster to develop with. You can use the package manager [pip](https://pip.pypa.io/en/stable/) to install `src/requirements.txt` and use the python-dotenv package to handle reading in env vars (you'll need to install this)
 
 ```bash
-pip install -r path/to/fu/src/requirements.txt
+pip install -r ./src/requirements.txt
 ```
 Run your bot 
 ```
-python3 /path/to/src/main.py
+python3 ./src/main.py
 ```
 ### Docker
 
 
 Install [Docker](https://docs.docker.com/get-docker/) and start the Docker engine.
 
-From the top level `FU/` directory, build the docker image using:
+From the top level `FU/` directory, build the docker image using docker-compose:
 ```bash
-docker build -t fubot .
+docker-compose -d up
 ``` 
 
-Run your bot using your local `.env` file:
-```bash
-docker run -d --name fubot --env-file .\src\.env fubot
-```
-Check on your container with:
+Check on your containers with:
 ```
 docker logs fubot
-expected output:
-08/07/2022 12:57:32 PM on_ready: FUBot is ready!
+docker logs mongodb
 ```
 
-To stop your container:
+To stop your containers:
 ```
-docker stop fubot
+docker-compose down
 ```
 
 ## Contributing

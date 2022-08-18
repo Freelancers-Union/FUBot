@@ -12,20 +12,13 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
+from database_connector import Database
 import emoji
 import re
 
-try:
-    from dotenv import load_dotenv
 
-    load_dotenv()
-except ModuleNotFoundError as err:
-    # This is an expected error when not running locally using dotenv
-    print(err)
-
-LOGLEVEL = str(os.getenv('LOGLEVEL').upper())
-logging.basicConfig(level=LOGLEVEL, format='%(asctime)s : %(levelname)s : %(funcName)s : %(message)s ',
-                    datefmt='%m-%d-%Y %I:%M:%S')
+logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
+                    datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # Discord Intents
 
@@ -55,6 +48,7 @@ bot = commands.Bot(
     sync_commands_debug=False
 )
 
+Database.initialize()
 
 @bot.event
 async def on_ready():
@@ -186,5 +180,7 @@ async def send_scheduled_message():
 
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
+bot.load_extension("commands.link_ps2_discord")
+bot.load_extension("discord_db")
 
 bot.run(discordClientToken)
