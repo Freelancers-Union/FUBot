@@ -16,6 +16,7 @@ jobs:
       PORT_MAPPING: 80:443
       MONGO_DB_PORT_MAPPING: "127.0.0.1:27017:27017"
       MONGO_DATA_DIR: "/var/lib/FUBot/mongodb"
+      MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     steps:
       - uses: actions/checkout@v3
