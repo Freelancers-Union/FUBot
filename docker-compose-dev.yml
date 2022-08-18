@@ -1,13 +1,27 @@
+version: "3"
+
 services:
   fubot-dev:
     build: .
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
     ports:
-    - "80:80"
+    - ${PORT_MAPPING} # not actually used as Karlish first needs to open ports on firewall
     restart: unless-stopped
     environment:
     - TEST_GUILD_ID=914185528268689428
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
+
+  mongodb:
+    image: mongo:5
+    container_name: mongodb
+    ports:
+      - ${MONGO_DB_PORT_MAPPING}
+    volumes:
+      - ${MONGO_DATA_DIR}:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    restart: unless-stopped
