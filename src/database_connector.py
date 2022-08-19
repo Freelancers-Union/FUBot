@@ -9,7 +9,7 @@ class Database(object):
         + str(os.getenv('MONGO_USERNAME'))
         + ":"
         + str(os.getenv('MONGO_PASSWORD'))
-        + "@" + str(os.getenv('MONGO_ADDRESS')) + "/"
+        + "@" + str(os.getenv('MONGO_ADDRESS')) + ":27017/"
     )
     DATABASE = None
 
