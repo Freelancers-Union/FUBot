@@ -14,7 +14,7 @@ jobs:
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
       ENVIRONMENT: "dev"
       PORT_MAPPING: 80:443
-      MONGO_DATA_DIR: /var/lib/FUBot/mongodb
+      MONGO_DATA_DIR: /var/lib/FUBot-dev/mongodb
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     steps:

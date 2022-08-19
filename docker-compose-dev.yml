@@ -6,21 +6,21 @@ services:
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
     ports:
-    - ${PORT_MAPPING} # not actually used as Karlish first needs to open ports on firewall
+    - ${PORT_MAPPING}
     restart: unless-stopped
     environment:
-    - TEST_GUILD_ID=914185528268689428
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
     depends_on:
-      - mongodb
+      mongodb-dev:
+        condition: service_healthy
 
-  mongodb:
+  mongodb-dev:
     image: mongo:5
-    container_name: mongodb
+    container_name: mongodb-${ENVIRONMENT}
     volumes:
       - ${MONGO_DATA_DIR}:/data/db
     ports:
@@ -28,4 +28,9 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-dev:27017/ --quiet
+      interval: 3s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
