@@ -6,12 +6,10 @@ import pymongo
 class Database(object):
     URI = (
         "mongodb://"
-        + str(os.getenv("MONGO_USERNAME"))
+        + str(os.getenv('MONGO_USERNAME'))
         + ":"
-        + str(os.getenv("MONGO_PASSWORD"))
-        + "@mongodb:"
-        + str(os.getenv("MONGO_PORT"))
-        + "/"
+        + str(os.getenv('MONGO_PASSWORD'))
+        + "@" + str(os.getenv('MONGO_ADDRESS')) + "/"
     )
     DATABASE = None
 

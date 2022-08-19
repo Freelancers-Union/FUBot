@@ -12,7 +12,7 @@ services:
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
     - CENSUS_TOKEN=${CENSUS_TOKEN}
-    - MONGO_PORT=${MONGO_PORT}
+    - MONGO_ADDRESS=${MONGO_ADDRESS}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
     depends_on:
@@ -25,7 +25,7 @@ services:
     volumes:
       - ${MONGO_DATA_DIR}:/data/db
     ports:
-      - 27018:27017
+      - 127.0.0.1:27018:27017
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
