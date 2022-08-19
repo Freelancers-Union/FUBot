@@ -4,11 +4,11 @@ from disnake.ext import commands
 import logging
 import time
 
-
 class NewDiscordMembers(commands.Cog):
     """
     Class cog for new Discord member report.
     """
+
 
     async def build_member_report(self, guild: disnake.Guild, days: int = 7):
         date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
@@ -38,6 +38,7 @@ class NewDiscordMembers(commands.Cog):
         new_a3_message = "\n---------------\n"
         new_other_message = "\n---------------\n"
         for player in new_ps2_members:
+
             new_ps2_message = (
                 new_ps2_message + player.name + "#" + str(player.discriminator) + "\n"
             )
@@ -57,6 +58,7 @@ class NewDiscordMembers(commands.Cog):
             + " new members joined Discord in the last "
             + str(days)
             + " days.\n",
+
         )
         Message.add_field(
             name="PlanetSide 2",

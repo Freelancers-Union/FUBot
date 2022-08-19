@@ -19,7 +19,6 @@ Utilises the [Auraxium](https://github.com/leonhard-s/auraxium) PS2 Census pytho
 [disnake](https://docs.disnake.dev/en/latest/index.html), a fork of discordpy.
 [MongoDB](https://www.mongodb.com/) as a document database.
 
-
 ## Requirements
 
 - [Python3](https://www.python.org/downloads/)
@@ -28,6 +27,7 @@ Utilises the [Auraxium](https://github.com/leonhard-s/auraxium) PS2 Census pytho
 
 ## Getting Started
 ### Create a `.env` file
+
 
 Create a `.env` file to store local env vars in the root of the project (This MUST be included in `.gitignore`)
 
@@ -47,11 +47,13 @@ MONGO_PASSWORD= #This is a secret but if running locally you can set your own
 Docker is cool and all, but running it locally is much faster to develop with. You can use the package manager [pip](https://pip.pypa.io/en/stable/) to install `src/requirements.txt` and use the python-dotenv package to handle reading in env vars (you'll need to install this)
 
 ```bash
+
 pip install -r ./src/requirements.txt
 ```
 Run your bot 
 ```
 python3 ./src/main.py
+
 ```
 ### Docker
 
@@ -72,6 +74,7 @@ docker logs mongodb
 To stop your containers:
 ```
 docker-compose down
+
 ```
 
 ## Contributing
