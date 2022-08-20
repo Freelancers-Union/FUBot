@@ -4,12 +4,13 @@ FUBot is a python Discord Bot built exclusively for the FU Discord.
 
 # Commands
 
-| Command | Description  | arguments  | Example  |
-| ------- | --- | --- | --- |
-| /player_card | Gets information for a given player | character_name | /player_card `wrel` |
-| /outfit | Gets information for a given Outfit | [name] / [tag] | /outfit `FU` |
-| /announce_event | Posts an announcement for an event | event [message_body] | /announce_event `FUBG` `We're building!` |
-| /new_member_report | Posts to #officers new Discord members | days | /new_member_report `30` |
+| Command                  | Description                                   | arguments            | Example                                  |
+|--------------------------|-----------------------------------------------|----------------------|------------------------------------------|
+| /player_card             | Gets information for a given player           | character_name       | /player_card `wrel`                      |
+| /outfit                  | Gets information for a given Outfit           | [name] / [tag]       | /outfit `FU`                             |
+| /announce_event          | Posts an announcement for an event            | event [message_body] | /announce_event `FUBG` `We're building!` |
+| /new_member_report       | Posts to #officers new Discord members        | days                 | /new_member_report `30`                  |
+| /link_planetside_account | Links PlanetSide 2 account to FU discord user | account_name         | /link_planetside_account `Karlish`       |
 
 
 
