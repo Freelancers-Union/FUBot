@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 import flatdict
 import auraxium
@@ -132,7 +133,8 @@ class InitiateDiscordPs2Link(commands.Cog):
 
     @commands.slash_command()
     async def link_planetside_account(
-        self, inter: disnake.ApplicationCommandInteraction, account_name
+            self, inter: disnake.ApplicationCommandInteraction,
+            account_name: str
     ):
         """
         Links your Planetside account to FU
@@ -144,10 +146,15 @@ class InitiateDiscordPs2Link(commands.Cog):
         """
         await inter.response.defer(ephemeral=True)
 
+        if not re.match(pattern="^[a-zA-Z0-9]*$", string=account_name):
+            await inter.edit_original_message("Did you know that PlanetSide 2 character names are alphanumeric?")
+            return
+
         # Check if this PS2 character exists, get the character object if it does.
         ps2_char = await self.ps2_get_char(account_name)
         if ps2_char is None:
-            await inter.edit_original_message("That character doesn't exist.")
+            await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
+                                              f"\n character {account_name} doesn't exist")
             return
 
         try:
@@ -156,7 +163,8 @@ class InitiateDiscordPs2Link(commands.Cog):
             # If the account is already claimed, inform the user.
             if ps2_db_check is True:
                 await inter.edit_original_message(
-                    str(ps2_char.name) + " is already connected to another FU member!"
+                    str(ps2_char.name) + " is already connected to another FU member!" +
+                    "\nIf this is an issue, contact an Officer"
                 )
                 raise NameError
         except NameError:
