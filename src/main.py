@@ -13,8 +13,13 @@ import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
 from database_connector import Database
+from ps2_db import *
 import emoji
 import re
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
@@ -52,6 +57,7 @@ Database.initialize()
 
 @bot.event
 async def on_ready():
+    await PlayerLogin()
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
 
@@ -182,5 +188,6 @@ bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
 bot.load_extension("discord_db")
+
 
 bot.run(discordClientToken)
