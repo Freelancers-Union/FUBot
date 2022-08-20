@@ -12,46 +12,35 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
+from database_connector import Database
 import emoji
 import re
 
+
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ModuleNotFoundError as err:
-    # This is an expected error when not running locally using dotenv
-    logging.warning(err)
 
 # Discord Intents
 
 intents = disnake.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.guilds = True
 
 # Initialize the bot
 
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
-if os.getenv('TEST_GUILD_ID') is not None:
-    bot = commands.Bot(
-        command_prefix=commands.when_mentioned_or("?"),
-        description=Botdescription,
-        intents=intents,
-        test_guilds=[int(os.getenv('TEST_GUILD_ID'))],
-        sync_commands_debug=False
-    )
-else:
-    bot = commands.Bot(
-        command_prefix=commands.when_mentioned_or("?"),
-        description=Botdescription,
-        intents=intents,
-        sync_commands_debug=False
-    )
 
+bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or("?"),
+    description=Botdescription,
+    intents=intents,
+    sync_commands_debug=False
+)
+
+Database.initialize()
 
 @bot.event
 async def on_ready():
@@ -119,7 +108,7 @@ EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen",
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 
-@bot.slash_command()
+@bot.slash_command(dm_permission=False)
 async def announce_event(
         inter: disnake.CommandInteraction,
         event: str = commands.Param(autocomplete=autocomplete_event),
@@ -181,7 +170,9 @@ async def send_scheduled_message():
     except Exception as e:
         logging.exception(e)
 
-
+bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
+bot.load_extension("commands.link_ps2_discord")
+bot.load_extension("discord_db")
 
 bot.run(discordClientToken)
