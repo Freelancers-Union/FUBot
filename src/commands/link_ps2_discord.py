@@ -132,7 +132,7 @@ class InitiateDiscordPs2Link(commands.Cog):
 
     @commands.slash_command()
     async def link_planetside_account(
-        self, inter: disnake.ApplicationCommandInteraction, account_name
+            self, inter: disnake.ApplicationCommandInteraction, account_name
     ):
         """
         Links your Planetside account to FU
@@ -156,7 +156,8 @@ class InitiateDiscordPs2Link(commands.Cog):
             # If the account is already claimed, inform the user.
             if ps2_db_check is True:
                 await inter.edit_original_message(
-                    str(ps2_char.name) + " is already connected to another FU member!"
+                    str(ps2_char.name) + " is already connected to another FU member!" +
+                    "\nIf this is an issue, contact an Officer"
                 )
                 raise NameError
         except NameError:
