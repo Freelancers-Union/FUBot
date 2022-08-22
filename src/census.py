@@ -50,7 +50,7 @@ async def get_outfit(outfit_tag, outfit_name, client):
     try:
         if outfit_tag:
             outfit = await client.get(ps2.Outfit, alias_lower=outfit_tag.lower())
-        elif outfit_name is not None:
+        elif outfit_name:
             outfit = await client.get(ps2.Outfit, name_lower=outfit_name.lower())
         if outfit is not None:
             online_members = await get_online_outfit(outfit.id)
