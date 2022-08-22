@@ -26,12 +26,10 @@ class DiscordMemberDB(commands.Cog):
         if db_entry is None:
             disc_obj = {}
             data = {}
-            discord_attrs = ["id", "name", "nick", "joined_at"]
+            discord_attrs = ["id", "nick", "joined_at"]
+            disc_obj["name"] = str(member)
             for count, ele in enumerate(discord_attrs):
                 disc_obj[ele] = str(getattr(member, ele))
-            disc_obj["name"] = (
-                str(disc_obj["name"]) + "#" + str(disc_obj["discriminator"])
-            )
             data["discord_user"] = disc_obj
             Database.insert_one("members", data)
         else:
@@ -71,11 +69,9 @@ class DiscordMemberDB(commands.Cog):
                 disc_obj = {}
                 data = {}
                 discord_attrs = ["id", "name", "nick", "joined_at"]
+                disc_obj["name"] = str(member)
                 for count, ele in enumerate(discord_attrs):
                     disc_obj[ele] = str(getattr(member, ele))
-                disc_obj["name"] = (
-                    str(disc_obj["name"]) + "#" + str(member.discriminator)
-                )
                 data["discord_user"] = disc_obj
                 all_mems.append(data)
         if len(all_mems) != 0:
