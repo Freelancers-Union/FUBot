@@ -1,5 +1,8 @@
 import os
 import logging
+from dotenv import load_dotenv;
+
+load_dotenv()
 import datetime
 from typing import List
 import aiocron
@@ -13,9 +16,9 @@ import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
 from database_connector import Database
+from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
-
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -32,7 +35,6 @@ intents.guilds = True
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
-
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"),
     description=Botdescription,
@@ -41,6 +43,8 @@ bot = commands.Bot(
 )
 
 Database.initialize()
+arma_logger = ArmaLogger()
+
 
 @bot.event
 async def on_ready():
@@ -105,8 +109,11 @@ async def outfit(
 
 
 EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+
+
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
+
 
 @bot.slash_command(dm_permission=False)
 async def announce_event(
@@ -162,13 +169,19 @@ async def send_scheduled_message():
     Scheduled task to post new Discord members report.
     Cron: Every Friday at 1700 UTC
     """
-    
+
     weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
     try:
         for guild in bot.guilds:
             await weeklyNewMemberReport.post_member_report(guild)
     except Exception as e:
         logging.exception(e)
+
+
+@aiocron.crontab("* * * * *")
+async def log_arma_server_status():
+    arma_logger.log_server_status()
+
 
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")

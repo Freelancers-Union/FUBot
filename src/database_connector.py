@@ -4,12 +4,14 @@ import pymongo
 
 
 class Database(object):
+    port = ":" + str(os.getenv("MONGO_PORT")) if os.getenv("MONGO_PORT") else ""
     URI = (
-        "mongodb://"
-        + str(os.getenv('MONGO_USERNAME'))
-        + ":"
-        + str(os.getenv('MONGO_PASSWORD'))
-        + "@" + str(os.getenv('MONGO_ADDRESS')) + ":27017/"
+            "mongodb://"
+            + str(os.getenv('MONGO_USERNAME'))
+            + ":"
+            + str(os.getenv('MONGO_PASSWORD'))
+            + "@" + str(os.getenv('MONGO_ADDRESS'))
+            + port + "/"
     )
     DATABASE = None
 
