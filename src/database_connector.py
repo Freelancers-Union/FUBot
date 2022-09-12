@@ -13,7 +13,7 @@ class Database(object):
             + "@" + str(os.getenv('MONGO_ADDRESS'))
             + port + "/"
     )
-    DATABASE = None
+    DATABASE: pymongo.mongo_client.database.Database = None
 
     @staticmethod
     def initialize():

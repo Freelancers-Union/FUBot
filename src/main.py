@@ -43,7 +43,7 @@ bot = commands.Bot(
 )
 
 Database.initialize()
-arma_logger = ArmaLogger()
+arma_logger = ArmaLogger(Database)
 
 
 @bot.event
@@ -178,7 +178,7 @@ async def send_scheduled_message():
         logging.exception(e)
 
 
-@aiocron.crontab("* * * * *")
+@aiocron.crontab("*/10 * * * *")
 async def log_arma_server_status():
     arma_logger.log_server_status()
 
