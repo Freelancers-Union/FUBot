@@ -1,8 +1,5 @@
 import os
 import logging
-from dotenv import load_dotenv;
-
-load_dotenv()
 import datetime
 from typing import List
 import aiocron
