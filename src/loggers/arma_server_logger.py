@@ -1,7 +1,6 @@
 import logging
 import os
 import datetime
-import types
 
 from steam import SteamQuery
 from src.database_connector import Database
@@ -41,7 +40,7 @@ class ArmaLogger:
             mission = "None"
             logging.error("Failed to log ArmA server status", exc_info=exception)
 
-        if not isinstance(self.collection, types.NoneType):
+        if self.collection is not None:
             timestamp = datetime.datetime.utcnow().replace(microsecond=0, second=0, minute=0)
 
             self.collection.insert_one({
