@@ -13,6 +13,8 @@ services:
     - MONGO_ADDRESS=${MONGO_ADDRESS}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
+    - ARMA_HOST=fu-server.lan
+    - ARMA_QUERY_PORT=2303
     depends_on:
       mongodb-dev:
         condition: service_healthy
