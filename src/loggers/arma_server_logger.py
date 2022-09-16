@@ -1,9 +1,8 @@
 import logging
 import os
 import datetime
-
 from steam import SteamQuery
-from src.database_connector import Database
+from database_connector import Database
 
 
 class ArmaLogger:
@@ -41,7 +40,7 @@ class ArmaLogger:
             logging.error("Failed to log ArmA server status", exc_info=exception)
 
         if self.collection is not None:
-            timestamp = datetime.datetime.utcnow().replace(microsecond=0, second=0, minute=0)
+            timestamp = datetime.datetime.utcnow().replace(microsecond=0, second=0)
 
             self.collection.insert_one({
                 "metadata": {"mission": mission},
