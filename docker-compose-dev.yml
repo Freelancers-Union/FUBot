@@ -5,8 +5,6 @@ services:
     build: .
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
-    ports:
-    - ${PORT_MAPPING}
     restart: unless-stopped
     environment:
     - LOGLEVEL=${LOGLEVEL}
