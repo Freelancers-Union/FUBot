@@ -40,15 +40,15 @@ class NewDiscordMembers(commands.Cog):
         for player in new_ps2_members:
 
             new_ps2_message = (
-                new_ps2_message + player.name + "#" + str(player.discriminator) + "\n"
+                new_ps2_message + str(player) + "\n"
             )
         for player in new_a3_members:
             new_a3_message = (
-                new_a3_message + player.name + "#" + str(player.discriminator) + "\n"
+                new_a3_message + str(player) + "\n"
             )
         for player in new_other_members:
             new_other_message = (
-                new_other_message + player.name + "#" + str(player.discriminator) + "\n"
+                new_other_message + str(player) + "\n"
             )
 
         Message = disnake.Embed(

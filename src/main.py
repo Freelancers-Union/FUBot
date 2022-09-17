@@ -13,6 +13,7 @@ import commands.get_outfit as get_outfit
 import commands.ops as ops
 import commands.new_discord_members as new_discord_members
 from database_connector import Database
+from loggers.arma_server_logger import ArmaLogger
 from ps2_db import *
 import emoji
 import re
@@ -44,6 +45,8 @@ bot = commands.Bot(
 )
 
 Database.initialize()
+arma_logger = ArmaLogger(Database)
+
 
 Database.initialize()
 
@@ -127,7 +130,6 @@ EVENTS = [
     "ArmaOps",
 ]
 
-
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
 
@@ -199,6 +201,11 @@ async def send_scheduled_message():
             await weeklyNewMemberReport.post_member_report(guild)
     except Exception as e:
         logging.exception(e)
+
+
+@aiocron.crontab("*/10 * * * *")
+async def log_arma_server_status():
+    arma_logger.log_server_status()
 
 
 bot.load_extension("commands.role_added")
