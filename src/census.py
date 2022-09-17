@@ -5,9 +5,7 @@ from auraxium import ps2, Client
 from typing import Tuple
 
 
-async def get_character(
-    char_name: str, client: Client
-) -> Tuple[ps2.Character, int, ps2.OutfitMember]:
+async def get_character(char_name: str, client: Client) -> Tuple[ps2.Character, int, ps2.OutfitMember]:
     """
     Gets character, world it is in and its outfit
     Parameters

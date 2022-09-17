@@ -45,6 +45,7 @@ bot = commands.Bot(
 
 Database.initialize()
 
+Database.initialize()
 
 @bot.event
 async def on_ready():
