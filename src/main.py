@@ -161,7 +161,7 @@ async def add_reactions(inter: disnake.interactions.application_command.Applicat
     for item in sorted_list:
         await message.add_reaction(item)
 
-    await inter.edit_original_message("reacted with:" + str(sorted_list) + "To message:" + message.jump_url)
+    await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
 
 
 @aiocron.crontab("0 17 * * 5")
