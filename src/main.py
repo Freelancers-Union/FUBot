@@ -133,7 +133,8 @@ async def announce_event(
 
 @bot.message_command(name="Add Reactions")
 @commands.default_member_permissions(manage_messages=True)
-async def vote(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+@commands.bot_has_permissions(add_reactions=True)
+async def add_reactions(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
                message: disnake.Message):
     emoji_list: list
 
@@ -148,12 +149,15 @@ async def vote(inter: disnake.interactions.application_command.ApplicationComman
                                           )
         return
 
-    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some magic to delete duplicates
-    emoji_list = emoji.distinct_emoji_list(message.content) + discord_emojis
+    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some sets to delete duplicates
+    emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
 
-    for item in emoji_list:
+    sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
+
+    for item in sorted_list:
         await message.add_reaction(item)
-    await inter.edit_original_message("reacted with:" + str(emoji_list))
+
+    await inter.edit_original_message("reacted with:" + str(sorted_list) + "To message:" + message.jump_url)
 
 
 @aiocron.crontab("0 17 * * 5")
