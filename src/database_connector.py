@@ -28,6 +28,30 @@ class Database(object):
             logging.info("Database Initialized")
 
     @staticmethod
+    def init_timeseries_db(collection_name: str, collection_options: dict) -> pymongo.collection.Collection:
+        """
+        Get or create a timeseries collection in database.
+        If the timeseries exists, it oly makes sure that it's timeseries collection and nothing more
+        Parameters
+        ----------
+        collection_name: name of collection that will be used
+        collection_options: set of options this collection should have
+
+        Returns
+        -------
+            the timeseries collection with such name (and hopefully those options)
+        """
+        current_collection_options = Database.DATABASE[collection_name].options()
+
+        if collection_name not in Database.DATABASE.list_collection_names():
+            Database.DATABASE.create_collection(name=collection_name, timeseries=collection_options,
+                                 expireAfterSeconds=94608000)
+        elif "timeseries" not in current_collection_options.keys():
+            raise Exception(f"collection {collection_name} exists, but isn't timeseries")
+        collection: pymongo.collection.Collection = Database.DATABASE[collection_name]
+        return Database.DATABASE[collection_name]
+
+    @staticmethod
     def insert_one(collection, data):
         Database.DATABASE[collection].insert_one(data)
 
