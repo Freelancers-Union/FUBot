@@ -1,6 +1,6 @@
-from ..database_connector import Database
+from database_connector import Database
 from auraxium import event, ps2
-from .. import census
+import census
 import logging
 import os
 import datetime
@@ -39,10 +39,12 @@ class Ps2OutfitPlayerLogger:
         try:
             self.collection = db.init_timeseries_db(db_collection_name, collection_options)
             # This will create a task. currently, the loop will be run forever by the bot in disnake bots code
-            self.loop = asyncio.get_event_loop()
-            self.loop.create_task(self.ps2_outfit_events())
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.ps2_outfit_events())
         except Exception as exception:
             logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
+
+        loop.run_forever()
 
     def add_outfit(self, outfit_id: int):
         """
@@ -87,7 +89,7 @@ class Ps2OutfitPlayerLogger:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
-            print(
+            logging.info(
                 f'{name} logged in at {character.data.times.last_login_date}, logged out at {_event.timestamp} and his '
                 f'outfit is {outfit.tag if outfit is not None else "non existent"} ')
             # events.append(evt)
@@ -101,5 +103,5 @@ class Ps2OutfitPlayerLogger:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
-            print(
+            logging.info(
                 f'{name} logged in at {_event.timestamp} and his outfit is {outfit.tag if outfit is not None else "non existent"} ')

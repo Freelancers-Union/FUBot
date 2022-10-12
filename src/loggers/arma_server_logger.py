@@ -2,7 +2,7 @@ import logging
 import os
 import datetime
 from steam import SteamQuery
-from ..database_connector import Database
+from database_connector import Database
 
 
 class ArmaLogger:
