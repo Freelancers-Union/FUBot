@@ -1,12 +1,10 @@
-version: "3.x"
+version: "3.9"
 
 services:
   fubot:
     build: .
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
-    ports:
-    - ${PORT_MAPPING}
     restart: unless-stopped
     environment:
     - LOGLEVEL=${LOGLEVEL}
