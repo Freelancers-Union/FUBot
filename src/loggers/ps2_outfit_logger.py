@@ -44,7 +44,6 @@ class Ps2OutfitPlayerLogger:
         except Exception as exception:
             logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
 
-        loop.run_forever()
 
     def add_outfit(self, outfit_id: int):
         """
@@ -83,25 +82,17 @@ class Ps2OutfitPlayerLogger:
         @client.trigger(event=event.PlayerLogout, worlds=[10])
         async def logged_out(_event: event.PlayerLogout):
             character = await client.get_by_id(ps2.Character, _event.character_id)
-            name: str = character.data.name.first
             outfit = await character.outfit()
             if not outfit:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
-            logging.info(
-                f'{name} logged in at {character.data.times.last_login_date}, logged out at {_event.timestamp} and his '
-                f'outfit is {outfit.tag if outfit is not None else "non existent"} ')
-            # events.append(evt)
 
         @client.trigger(event=event.PlayerLogin, worlds=[10])
         async def logged_in(_event: event.PlayerLogin):
             character = await client.get_by_id(ps2.Character, _event.character_id)
-            name: str = character.data.name.first
             outfit = await character.outfit()
             if not outfit:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
-            logging.info(
-                f'{name} logged in at {_event.timestamp} and his outfit is {outfit.tag if outfit is not None else "non existent"} ')
