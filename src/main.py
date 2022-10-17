@@ -8,11 +8,12 @@ from disnake.ext import commands
 import auraxium
 from auraxium import ps2
 import census
+import commands.new_discord_members as new_discord_members
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
-import commands.new_discord_members as new_discord_members
 from database_connector import Database
+from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
 from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
@@ -21,7 +22,6 @@ logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(f
                     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # Discord Intents
-
 intents = disnake.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -32,6 +32,11 @@ intents.guilds = True
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
+
+Database.initialize()
+Ps2OutfitPlayerLogger(Database)
+arma_logger = ArmaLogger(Database)
+
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"),
     description=Botdescription,
@@ -39,8 +44,6 @@ bot = commands.Bot(
     sync_commands_debug=False
 )
 
-Database.initialize()
-arma_logger = ArmaLogger(Database)
 
 
 @bot.event
@@ -190,3 +193,16 @@ bot.load_extension("commands.link_ps2_discord")
 bot.load_extension("discord_db")
 
 bot.run(discordClientToken)
+
+# # This is another way that we could try to run, if updates to bot break our setup.
+# loop = bot.loop #asyncio.get_event_loop()
+# try:
+#         loop.create_task(bot.start(discordClientToken))
+#         loop.create_task(ps2_outfit_events())
+#         loop.run_forever()
+#
+# except KeyboardInterrupt:
+#     loop.run_until_complete(bot.close())
+#     # cancel all tasks lingering
+# finally:
+#     loop.close()
