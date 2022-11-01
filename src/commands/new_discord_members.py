@@ -4,11 +4,11 @@ from disnake.ext import commands
 import logging
 import time
 
+
 class NewDiscordMembers(commands.Cog):
     """
     Class cog for new Discord member report.
     """
-
 
     async def build_member_report(self, guild: disnake.Guild, days: int = 7):
         date_delta = datetime.datetime.now() - datetime.timedelta(days=days)
@@ -40,24 +40,24 @@ class NewDiscordMembers(commands.Cog):
         for player in new_ps2_members:
 
             new_ps2_message = (
-                new_ps2_message + str(player) + "\n"
+                    new_ps2_message + str(player) + "\n"
             )
         for player in new_a3_members:
             new_a3_message = (
-                new_a3_message + str(player) + "\n"
+                    new_a3_message + str(player) + "\n"
             )
         for player in new_other_members:
             new_other_message = (
-                new_other_message + str(player) + "\n"
+                    new_other_message + str(player) + "\n"
             )
 
         Message = disnake.Embed(
             title="New Discord Member Report",
             color=0x9E0B0F,
             description=str(all_new_members)
-            + " new members joined Discord in the last "
-            + str(days)
-            + " days.\n",
+                        + " new members joined Discord in the last "
+                        + str(days)
+                        + " days.\n",
 
         )
         Message.add_field(
@@ -77,7 +77,9 @@ class NewDiscordMembers(commands.Cog):
 
     @commands.slash_command(dm_permission=False)
     async def new_member_report(
-        self, inter: disnake.ApplicationCommandInteraction, days: int = 7
+            self,
+            inter: disnake.ApplicationCommandInteraction,
+            days: int = 7
     ):
         """
         Report of new Discord members.
@@ -112,8 +114,8 @@ class NewDiscordMembers(commands.Cog):
                 discord_analytics_button = disnake.ui.Button(
                     style=disnake.ButtonStyle.url,
                     url="https://discord.com/developers/servers/"
-                    + str(inter.guild.id)
-                    + "/analytics",
+                        + str(inter.guild.id)
+                        + "/analytics",
                     label="Server Insights",
                 )
                 channel = disnake.utils.find(

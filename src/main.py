@@ -32,7 +32,6 @@ intents.guilds = True
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
-
 Database.initialize()
 Ps2OutfitPlayerLogger(Database)
 arma_logger = ArmaLogger(Database)
@@ -43,7 +42,6 @@ bot = commands.Bot(
     intents=intents,
     sync_commands_debug=False
 )
-
 
 
 @bot.event
@@ -142,7 +140,7 @@ async def announce_event(
 @commands.default_member_permissions(manage_messages=True)
 @commands.bot_has_permissions(add_reactions=True)
 async def add_reactions(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
-               message: disnake.Message):
+                        message: disnake.Message):
     emoji_list: list
 
     await inter.response.defer(ephemeral=True)
