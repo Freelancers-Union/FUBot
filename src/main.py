@@ -8,6 +8,7 @@ from disnake.ext import commands
 import auraxium
 from auraxium import ps2
 import census
+import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
@@ -17,6 +18,7 @@ from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
 from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
+
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -106,11 +108,9 @@ async def outfit(
         logging.exception(e)
 
 
-EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
-
-
 async def autocomplete_event(inter, string: str) -> List[str]:
-    return [event for event in EVENTS if string.lower() in event.lower()]
+    events = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    return [event for event in events if string.lower() in event.lower()]
 
 
 @bot.slash_command(dm_permission=False)
@@ -146,12 +146,7 @@ async def add_reactions(inter: disnake.interactions.application_command.Applicat
     await inter.response.defer(ephemeral=True)
     # Permission checks
     # this is as a catch just in case the default_members_permissions fail
-    if not message.channel.permissions_for(inter.author).manage_messages:
-        await inter.edit_original_message("Request denied.\n" +
-                                          "You don't have the permissions to remove unneeded reactions or spam in " +
-                                          message.channel.mention + "\nhttps://www.govloop.com/wp-content/uploads"
-                                                                    "/2015/02/data-star-trek-request-denied.gif"
-                                          )
+    if not await dc.user_or_role_has_permission(inter, can_manage_reactions=True):
         return
 
     discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some sets to delete duplicates
@@ -182,8 +177,8 @@ async def send_scheduled_message():
 
 @aiocron.crontab("*/10 * * * *")
 async def log_arma_server_status():
-    arma_logger.log_server_status()
-
+    # arma_logger.log_server_status()
+    pass
 
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
