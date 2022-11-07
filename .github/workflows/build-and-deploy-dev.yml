@@ -26,3 +26,9 @@ jobs:
 
       - name: update containers
         run: docker compose -f docker-compose-dev.yml up -d --force-recreate
+
+      - name: Build chartbrew
+        env:
+          CB_SECRET: ${{ secrets.CB_SECRET }}
+          CB_MYSQL_PASSWORD: ${{ secrets.CB_MYSQL_PASSWORD }}
+        run: docker compose -f chartbrew-compse.yml up -d --force-recreate --pull always
