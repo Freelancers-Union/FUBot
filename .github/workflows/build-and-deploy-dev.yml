@@ -31,4 +31,4 @@ jobs:
         env:
           CB_SECRET: ${{ secrets.CB_SECRET }}
           CB_MYSQL_PASSWORD: ${{ secrets.CB_MYSQL_PASSWORD }}
-        run: docker compose -f chartbrew-compse.yml up -d --force-recreate --pull always
+        run: docker compose -f chartbrew-compose.yml up -d --force-recreate --pull always
