@@ -1,12 +1,10 @@
-version: "3"
+version: "3.9"
 
 services:
   fubot:
     build: .
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
-    ports:
-    - ${PORT_MAPPING}
     restart: unless-stopped
     environment:
     - LOGLEVEL=${LOGLEVEL}
@@ -15,6 +13,8 @@ services:
     - MONGO_ADDRESS=${MONGO_ADDRESS}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
+    - ARMA_HOST=fu-server.lan
+    - ARMA_QUERY_PORT=2303
     depends_on:
       mongodb:
         condition: service_healthy

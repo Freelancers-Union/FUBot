@@ -63,8 +63,15 @@ async def event_message(
 
 
 async def message_embed(message_body, game, event):
+    title = str(game) + " - " + str(event)
+    if "arma" in str.lower(game):
+        title += " - Starting ~~NOW~~ SOON (in 1 h or something)"
+        message_body = "IDK when, it's not like you allow a robot to play with you"
+    else:
+        title += " - Starting NOW!"
+    # Arma 3
     Message = disnake.Embed(
-            title=str(game) + " - " + str(event) + " - Starting NOW!",
+            title=title,
             color=0x9E0B0F,
             description=str(message_body),
             )
@@ -136,7 +143,7 @@ async def fuel(Message):
 
 async def armaops(Message):
     Message.add_field(
-            name="Join us on TeamSpeak",
-            value="Get your TFAR's ready!",
+            name="Join us on TeamSpeak?",
+            value="Am I a goodadmin now?  Oh, and also:\n Get your TFAR's ready!",
             )
     return Message

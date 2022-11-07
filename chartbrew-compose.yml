@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  chartbrew:
+    image: razvanilin/chartbrew:latest
+    ports:
+      - 4019:4019
+      - 4080:3000
+    environment:
+      CB_SECRET: ${CB_SECRET}
+      CB_API_HOST: 0.0.0.0
+      CB_API_PORT: 4019
+      CB_DB_HOST: chartbrew-db
+      CB_DB_NAME: chartbrew
+      CB_DB_USERNAME: root
+      CB_DB_PASSWORD: ${CB_MYSQL_PASSWORD}
+      REACT_APP_CLIENT_HOST: https://charts.fugaming.org
+      REACT_APP_API_HOST: https://charts.fugaming.org
+    restart: unless-stopped
+
+  chartbrew-db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: chartbrew
+      MYSQL_USER: chartbrew
+    restart: unless-stopped
+    volumes:
+      - /var/lib/chartbrew/mysql:/var/lib/mysql

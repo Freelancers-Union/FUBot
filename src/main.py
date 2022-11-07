@@ -8,20 +8,20 @@ from disnake.ext import commands
 import auraxium
 from auraxium import ps2
 import census
+import commands.new_discord_members as new_discord_members
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
-import commands.new_discord_members as new_discord_members
 from database_connector import Database
+from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
+from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
-
 
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # Discord Intents
-
 intents = disnake.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -32,6 +32,9 @@ intents.guilds = True
 discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
+Database.initialize()
+Ps2OutfitPlayerLogger(Database)
+arma_logger = ArmaLogger(Database)
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"),
@@ -40,7 +43,6 @@ bot = commands.Bot(
     sync_commands_debug=False
 )
 
-Database.initialize()
 
 @bot.event
 async def on_ready():
@@ -105,8 +107,11 @@ async def outfit(
 
 
 EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+
+
 async def autocomplete_event(inter, string: str) -> List[str]:
     return [event for event in EVENTS if string.lower() in event.lower()]
+
 
 @bot.slash_command(dm_permission=False)
 async def announce_event(
@@ -135,7 +140,7 @@ async def announce_event(
 @commands.default_member_permissions(manage_messages=True)
 @commands.bot_has_permissions(add_reactions=True)
 async def add_reactions(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
-               message: disnake.Message):
+                        message: disnake.Message):
     emoji_list: list
 
     await inter.response.defer(ephemeral=True)
@@ -166,7 +171,7 @@ async def send_scheduled_message():
     Scheduled task to post new Discord members report.
     Cron: Every Friday at 1700 UTC
     """
-    
+
     weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
     try:
         for guild in bot.guilds:
@@ -174,9 +179,28 @@ async def send_scheduled_message():
     except Exception as e:
         logging.exception(e)
 
+
+@aiocron.crontab("*/10 * * * *")
+async def log_arma_server_status():
+    arma_logger.log_server_status()
+
+
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
 bot.load_extension("discord_db")
 
 bot.run(discordClientToken)
+
+# # This is another way that we could try to run, if updates to bot break our setup.
+# loop = bot.loop #asyncio.get_event_loop()
+# try:
+#         loop.create_task(bot.start(discordClientToken))
+#         loop.create_task(ps2_outfit_events())
+#         loop.run_forever()
+#
+# except KeyboardInterrupt:
+#     loop.run_until_complete(bot.close())
+#     # cancel all tasks lingering
+# finally:
+#     loop.close()
