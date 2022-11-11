@@ -89,12 +89,12 @@ class NewDiscordMembers(commands.Cog):
         """
         await inter.response.defer(ephemeral=True)
         # find the channel, where to send the message
-        channel = await dc.channel_exists(inter, "officers")
+        channel = await dc.get_channel(inter=inter, channel_name="officers", send_error=True)
         if not channel:
             return
-        elif not await dc.user_or_role_has_permission(inter, channel=channel, can_write=True):
+        elif not await dc.user_or_role_has_permission(inter=inter, channel=channel, can_write=True, send_error=True):
             return
-        elif not await dc.check_if_bot_has_permission(inter, channel):
+        elif not await dc.check_if_bot_has_permission(inter=inter, channel=channel, send_error=True):
             return
         else:
             try:

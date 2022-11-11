@@ -52,12 +52,6 @@ async def on_ready():
     logging.info("FUBot is ready!")
 
 
-@bot.command()
-async def add(ctx, left: int, right: int):
-    """Adds two numbers together."""
-    await ctx.send(left + right)
-
-
 @bot.slash_command()
 async def player_card(
         inter: disnake.CommandInteraction,
@@ -146,10 +140,10 @@ async def add_reactions(inter: disnake.interactions.application_command.Applicat
     await inter.response.defer(ephemeral=True)
     # Permission checks
     # this is as a catch just in case the default_members_permissions fail
-    if not await dc.user_or_role_has_permission(inter, can_manage_reactions=True):
+    if not await dc.user_or_role_has_permission(inter=inter, can_manage_reactions=True, send_error=True):
         return
 
-    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some sets to delete duplicates
+    discord_emojis = list(set(re.compile(r"<:[a-zA-Z0-9_]+:[0-9]+>").findall(message.content)))  # some sets to delete duplicates
     emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
 
     sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
