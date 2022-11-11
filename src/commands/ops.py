@@ -6,7 +6,7 @@ import disnake
 
 
 async def event_message(
-        inter,
+        inter: disnake.interactions.application_command.ApplicationCommandInteraction,
         message_body,
         event
 ):
@@ -23,26 +23,20 @@ async def event_message(
     }
     game = ops_dict[event][1]
     teamspeak_channel = ops_dict[event][0]
+    channel_name: str = ""
     if game == "Planetside 2":
-        channel_name = "ps2-announcements"
+        channel_name = "ps2-annosuncements"
     elif game == "Arma 3":
         channel_name = "a3-announcements"
 
     # find the channel, where to send the message
-    channel = disnake.utils.get(inter.guild.text_channels, name=channel_name)
+    channel = await dc.get_channel(inter=inter, channel_name=channel_name, send_error=True)
+    role_to_ping = await dc.get_role(inter=inter, role_name=ops_dict[event][1], send_error=True)
 
-    # find PS2 role, that should be Tagged:
-    role_to_ping = disnake.utils.get(inter.guild.roles, name=ops_dict[event][1])
-
-    if channel is None or role_to_ping is None:
-        # todo: add tis
-        await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
-                                          f"\n Role `{event}` doesn't exist")
-    elif not await dc.channel_exists(inter, channel_name):
-        return
-    elif not await dc.check_if_bot_has_permission(inter, channel):
-        return
-    elif not await dc.user_or_role_has_permission(inter, channel=channel, can_write=True):
+    if not channel or \
+            not role_to_ping or \
+            not await dc.check_if_bot_has_permission(inter=inter, channel=channel, send_error=True) or \
+            not await dc.user_or_role_has_permission(inter=inter, channel=channel, can_write=True, send_error=True):
         return
     else:
         try:
