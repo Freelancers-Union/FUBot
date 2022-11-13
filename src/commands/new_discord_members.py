@@ -92,9 +92,9 @@ class NewDiscordMembers(commands.Cog):
         channel = await dc.get_channel(inter=inter, channel_name="officers", send_error=True)
         if not channel:
             return
-        elif not await dc.user_or_role_has_permission(inter=inter, channel=channel, can_write=True, send_error=True):
+        elif not await dc.user_or_role_has_permission(inter=inter, channel=channel, write=True, send_error=True):
             return
-        elif not await dc.check_if_bot_has_permission(inter=inter, channel=channel, send_error=True):
+        elif not await dc.bot_has_permission(inter=inter, channel=channel, write=True, send_error=True):
             return
         else:
             try:

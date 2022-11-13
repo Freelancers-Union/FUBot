@@ -19,7 +19,6 @@ from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
 
-
 logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -132,25 +131,26 @@ async def announce_event(
 
 @bot.message_command(name="Add Reactions")
 @commands.default_member_permissions(manage_messages=True)
-@commands.bot_has_permissions(add_reactions=True)
-async def add_reactions(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+async def add_reactions(inter: disnake.ApplicationCommandInteraction,
                         message: disnake.Message):
-    emoji_list: list
-
     await inter.response.defer(ephemeral=True)
     # Permission checks
     # this is as a catch just in case the default_members_permissions fail
-    if not await dc.user_or_role_has_permission(inter=inter, can_manage_reactions=True, send_error=True):
+    if not await dc.user_or_role_has_permission(inter=inter, manage_reactions=True, send_error=True):
+        return
+    if not await dc.bot_has_permission(inter=inter, react=True, send_error=True):
         return
 
-    discord_emojis = list(set(re.compile(r"<:[a-zA-Z0-9_]+:[0-9]+>").findall(message.content)))  # some sets to delete duplicates
+    discord_emojis = []
+    for _ in message.guild.emojis:
+        e = str(_)
+        if str(e) in message.content:
+            discord_emojis.append(e)
     emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
-
     sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
 
     for item in sorted_list:
         await message.add_reaction(item)
-
     await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
 
 
@@ -160,19 +160,19 @@ async def send_scheduled_message():
     Scheduled task to post new Discord members report.
     Cron: Every Friday at 1700 UTC
     """
-
-    weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
+    weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
     try:
         for guild in bot.guilds:
-            await weeklyNewMemberReport.post_member_report(guild)
+            await weekly_new_member_report.build_member_report(guild=guild)
     except Exception as e:
         logging.exception(e)
 
 
 @aiocron.crontab("*/10 * * * *")
 async def log_arma_server_status():
-    # arma_logger.log_server_status()
+    arma_logger.log_server_status()
     pass
+
 
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
