@@ -171,7 +171,6 @@ async def send_scheduled_message():
 @aiocron.crontab("*/10 * * * *")
 async def log_arma_server_status():
     arma_logger.log_server_status()
-    pass
 
 
 bot.load_extension("commands.role_added")
