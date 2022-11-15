@@ -11,7 +11,7 @@ class Database(object):
             + ":"
             + str(os.getenv('MONGO_PASSWORD'))
             + "@" + str(os.getenv('MONGO_ADDRESS'))
-            + port + "/"
+            + str(port) + "/"
     )
     DATABASE: pymongo.mongo_client.database.Database = None
 

@@ -13,6 +13,7 @@ services:
     - MONGO_ADDRESS=${MONGO_ADDRESS}
     - MONGO_USERNAME=${MONGO_USERNAME}
     - MONGO_PASSWORD=${MONGO_PASSWORD}
+    - MONGO_PORT=${MONGO_PORT}
     - ARMA_HOST=fu-server.lan
     - ARMA_QUERY_PORT=2303
     depends_on:
