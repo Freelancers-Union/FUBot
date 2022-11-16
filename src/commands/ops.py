@@ -1,4 +1,4 @@
-import src.helpers.discord_checks as dc
+import helpers.discord_checks as dc
 import urllib.parse
 import random
 import glob
@@ -25,7 +25,7 @@ async def event_message(
     teamspeak_channel = ops_dict[event][0]
     channel_name: str = ""
     if game == "Planetside 2":
-        channel_name = "ps2-annosuncements"
+        channel_name = "ps2-announcements"
     elif game == "Arma 3":
         channel_name = "a3-announcements"
 
@@ -43,8 +43,8 @@ async def event_message(
             teamspeak_channel.encode('utf-8')
             teamspeak_channel = urllib.parse.quote(str(game + "/" + teamspeak_channel), safe="")
             team_speak = disnake.ui.Button(style=disnake.ButtonStyle.url,
-                                           url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=" + str(
-                                               teamspeak_channel),
+                                           url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=" +
+                                               str(teamspeak_channel),
                                            label="Open TeamSpeak")
             Message = await message_embed(message_body, game, event)  # eval(str(event.lower()) + "(message_body)")
             Message.set_image(
