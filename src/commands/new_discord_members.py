@@ -2,7 +2,7 @@ import datetime
 import disnake
 from disnake.ext import commands
 import logging
-import src.helpers.discord_checks as dc
+import helpers.discord_checks as dc
 
 
 class NewDiscordMembers(commands.Cog):
