@@ -2,7 +2,7 @@ import datetime
 import disnake
 from disnake.ext import commands
 import logging
-import time
+import helpers.discord_checks as dc
 
 
 class NewDiscordMembers(commands.Cog):
@@ -38,7 +38,6 @@ class NewDiscordMembers(commands.Cog):
         new_a3_message = "\n---------------\n"
         new_other_message = "\n---------------\n"
         for player in new_ps2_members:
-
             new_ps2_message = (
                     new_ps2_message + str(player) + "\n"
             )
@@ -90,25 +89,13 @@ class NewDiscordMembers(commands.Cog):
         """
         await inter.response.defer(ephemeral=True)
         # find the channel, where to send the message
-        channels: [disnake.abc.GuildChannel] = await inter.guild.fetch_channels()
-        channel = None
-        for ch in channels:
-            if ch.name == "officers":
-                channel = ch
-        if not channel.permissions_for(inter.author).send_messages:
-            await inter.edit_original_message(
-                "Imitating the Captain, huh? Surely that violates some kind of Starfleet protocol."
-                + "\n You don't have the permission to announce, so I won't"
-            )
-        elif channel is None:
-            await inter.edit_original_message(
-                "Impossible. Perhaps the Archives are incomplete."
-                + "\n I can't find #officers."
-            )
-        elif not channel.permissions_for(channel.guild.me).send_messages:
-            await inter.edit_original_message(
-                "My lord, is that legal? \n I don't have the permissions to send there"
-            )
+        channel = await dc.get_channel(inter=inter, channel_name="officers", send_error=True)
+        if not channel:
+            return
+        elif not await dc.user_or_role_has_permission(inter=inter, channel=channel, write=True, send_error=True):
+            return
+        elif not await dc.bot_has_permission(inter=inter, channel=channel, write=True, send_error=True):
+            return
         else:
             try:
                 discord_analytics_button = disnake.ui.Button(
@@ -117,9 +104,6 @@ class NewDiscordMembers(commands.Cog):
                         + str(inter.guild.id)
                         + "/analytics",
                     label="Server Insights",
-                )
-                channel = disnake.utils.find(
-                    lambda channel: channel.name == "officers", inter.guild.channels
                 )
                 await channel.send(
                     embed=await self.build_member_report(inter.guild, days),

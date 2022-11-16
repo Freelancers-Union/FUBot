@@ -32,7 +32,7 @@ class LinkPs2(commands.Cog):
 
         self.bot = bot
         self.client = auraxium.event.EventClient(
-            service_id=os.getenv("CENSUS_TOKEN"), no_ssl_certs=True
+            service_id=os.getenv("CENSUS_TOKEN")
         )
         self.characters = [None]
         self.characters[0] = ps2_char
@@ -71,7 +71,7 @@ class InitiateDiscordPs2Link(commands.Cog):
         self.bot = bot
         self.login_checks = {}
         self.client = auraxium.event.EventClient(
-            service_id=os.getenv("CENSUS_TOKEN"), no_ssl_certs=True
+            service_id=os.getenv("CENSUS_TOKEN")
         )
         self.census_client = auraxium.Client(service_id=str(os.getenv("CENSUS_TOKEN")))
 
