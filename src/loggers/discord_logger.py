@@ -17,27 +17,21 @@ class DiscordMemberLogger(commands.Cog):
     Parameters
     ----------
     db: Database class instance
-    saving_period: time in seconds for fow frequently the data should be saved
     """
     def __init__(
             self,
             bot: commands.Bot,
             db: Database,
-            saving_period: float = 5 * 60
     ):
         """
         initializes Discord logger timeseries db
         Parameters
         ----------
         db: Database class instance to use
-        saving_period: time in seconds for fow frequently the data should be saved
         """
-        self.saving_period: float = saving_period
         FU_guild_id = 282514718445273089
         FU_demo_guild_id = 914185528268689428
         self._monitored_guilds: {int} = {FU_guild_id, FU_demo_guild_id}
-        self._max_member_count: typing.Dict[int: int] = dict.fromkeys(self._monitored_guilds, None)
-        self._last_member_count_save_time: float = .0
         self.collection: pymongo.collection.Collection
 
         db_collection_name = "discord_member_log"
@@ -60,7 +54,7 @@ class DiscordMemberLogger(commands.Cog):
         ----------
         guild_id: ID of Discord guild to monitor.
         """
-        self._max_member_count[guild_id] = None
+
         self._monitored_guilds.add(guild_id)
 
     async def _save_member_count(self, guild_id: int, current_count: int):
@@ -72,24 +66,15 @@ class DiscordMemberLogger(commands.Cog):
         guild_id: ID of Discord guild to monitor.
         current_count: the count to log
         """
-        if not self._max_member_count[guild_id] or current_count > self._max_member_count[guild_id]:
-            self._max_member_count[guild_id] = current_count
 
-        if time.time() > self._last_member_count_save_time + self.saving_period:
-            self._last_member_count_save_time = time.time()
-
-            tmp_store = self._max_member_count.copy()  # not 100% sure how async works in python, so going safe way
-            self._max_member_count = dict.fromkeys(self._monitored_guilds, None)
-            timestamp = datetime.datetime.utcnow()
-            for guild in tmp_store:
-                if tmp_store[guild]:
-                    self.collection.insert_one(
-                        {
-                            "metadata": {"guild": guild},
-                            "member_count": tmp_store[guild],
-                            "timestamp": timestamp
-                        }
-                    )
+        timestamp = datetime.datetime.utcnow()
+        self.collection.insert_one(
+            {
+                "metadata": {"guild": guild_id},
+                "member_count": current_count,
+                "timestamp": timestamp
+            }
+        )
 
     async def _add_member_profile(self, member):
         # Query the DB to see if this user has appeared before.
@@ -99,20 +84,32 @@ class DiscordMemberLogger(commands.Cog):
         if db_entry is None:
             disc_obj = {}
             data = {}
-            discord_attrs = ["id", "name", "nick", "joined_at"]
-            disc_obj["name"] = str(member)
+            discord_attrs = ["id", "name", "nick"]
+            disc_obj["joined_at"] = member.joined_at
             disc_obj["guild"] = str(member.guild.id)
             for count, ele in enumerate(discord_attrs):
                 disc_obj[ele] = str(getattr(member, ele))
             data["discord_user"] = disc_obj
             Database.insert_one("members", data)
         else:
-            rejoined = {}
-            rejoined["discord_user"]["re-joined_at"] = member.joined_at
-            Database.update_one("members", query, rejoined)
-        # We will at some point need to extend this to handle a single user in multiple guilds.
+            # Update their rejoined date
+            update_data = {}
+            update_data = { "$set": { 'discord_user.re-joined': member.joined_at } }
+            Database.update_one("members", query, update_data)
+
+        # TODO: We will at some point need to extend this to handle a single user in multiple tracked guilds.
         # But let's cross that bridge when we get to it.
 
+    async def _member_left(self, member):
+        # Query the DB to find the user that has left.
+        query = {"discord_user.id": str(member.id)}
+        db_entry = Database.find_one("members", query)
+        timestamp = datetime.datetime.utcnow()
+        # Update their db entry to reflect when they left.
+        if db_entry is not None:
+            update_data = {}
+            update_data = { "$set": { 'discord_user.left': timestamp } }
+            Database.update_one("members", query, update_data)
 
     @commands.Cog.listener("on_member_join")
     async def on_member_join(self, member):
@@ -122,10 +119,11 @@ class DiscordMemberLogger(commands.Cog):
             await self._add_member_profile(member)
 
     @commands.Cog.listener("on_member_remove")
-    async def on_member_remove(self, member):
-        guild = member.guild.id
+    async def on_raw_member_remove(self, payload):
+        guild = payload.guild.id
         if guild in self._monitored_guilds:
-            await self._save_member_count(guild, member.guild.member_count)
+            await self._save_member_count(guild, payload.guild.member_count)
+            await self._member_left(payload)
             
 
 def setup(bot: commands.Bot):
