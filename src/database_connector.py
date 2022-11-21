@@ -52,6 +52,29 @@ class Database(object):
         return Database.DATABASE[collection_name]
 
     @staticmethod
+    def init_collection(collection_name: str, collection_options: dict) -> pymongo.collection.Collection:
+        """
+        Get or create a collection in database.
+        If the collection exists, do nothing.
+        Parameters
+        ----------
+        collection_name: name of collection that will be used
+        collection_options: set of options this collection should have
+
+        Returns
+        -------
+            the collection name.
+        """
+        current_collection_options = Database.DATABASE[collection_name].options()
+
+        if collection_name not in Database.DATABASE.list_collection_names():
+            Database.DATABASE.create_collection(name=collection_name)
+        elif "timeseries"in current_collection_options.keys():
+            raise Exception(f"collection {collection_name} exists, but is a timeseries")
+        collection: pymongo.collection.Collection = Database.DATABASE[collection_name]
+        return Database.DATABASE[collection_name]
+
+    @staticmethod
     def insert_one(collection, data):
         Database.DATABASE[collection].insert_one(data)
 
