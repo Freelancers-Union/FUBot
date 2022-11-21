@@ -13,6 +13,7 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 from database_connector import Database
+from loggers.ps2_outfit_members import PS2OutfitMembers
 from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
 from loggers.arma_server_logger import ArmaLogger
 import emoji
@@ -35,6 +36,7 @@ Botdescription = "The serious bot for the casual Discord."
 Database.initialize()
 Ps2OutfitPlayerLogger(Database)
 arma_logger = ArmaLogger(Database)
+ps2_outfit_members = PS2OutfitMembers(Database)
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"),
@@ -183,6 +185,10 @@ async def send_scheduled_message():
 @aiocron.crontab("*/10 * * * *")
 async def log_arma_server_status():
     arma_logger.log_server_status()
+
+@aiocron.crontab("*/1 * * * *")
+async def ps2_outfit_members_db():
+    await ps2_outfit_members.update_outfit_members()
 
 
 bot.load_extension("commands.role_added")

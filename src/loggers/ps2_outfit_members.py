@@ -1,6 +1,5 @@
 import logging
 import os
-import datetime
 from database_connector import Database
 import census
 import pymongo.collection
@@ -14,13 +13,13 @@ class PS2OutfitMembers:
             self.db = _db.DATABASE
             # check if the database contains such collection
             self._monitored_outfits = ["FU", "nFUc", "vFUs"]
-            
+
             for outfit in self._monitored_outfits:
                 collection_name = "ps2_outfit_members_"+str(outfit)
-                current_collection_options = db[collection_name].options()
+                current_collection_options = self.db[collection_name].options()
 
-                if collection_name not in db.list_collection_names():
-                    db.create_collection(name=collection_name)
+                if collection_name not in self.db.list_collection_names():
+                    self.db.create_collection(name=collection_name)
                 elif "timeseries" in current_collection_options.keys():
                     raise Exception(f"collection {collection_name} exists, but is a timeseries")
 
@@ -37,7 +36,10 @@ class PS2OutfitMembers:
             # Get a list of all outfit members from the API
             for outfit in self._monitored_outfits:
                 collection = self.db["ps2_outfit_members_"+str(outfit)]
-                outfit, online_members = census.get_outfit(outfit_name = 0, outfit_tag = outfit, client = self.client)
+                outfit, online_members = await census.get_outfit(
+                    outfit_name = 0,
+                    outfit_tag = str(outfit),
+                    client = self.client)
                 live_members = await outfit.members()
 
                 # build the mongodb document for outfit members in API payload
@@ -46,13 +48,11 @@ class PS2OutfitMembers:
                     ps2_player_object = {}
                     attributes = ["outfit_id", "member_since_date", "rank"]
                     character_obj = await member.character()
-                    print(character_obj.name)
                     ps2_player_object["_id"] = member.id
-                    ps2_player_object["name"] = character_obj.name
+                    ps2_player_object["name"] = str(character_obj.name)
                     for count, ele in enumerate(attributes):
                         ps2_player_object[ele] = str(getattr(member, ele))
                     data.append(ps2_player_object)
-
                     # Write to the DB
                 if collection is not None:
                     collection.insert_many(data)
