@@ -9,12 +9,14 @@ import time
 import typing
 import pymongo.collection
 import auraxium
+from disnake.ext import commands
 
 
-class Ps2OutfitPlayerLogger:
+class Ps2OutfitPlayerLogger(commands.Cog):
     def __init__(
             self,
             db: Database,
+            bot: commands.Bot,
             saving_period: float = 5 * 60
     ):
         """
@@ -96,3 +98,6 @@ class Ps2OutfitPlayerLogger:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
+
+def setup(bot: commands.Bot):
+    bot.add_cog(Ps2OutfitPlayerLogger(bot = bot, db = Database))
