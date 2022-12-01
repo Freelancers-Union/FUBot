@@ -13,7 +13,6 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 from database_connector import Database
-# from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
 from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
@@ -33,7 +32,6 @@ discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
 Database.initialize()
-# Ps2OutfitPlayerLogger(Database)
 arma_logger = ArmaLogger(Database)
 
 bot = commands.Bot(
