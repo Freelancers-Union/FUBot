@@ -1,6 +1,7 @@
 import disnake
 from disnake.ext import commands
 
+
 class Ps2SquadMarkup(commands.Cog):
     """
     Class cog for ps2 squad markup help message.
@@ -27,18 +28,19 @@ class Ps2SquadMarkup(commands.Cog):
             "Delta": "`<font color=\"#ff0000\">✵ FU Delta Platoon/Voice Lead ✴</font>`"
         }
 
-        Message = disnake.Embed(
-        title="Squad Markup",
-        color=0x9E0B0F,
-        description="Copy and paste the following into your squad description."
+        message = disnake.Embed(
+            title="Squad Markup",
+            color=0x9E0B0F,
+            description="Copy and paste the following into your squad description."
         )
         for key, value in markup.items():
-            Message.add_field(
+            message.add_field(
                 name=f"{key} Squad",
                 value=value,
                 inline=False
             )
-        await inter.edit_original_message(embed=Message)
+        await inter.edit_original_message(embed=message)
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Ps2SquadMarkup(bot))
