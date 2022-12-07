@@ -176,7 +176,9 @@ async def log_arma_server_status():
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
+bot.load_extension("commands.squad_markup")
 bot.load_extension("discord_db")
+
 
 bot.run(discordClientToken)
 
