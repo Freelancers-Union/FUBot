@@ -18,6 +18,7 @@ class DiscordMemberLogger(commands.Cog):
     ----------
     db: Database class instance
     """
+
     def __init__(
             self,
             bot: commands.Bot,
@@ -44,7 +45,6 @@ class DiscordMemberLogger(commands.Cog):
             loop.create_task(self.discord_guild_events())
         except Exception as exception:
             logging.error("Failed to initialize Discord member logger", exc_info=exception)
-
 
     def add_guild(self, guild_id: int):
         """
@@ -94,7 +94,7 @@ class DiscordMemberLogger(commands.Cog):
         else:
             # Update their rejoined date
             update_data = {}
-            update_data = { "$set": { 'discord_user.re-joined': member.joined_at } }
+            update_data = {"$set": {'discord_user.re-joined': member.joined_at}}
             Database.update_one("members", query, update_data)
 
         # TODO: We will at some point need to extend this to handle a single user in multiple tracked guilds.
@@ -108,7 +108,7 @@ class DiscordMemberLogger(commands.Cog):
         # Update their db entry to reflect when they left.
         if db_entry is not None:
             update_data = {}
-            update_data = { "$set": { 'discord_user.left': timestamp } }
+            update_data = {"$set": {'discord_user.left': timestamp}}
             Database.update_one("members", query, update_data)
 
     @commands.Cog.listener("on_member_join")
@@ -124,7 +124,7 @@ class DiscordMemberLogger(commands.Cog):
         if guild in self._monitored_guilds:
             await self._save_member_count(guild, payload.guild.member_count)
             await self._member_left(payload)
-            
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(DiscordMemberLogger(bot, Database))

@@ -11,10 +11,10 @@ from disnake.ext import commands, tasks
 
 class PS2OutfitMembers(commands.Cog):
     def __init__(
-        self,
-        _db: Database,
-        bot: commands.Bot
-        ):
+            self,
+            _db: Database,
+            bot: commands.Bot
+    ):
         try:
             self.bot = bot
             self.db = _db.DATABASE
@@ -22,7 +22,7 @@ class PS2OutfitMembers(commands.Cog):
             self._monitored_outfits = ["FU", "nFUc", "vFUs"]
 
             for outfit in self._monitored_outfits:
-                collection_name = "ps2_outfit_members_"+str(outfit)
+                collection_name = "ps2_outfit_members_" + str(outfit)
                 current_collection_options = self.db[collection_name].options()
 
                 if collection_name not in self.db.list_collection_names():
@@ -40,9 +40,9 @@ class PS2OutfitMembers(commands.Cog):
 
     async def _get_api_outfit_members(self, outfit):
         outfit, online_members = await census.get_outfit(
-            outfit_name = 0,
-            outfit_tag = str(outfit),
-            client = self.client)
+            outfit_name=0,
+            outfit_tag=str(outfit),
+            client=self.client)
         live_members = await outfit.members()
         return live_members
 
@@ -77,7 +77,7 @@ class PS2OutfitMembers(commands.Cog):
                     collection.update_one({'_id': member.get("_id")}, {
                         '$push': {'left_outfit_date': datetime.now()},
                         '$set': {'active_member': False}
-                        })
+                    })
 
     async def member_rejoined_outfit(self, returning_members, collection):
         if collection is not None and len(returning_members) != 0:
@@ -85,7 +85,7 @@ class PS2OutfitMembers(commands.Cog):
                 collection.update_one({'_id': member.id}, {
                     '$push': {'rejoined_outfit_date': datetime.now()},
                     '$set': {'active_member': True}
-                    })
+                })
 
     @tasks.loop(minutes=1.0)
     async def update_outfit_members(self):
@@ -95,7 +95,7 @@ class PS2OutfitMembers(commands.Cog):
         try:
             # For each outfit: Get a list of all outfit members from the API
             for outfit in self._monitored_outfits:
-                collection = self.db["ps2_outfit_members_"+str(outfit)]
+                collection = self.db["ps2_outfit_members_" + str(outfit)]
                 live_members = await self._get_api_outfit_members(outfit)
 
                 # Get a list of dictionaries of members in the DB
@@ -104,7 +104,7 @@ class PS2OutfitMembers(commands.Cog):
                     "left_outfit_date": 1,
                     "active_member": 1,
                     "rank_history": 1
-                    })
+                })
                 db_members = []
                 for result in db_result:
                     db_members.append(result)
@@ -138,5 +138,6 @@ class PS2OutfitMembers(commands.Cog):
         except Exception as exception:
             logging.error("Failed to update PS2 Outfit Member Collection", exc_info=exception)
 
+
 def setup(bot: commands.Bot):
-    bot.add_cog(PS2OutfitMembers(bot = bot, _db = Database))
+    bot.add_cog(PS2OutfitMembers(bot=bot, _db=Database))

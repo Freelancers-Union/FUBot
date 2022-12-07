@@ -46,7 +46,6 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         except Exception as exception:
             logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
 
-
     def add_outfit(self, outfit_id: int):
         """
         Adds an outfit to the list of monitored outfits
@@ -99,5 +98,6 @@ class Ps2OutfitPlayerLogger(commands.Cog):
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
 
+
 def setup(bot: commands.Bot):
-    bot.add_cog(Ps2OutfitPlayerLogger(bot = bot, db = Database))
+    bot.add_cog(Ps2OutfitPlayerLogger(bot=bot, db=Database))
