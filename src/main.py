@@ -14,7 +14,6 @@ import commands.get_player as get_player
 import commands.get_outfit as get_outfit
 import commands.ops as ops
 from database_connector import Database
-from loggers.ps2_outfit_logger import Ps2OutfitPlayerLogger
 from loggers.arma_server_logger import ArmaLogger
 import emoji
 import re
@@ -34,7 +33,6 @@ discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
 Database.initialize()
-Ps2OutfitPlayerLogger(Database)
 arma_logger = ArmaLogger(Database)
 
 bot = commands.Bot(
@@ -172,25 +170,16 @@ async def send_scheduled_message():
 async def log_arma_server_status():
     arma_logger.log_server_status()
 
-
+# Load cog extensions into the bot
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
 bot.load_extension("commands.squad_markup")
+bot.load_extension("loggers.discord_logger")
+bot.load_extension("loggers.ps2_outfit_members")
+bot.load_extension("loggers.ps2_outfit_logger")
 bot.load_extension("discord_db")
 
 
-bot.run(discordClientToken)
 
-# # This is another way that we could try to run, if updates to bot break our setup.
-# loop = bot.loop #asyncio.get_event_loop()
-# try:
-#         loop.create_task(bot.start(discordClientToken))
-#         loop.create_task(ps2_outfit_events())
-#         loop.run_forever()
-#
-# except KeyboardInterrupt:
-#     loop.run_until_complete(bot.close())
-#     # cancel all tasks lingering
-# finally:
-#     loop.close()
+bot.run(discordClientToken)
