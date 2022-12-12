@@ -8,6 +8,7 @@ from disnake.ext import commands
 import auraxium
 from auraxium import ps2
 import census
+import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
 import commands.get_player as get_player
 import commands.get_outfit as get_outfit
@@ -46,12 +47,6 @@ bot = commands.Bot(
 async def on_ready():
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
-
-
-@bot.command()
-async def add(ctx, left: int, right: int):
-    """Adds two numbers together."""
-    await ctx.send(left + right)
 
 
 @bot.slash_command()
@@ -104,11 +99,9 @@ async def outfit(
         logging.exception(e)
 
 
-EVENTS = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
-
-
 async def autocomplete_event(inter, string: str) -> List[str]:
-    return [event for event in EVENTS if string.lower() in event.lower()]
+    events = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    return [event for event in events if string.lower() in event.lower()]
 
 
 @bot.slash_command(dm_permission=False)
@@ -136,30 +129,26 @@ async def announce_event(
 
 @bot.message_command(name="Add Reactions")
 @commands.default_member_permissions(manage_messages=True)
-@commands.bot_has_permissions(add_reactions=True)
-async def add_reactions(inter: disnake.interactions.application_command.ApplicationCommandInteraction,
+async def add_reactions(inter: disnake.ApplicationCommandInteraction,
                         message: disnake.Message):
-    emoji_list: list
-
     await inter.response.defer(ephemeral=True)
     # Permission checks
     # this is as a catch just in case the default_members_permissions fail
-    if not message.channel.permissions_for(inter.author).manage_messages:
-        await inter.edit_original_message("Request denied.\n" +
-                                          "You don't have the permissions to remove unneeded reactions or spam in " +
-                                          message.channel.mention + "\nhttps://www.govloop.com/wp-content/uploads"
-                                                                    "/2015/02/data-star-trek-request-denied.gif"
-                                          )
+    if not await dc.user_or_role_has_permission(inter=inter, manage_reactions=True, send_error=True):
+        return
+    if not await dc.bot_has_permission(inter=inter, react=True, send_error=True):
         return
 
-    discord_emojis = list(set(re.compile(r"<:.*:[0-9]*>").findall(message.content)))  # some sets to delete duplicates
+    discord_emojis = []
+    for _ in message.guild.emojis:
+        e = str(_)
+        if str(e) in message.content:
+            discord_emojis.append(e)
     emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
-
     sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
 
     for item in sorted_list:
         await message.add_reaction(item)
-
     await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
 
 
@@ -169,11 +158,10 @@ async def send_scheduled_message():
     Scheduled task to post new Discord members report.
     Cron: Every Friday at 1700 UTC
     """
-
-    weeklyNewMemberReport = new_discord_members.NewDiscordMembers(bot)
+    weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
     try:
         for guild in bot.guilds:
-            await weeklyNewMemberReport.post_member_report(guild)
+            await weekly_new_member_report.build_member_report(guild=guild)
     except Exception as e:
         logging.exception(e)
 
@@ -186,8 +174,12 @@ async def log_arma_server_status():
 bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
+bot.load_extension("commands.squad_markup")
 bot.load_extension("loggers.discord_logger")
 bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
+bot.load_extension("discord_db")
+
+
 
 bot.run(discordClientToken)
