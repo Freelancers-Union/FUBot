@@ -45,7 +45,7 @@ async def event_message(
             team_speak = disnake.ui.Button(style=disnake.ButtonStyle.url,
                                            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=" +
                                                str(teamspeak_channel),
-                                           label="Open TeamSpeak")
+                                           label="Click to open TeamSpeak")
             Message = await message_embed(message_body, game, event)  # eval(str(event.lower()) + "(message_body)")
             Message.set_image(
                 file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/" + str(event.lower()) + "/*.png")))
