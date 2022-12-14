@@ -30,7 +30,8 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         FU_id = 37509488620602936
         nFUc_id = 37558455247570544
         vFUs_id = 37558804429669935
-        self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id}
+        SNGE_id = 37516191867639145
+        self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id, SNGE_id}
         self._max_player_count: typing.Dict[int: int] = dict.fromkeys(self._monitored_outfits, None)
         self._last_player_count_save_time: float = .0
         self.collection: pymongo.collection.Collection
