@@ -100,7 +100,7 @@ async def outfit(
 
 
 async def autocomplete_event(inter, string: str) -> List[str]:
-    events = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
     return [event for event in events if string.lower() in event.lower()]
 
 
