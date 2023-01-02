@@ -2,7 +2,10 @@ import helpers.discord_checks as dc
 import urllib.parse
 import random
 import glob
+import time
 import disnake
+from disnake import Webhook
+import aiohttp
 
 
 async def event_message(
@@ -11,27 +14,30 @@ async def event_message(
         event
 ):
     ops_dict = {
-        "Drill": ["Outfit Drill", "Planetside 2"],
-        "Casual": ["Casual Play", "Planetside 2"],
-        "FUAD": ["FUAD (Armoured Division)", "Planetside 2"],
-        "FUAF": ["FUAF (Air Force)", "Planetside 2"],
-        "FUBG": ["FUBG (Builders Group)", "Planetside 2"],
-        "FUEL": ["FUEL (Emerging Leaders)", "Planetside 2"],
-        "FUGG": ["FUGG (Galaxy Group)", "Planetside 2"],
-        "Huntsmen": ["Huntsmen", "Planetside 2"],
-        "ArmaOps": ["", "Arma 3"]
+        "Drill": {"short_title":"Drill" ,"ts_channel": "Outfit Drill", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "nFUc": {"short_title":"nFUc" ,"ts_channel": "nFUc", "game": "Planetside 2", "ping_role": "nFUc", "color": 0x004b80},
+        "vFUs": {"short_title":"vFUs", "ts_channel": "vFUs", "game": "Planetside 2", "ping_role": "vFUs", "color": 0x440E62},
+        "Casual": {"short_title":"Casual", "ts_channel": "Casual Play", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUAD": {"short_title":"FUAD" ,"ts_channel": "FUAD (Armoured Division)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUAF": {"short_title":"FUAF", "ts_channel": "FUAF (Air Force)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUBG": {"short_title":"FUBG", "ts_channel": "FUBG (Builders Group)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUEL": {"short_title":"FUEL", "ts_channel": "FUEL (Emerging Leaders)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUGG": {"short_title":"FUGG", "ts_channel": "FUGG (Galaxy Group)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "Huntsmen": {"short_title":"Huntsmen", "ts_channel": "Huntsmen", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "ArmaOps": {"short_title":"ArmaOps", "ts_channel": "", "game": "Arma 3", "ping_role": "Arma 3", "color": 0xb641d}
     }
-    game = ops_dict[event][1]
-    teamspeak_channel = ops_dict[event][0]
-    channel_name: str = ""
-    if game == "Planetside 2":
-        channel_name = "ps2-announcements"
-    elif game == "Arma 3":
+
+    game = ops_dict[event]["game"]
+    teamspeak_channel = ops_dict[event]["ts_channel"]
+
+    if ops_dict[event]["game"] != "Planetside 2":
         channel_name = "a3-announcements"
+    else:
+        channel_name = "ps2-announcements"
 
     # find the channel, where to send the message
     channel = await dc.get_channel(inter=inter, channel_name=channel_name, send_error=True)
-    role_to_ping = await dc.get_role(inter=inter, role_name=ops_dict[event][1], send_error=True)
+    role_to_ping = await dc.get_role(inter=inter, role_name=ops_dict[event]["ping_role"], send_error=True)
 
     if not channel or \
             not role_to_ping or \
@@ -46,30 +52,32 @@ async def event_message(
                                            url="https://invite.teamspeak.com/ts.fugaming.org/?password=futs&channel=" +
                                                str(teamspeak_channel),
                                            label="Click to open TeamSpeak")
-            Message = await message_embed(message_body, game, event)  # eval(str(event.lower()) + "(message_body)")
+            Message = await message_embed(message_body, ops_dict[event])
             Message.set_image(
-                file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/" + str(event.lower()) + "/*.png")))
+                file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/" + str(ops_dict[event]["short_title"].lower()) + "/*.png")))
             )
             await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                delete_after=18000)
-            await inter.edit_original_message("Posted a " + str(event) + " announcement to " + channel.mention)
+            await inter.edit_original_message("Posted a " + str(ops_dict[event]["short_title"]) + " announcement to " + channel.mention)
+            if ops_dict[event]["game"] == "Planetside 2":
+                await webhook_send(ops_dict[event])
         except Exception as e:
             raise e
 
 
-async def message_embed(message_body, game, event):
-    title = str(game) + " - " + str(event)
-    if "arma" in str.lower(game):
+async def message_embed(message_body, event):
+    
+    if "arma" in str.lower(event["game"]):
         title = "Main Operation - Starting in 1 h"
     else:
-        title += " - Starting NOW!"
-    # Arma 3
+        title = str(event["ts_channel"]) + " - Starting NOW!"
+
     Message = disnake.Embed(
         title=title,
-        color=0x9E0B0F,
+        color=event["color"],
         description=str(message_body),
     )
-    await globals()[event.lower()](Message)
+    await globals()[event["short_title"].lower()](Message)
     return Message
 
 
@@ -143,3 +151,23 @@ async def armaops(Message):
         value="Get your TFAR's ready!",
     )
     return Message
+
+async def nfuc(Message):
+    Message.add_field(
+        name="Join the conversation on TeamSpeak",
+        value="For chat, tactics and discussion.",
+    )
+    return Message
+
+async def vfus(Message):
+    Message.add_field(
+        name="Join the conversation on TeamSpeak",
+        value="For chat, tactics and discussion.",
+    )
+    return Message
+
+async def webhook_send(event):
+    async with aiohttp.ClientSession() as session:
+        webhook = Webhook.from_url('https://discord.com/api/webhooks/1054478039305699438/VBdNaYJDYfNQ6XdcITIl7tt8XcDlz7LCmbNSajCvfaF7iGB7bELefCqeI8RJRWBpdEy6', session=session)
+        message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
+        await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
