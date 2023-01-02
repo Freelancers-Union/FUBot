@@ -100,7 +100,7 @@ async def outfit(
 
 
 async def autocomplete_event(inter, string: str) -> List[str]:
-    events = ["Drill", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
     return [event for event in events if string.lower() in event.lower()]
 
 
@@ -178,6 +178,5 @@ bot.load_extension("commands.squad_markup")
 bot.load_extension("loggers.discord_logger")
 bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
-
 
 bot.run(discordClientToken)
