@@ -13,6 +13,8 @@ jobs:
 
       - name: Build chartbrew
         env:
+          CB_HOSTNAME: ${{ secrets.CB_HOSTNAME }}
+          CB_API_HOSTNAME: ${{ secrets.CB_API_HOSTNAME }}
           CB_DB_PASSWORD: ${{ secrets.CB_DB_PASSWORD }}
           CB_SECRET: ${{ secrets.CB_SECRET }}
         run: docker compose -f chartbrew-compose.yml up -d --force-recreate --pull always
