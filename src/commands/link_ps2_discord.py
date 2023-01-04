@@ -8,8 +8,6 @@ import disnake
 from disnake.ext import commands
 from bson.objectid import ObjectId
 from bson.dbref import DBRef
-from bson.objectid import ObjectId
-from bson.dbref import DBRef
 import census
 from database_connector import Database
 
@@ -127,14 +125,28 @@ class InitiateDiscordPs2Link(commands.Cog):
         member_id = ps2_record["discord_user"]["id"]
         return True, member_id
 
+    @commands.slash_command(dm_permission=True)
+    async def ps2(
+        self,
+        inter: disnake.ApplicationCommandInteraction
+    ):
+        pass
 
-    @commands.slash_command()
-    async def link_planetside_account(
-            self, inter: disnake.ApplicationCommandInteraction,
+    @ps2.sub_command_group()
+    async def link(
+        self,
+        inter: disnake.ApplicationCommandInteraction
+    ):
+        pass
+
+    @link.sub_command()
+    async def account(
+            self,
+            inter: disnake.ApplicationCommandInteraction,
             account_name: str
     ):
         """
-        Links your Planetside account to FU
+        Link your Planetside account to FU for cool stats and stuff!
 
         Parameters
         ----------
