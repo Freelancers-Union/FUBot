@@ -19,7 +19,7 @@ class PS2OutfitMembers(commands.Cog):
             self.bot = bot
             self.db = _db.DATABASE
             # check if the database contains such collection
-            self._monitored_outfits = ["FU", "nFUc", "vFUs"]
+            self._monitored_outfits = ["FU", "nFUc", "vFUs", "SNGE"]
 
             for outfit in self._monitored_outfits:
                 collection_name = "ps2_outfit_members_" + str(outfit)
@@ -51,7 +51,6 @@ class PS2OutfitMembers(commands.Cog):
             data = []
             for member in new_members:
                 ps2_player_object = {}
-                attributes = ["outfit_id", "member_since_date"]
                 character_obj = await member.character()
                 rank = {
                     "rank": member.rank,
@@ -60,9 +59,10 @@ class PS2OutfitMembers(commands.Cog):
                 ps2_player_object["_id"] = member.id
                 ps2_player_object["name"] = str(character_obj.name)
                 ps2_player_object["active_member"] = True
+                ps2_player_object["outfit_id"] = member.outfit_id
+                ps2_player_object["member_since"] = datetime.fromtimestamp(member.member_since)
                 ps2_player_object["rank_history"] = [rank]
-                for count, ele in enumerate(attributes):
-                    ps2_player_object[ele] = str(getattr(member, ele))
+
                 data.append(ps2_player_object)
                 # Write to the DB
             if not data:

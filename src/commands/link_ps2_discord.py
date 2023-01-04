@@ -1,10 +1,13 @@
 import os
 import re
 import logging
+from datetime import datetime
 import flatdict
 import auraxium
 import disnake
 from disnake.ext import commands
+from bson.objectid import ObjectId
+from bson.dbref import DBRef
 import census
 from database_connector import Database
 
@@ -110,26 +113,18 @@ class InitiateDiscordPs2Link(commands.Cog):
             ps2_record = Database.find_one(
                 "members",
                 {
-                    "$or": [
-                        {"ps2_char1.name": str(ps2_char.name)},
-                        {"ps2_char2.name": str(ps2_char.name)},
-                        {"ps2_char3.name": str(ps2_char.name)},
-                        {"ps2_char4.name": str(ps2_char.name)},
-                        {"ps2_char5.name": str(ps2_char.name)},
-                        {"ps2_char6.name": str(ps2_char.name)},
-                        {"ps2_char7.name": str(ps2_char.name)},
-                    ]
-                },
+                    "ps2_characters.$id": { '$in': [ ps2_char.id ] },
+                }
             )
         except Exception as e:
             raise e
-        else:
-            if ps2_record is None:
-                return False
-            else:
-                db_dict = flatdict.FlatDict(ps2_record, delimiter=".")
-                if str(ps2_char.name) in db_dict.values():
-                    return True
+
+        if ps2_record is None:
+            return False, None
+
+        member_id = ps2_record["discord_user"]["id"]
+        return True, member_id
+
 
     @commands.slash_command()
     async def link_planetside_account(
@@ -147,7 +142,7 @@ class InitiateDiscordPs2Link(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         if not re.match(pattern="^[a-zA-Z0-9]*$", string=account_name):
-            await inter.edit_original_message("Did you know that PlanetSide 2 character names are alphanumeric?")
+            await inter.edit_original_message("PlanetSide 2 character names are alphanumeric, are you sure you spelt that right?")
             return
 
         # Check if this PS2 character exists, get the character object if it does.
@@ -159,14 +154,20 @@ class InitiateDiscordPs2Link(commands.Cog):
 
         try:
             # Check if this PS2 character already claimed.
-            ps2_db_check = await self.check_ps2_db(ps2_char)
+            ps2_db_check, member_id = await self.check_ps2_db(ps2_char)
             # If the account is already claimed, inform the user.
             if ps2_db_check is True:
-                await inter.edit_original_message(
-                    str(ps2_char.name) + " is already connected to another FU member!" +
-                    "\nIf this is an issue, contact an Officer"
-                )
-                raise NameError
+                if str(member_id) == str(inter.author.id):
+                    await inter.edit_original_message(
+                        str(ps2_char.name) + " is already connected to your account!"
+                    )
+                    raise NameError
+                else:
+                    await inter.edit_original_message(
+                        str(ps2_char.name) + " is already connected to another FU member!" +
+                        "\nIf this is an issue, contact the Bot Devs `@BotDevs`"
+                    )
+                    raise NameError
         except NameError:
             del self
             return
@@ -174,6 +175,7 @@ class InitiateDiscordPs2Link(commands.Cog):
             await inter.edit_original_message(
                 "Timed out talking to Database. Try again later"
             )
+            logging.error("Failed to connect to database", exc_info=e)
             del self
             return
 
@@ -192,7 +194,7 @@ class InitiateDiscordPs2Link(commands.Cog):
             account_linked = await self.login_checks[account_name].login_check()
         except TimeoutError:
             await inter.edit_original_message(
-                "Link timed out!\nYou must log in within 2 minutes."
+                "Link timed out!\nYou must log in within 2 minutes.\nPlease try again."
             )
             del self.login_checks[account_name]
         else:
@@ -201,12 +203,13 @@ class InitiateDiscordPs2Link(commands.Cog):
                 await inter.edit_original_message(
                     "**"
                     + str(self.login_checks[account_name].characters[0].name)
-                    + "** Log in detected!"
+                    + "** Log in detected!\nNow linking accounts..."
                 )
                 try:
                     # Link the discord user and PS2 char in the db
                     await add_to_db(ps2_char, inter.author)
                 except Exception as e:
+                    logging.error("Failed to add to the database", exc_info=e)
                     await inter.edit_original_message(
                         "Looks like something went wrong talking to the Database"
                     )
@@ -241,44 +244,52 @@ async def add_to_db(ps2_char, author):
 
     """
 
-    # Add PS2 attrs to an object
-    ps2_obj = {}
-    ps2_attrs = ["id", "name"]
-    for count, ele in enumerate(ps2_attrs):
-        ps2_obj[ele] = str(getattr(ps2_char, ele))
-
-    # If the ps2_char is in an outfit, add those details
-    if await ps2_char.outfit_member() is not None:
-        ps2_outfit = await ps2_char.outfit_member()
-        ps2_outfit_obj = {}
-        outfit = await ps2_outfit.outfit()
-        ps2_outfit_obj["outfit_name"] = outfit.name
-        ps2_outfit_obj["outfit_alias"] = outfit.alias
-        ps2_outfit_obj["outfit_rank"] = ps2_outfit.rank
-        ps2_outfit_obj["joined_outfit"] = ps2_outfit.member_since_date
-        ps2_obj["outfit"] = ps2_outfit_obj
-
-    try:
-        # find member record to append to
-        query = {"discord_user.id": str(author.id)}
-        existing_record = Database.find_one("members", query)
-        alt_count = 0
-        for i in existing_record.keys():
-            if i.startswith("ps2_char"):
-                alt_count += 1
-        if alt_count == 0:
-            char = "ps2_char1"
+    # Check if the character is in a tracked outfit
+    FU_id = "37509488620602936"
+    nFUc_id = "37558455247570544"
+    vFUs_id = "37558804429669935"
+    tracked_outfits = [FU_id, nFUc_id, vFUs_id]
+    if await ps2_char.outfit() is not None:
+        outfit = await ps2_char.outfit()
+        if outfit.id not in tracked_outfits:
+            pass
         else:
-            char = "ps2_char" + str(alt_count + 1)
-        new_values = {"$set": {str(char): ps2_obj}}
+            # Reference the character in the outfit collection to the member object
+            char_reference = DBRef(f"ps2_outfit_members_{str(outfit.alias)}",
+                                ps2_char.id
+            )
+            try:
+                Database.update_one("members", {"discord_user.id": str(author.id)}, {
+                    '$push': {'ps2_characters': char_reference}
+                })
+                return
+            except Exception as e:
+                logging.error("Failed to update database", exc_info=e)
 
-        Database.update_one("members", query, new_values)
+    # Create a new document for the member
+    ps2_player_object = {}
+    ps2_player_object["_id"] = ps2_char.id
+    ps2_player_object["name"] = str(ps2_char.name)
+    ps2_player_object["active_member"] = True
+    outfit_object = await ps2_char.outfit_member()
+    if outfit_object is not None:
+        rank = {
+            "rank": outfit_object.rank,
+            "time": datetime.datetime.utcnow()
+        }
+        ps2_player_object["outfit_id"] = outfit_object.id
+        ps2_player_object["member_since"] = datetime.fromtimestamp(outfit_object.member_since)
+        ps2_player_object["rank_history"] = [rank]
+    try:
+        Database.insert_one("ps2_other_characters", ps2_player_object)
+        char_reference = DBRef("ps2_other_characters",
+                                ps2_char.id
+            )
+        Database.update_one("members", {"discord_user.id": str(author.id)}, {
+            '$push': {'ps2_characters': char_reference}
+        })
     except Exception as e:
-        print("summits fucked ay")
         raise e
-    else:
-        return
-
 
 def setup(bot: commands.Bot):
     bot.add_cog(InitiateDiscordPs2Link(bot))
