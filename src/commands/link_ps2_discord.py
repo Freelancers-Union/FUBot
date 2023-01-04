@@ -245,9 +245,9 @@ async def add_to_db(ps2_char, author):
     """
 
     # Check if the character is in a tracked outfit
-    FU_id = 37509488620602936
-    nFUc_id = 37558455247570544
-    vFUs_id = 37558804429669935
+    FU_id = "37509488620602936"
+    nFUc_id = "37558455247570544"
+    vFUs_id = "37558804429669935"
     tracked_outfits = [FU_id, nFUc_id, vFUs_id]
     if await ps2_char.outfit() is not None:
         outfit = await ps2_char.outfit()
@@ -262,6 +262,7 @@ async def add_to_db(ps2_char, author):
                 Database.update_one("members", {"discord_user.id": str(author.id)}, {
                     '$push': {'ps2_characters': char_reference}
                 })
+                return
             except Exception as e:
                 logging.error("Failed to update database", exc_info=e)
 
