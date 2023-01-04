@@ -278,7 +278,7 @@ async def add_to_db(ps2_char, author):
             "time": datetime.datetime.utcnow()
         }
         ps2_player_object["outfit_id"] = outfit_object.id
-        ps2_player_object["member_since"] = datetime.fromtimestamp(outfit_object.member_since)
+        ps2_player_object["member_since"] = datetime.datetime.fromtimestamp(outfit_object.member_since)
         ps2_player_object["rank_history"] = [rank]
     try:
         Database.insert_one("ps2_other_characters", ps2_player_object)
