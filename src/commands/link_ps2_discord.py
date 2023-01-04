@@ -1,11 +1,13 @@
 import os
 import re
 import logging
-from datetime import datetime
+import datetime
 import flatdict
 import auraxium
 import disnake
 from disnake.ext import commands
+from bson.objectid import ObjectId
+from bson.dbref import DBRef
 from bson.objectid import ObjectId
 from bson.dbref import DBRef
 import census
@@ -245,9 +247,9 @@ async def add_to_db(ps2_char, author):
     """
 
     # Check if the character is in a tracked outfit
-    FU_id = "37509488620602936"
-    nFUc_id = "37558455247570544"
-    vFUs_id = "37558804429669935"
+    FU_id = 37509488620602936
+    nFUc_id = 37558455247570544
+    vFUs_id = 37558804429669935
     tracked_outfits = [FU_id, nFUc_id, vFUs_id]
     if await ps2_char.outfit() is not None:
         outfit = await ps2_char.outfit()
@@ -278,7 +280,7 @@ async def add_to_db(ps2_char, author):
             "time": datetime.datetime.utcnow()
         }
         ps2_player_object["outfit_id"] = outfit_object.id
-        ps2_player_object["member_since"] = datetime.fromtimestamp(outfit_object.member_since)
+        ps2_player_object["member_since"] = datetime.datetime.fromtimestamp(outfit_object.member_since)
         ps2_player_object["rank_history"] = [rank]
     try:
         Database.insert_one("ps2_other_characters", ps2_player_object)
