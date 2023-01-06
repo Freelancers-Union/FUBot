@@ -2,7 +2,6 @@ name: Upgrade chartbrew
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   build:
