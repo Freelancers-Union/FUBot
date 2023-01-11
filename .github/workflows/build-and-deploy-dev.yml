@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: self-hosted
     env:
-      LOGLEVEL: DEBUG
+      LOGLEVEL: INFO
       DISCORDTOKEN: ${{ secrets.DISCORDTOKEN_DEV }}
       CENSUS_TOKEN: ${{ secrets.CENSUS_TOKEN }}
       ENVIRONMENT: "dev"

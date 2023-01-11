@@ -9,12 +9,14 @@ import time
 import typing
 import pymongo.collection
 import auraxium
+from disnake.ext import commands
 
 
-class Ps2OutfitPlayerLogger:
+class Ps2OutfitPlayerLogger(commands.Cog):
     def __init__(
             self,
             db: Database,
+            bot: commands.Bot,
             saving_period: float = 5 * 60
     ):
         """
@@ -28,7 +30,8 @@ class Ps2OutfitPlayerLogger:
         FU_id = 37509488620602936
         nFUc_id = 37558455247570544
         vFUs_id = 37558804429669935
-        self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id}
+        SNGE_id = 37516191867639145
+        self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id, SNGE_id}
         self._max_player_count: typing.Dict[int: int] = dict.fromkeys(self._monitored_outfits, None)
         self._last_player_count_save_time: float = .0
         self.collection: pymongo.collection.Collection
@@ -43,7 +46,6 @@ class Ps2OutfitPlayerLogger:
             loop.create_task(self.ps2_outfit_events())
         except Exception as exception:
             logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
-
 
     def add_outfit(self, outfit_id: int):
         """
@@ -96,3 +98,7 @@ class Ps2OutfitPlayerLogger:
                 return
             if outfit.id in self._monitored_outfits:
                 await self._save_player_count(outfit.id, await census.get_online_outfit(outfit.id))
+
+
+def setup(bot: commands.Bot):
+    bot.add_cog(Ps2OutfitPlayerLogger(bot=bot, db=Database))
