@@ -4,26 +4,34 @@ services:
   chartbrew:
     image: razvanilin/chartbrew:latest
     ports:
-      - 4019:4019
-      - 4080:3000
+      - 0.0.0.0:4018:4018
+      - 0.0.0.0:4019:4019
     environment:
       CB_SECRET: ${CB_SECRET}
       CB_API_HOST: 0.0.0.0
       CB_API_PORT: 4019
+      CB_RESTRICT_TEAMS: 0
+      CB_DB_DIALECT: postgres
       CB_DB_HOST: chartbrew-db
       CB_DB_NAME: chartbrew
-      CB_DB_USERNAME: root
-      CB_DB_PASSWORD: ${CB_MYSQL_PASSWORD}
-      REACT_APP_CLIENT_HOST: https://charts.fugaming.org
-      REACT_APP_API_HOST: https://charts.fugaming.org
+      CB_DB_USERNAME: chartbrew
+      CB_DB_PASSWORD: ${CB_DB_PASSWORD}
+      CB_DB_PORT: 5432
+      REACT_APP_CLIENT_HOST: https://${CB_HOSTNAME}
+      REACT_APP_API_HOST: https://${CB_API_HOSTNAME}
     restart: unless-stopped
 
   chartbrew-db:
-    image: mysql:8
+    image: postgres:14
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: chartbrew
-      MYSQL_USER: chartbrew
-    restart: unless-stopped
+      POSTGRES_DB: chartbrew
+      POSTGRES_USER: chartbrew
+      POSTGRES_PASSWORD: ${CB_DB_PASSWORD}
     volumes:
-      - /var/lib/chartbrew/mysql:/var/lib/mysql
+      - /var/lib/chartbrew/db:/var/lib/postgresql/data
+    restart: unless-stopped
+    # healthcheck:
+    #   test: sh -c 'pg_isready -U $$POSTGRES_USER -d  $$POSTGRES_DB'
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 3
