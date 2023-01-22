@@ -2,7 +2,7 @@
 
 FUBot is a python Discord Bot built exclusively for the FU Discord.
 
-# Commands 
+# Commands
 
 | Command                  | Description                                   | arguments            | Example                                  |
 |--------------------------|-----------------------------------------------|----------------------|------------------------------------------|
