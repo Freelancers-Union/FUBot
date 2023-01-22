@@ -178,5 +178,6 @@ bot.load_extension("commands.squad_markup")
 bot.load_extension("loggers.discord_logger")
 bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
+bot.load_extension("send_intro")
 
 bot.run(discordClientToken)
