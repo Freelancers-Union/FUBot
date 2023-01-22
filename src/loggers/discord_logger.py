@@ -8,7 +8,6 @@ import typing
 import pymongo.collection
 import disnake
 from disnake.ext import commands
-from  send_intro import SendIntro
 
 
 class DiscordMemberLogger(commands.Cog):
@@ -92,7 +91,6 @@ class DiscordMemberLogger(commands.Cog):
                 disc_obj[ele] = str(getattr(member, ele))
             data["discord_user"] = disc_obj
             Database.insert_one("members", data)
-            # finally, send the intro message
         else:
             # Update their rejoined date
             update_data = {}
