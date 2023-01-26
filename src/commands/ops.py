@@ -1,3 +1,4 @@
+import os
 import helpers.discord_checks as dc
 import urllib.parse
 import random
@@ -168,6 +169,6 @@ async def vfus(Message):
 
 async def webhook_send(event):
     async with aiohttp.ClientSession() as session:
-        webhook = Webhook.from_url('https://discord.com/api/webhooks/1054478039305699438/VBdNaYJDYfNQ6XdcITIl7tt8XcDlz7LCmbNSajCvfaF7iGB7bELefCqeI8RJRWBpdEy6', session=session)
+        webhook = Webhook.from_url(os.getenv('INTERLINK_WEBHOOK'), session=session)
         message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
         await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
