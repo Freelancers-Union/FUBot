@@ -158,7 +158,7 @@ class SendIntro(commands.Cog):
         """
         await inter.response.send_message("Sending intro message to DM...", ephemeral=True)
         embeds = await self.paginator()
-        await inter.author.send(content=None, embed=embeds[0], view = Menu(embeds))
+        await inter.author.send(content=None, embed=embeds[0], view=Menu(embeds))
 
 
 def setup(bot):
