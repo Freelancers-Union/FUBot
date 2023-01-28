@@ -52,7 +52,7 @@ class PS2OutfitMembers(commands.Cog):
             for member in new_members:
                 ps2_player_object = {}
                 character_obj = await member.character()
-                rank = {
+                rank_history = {
                     "rank": member.rank,
                     "time": datetime.now()
                 }
@@ -61,7 +61,8 @@ class PS2OutfitMembers(commands.Cog):
                 ps2_player_object["active_member"] = True
                 ps2_player_object["outfit_id"] = member.outfit_id
                 ps2_player_object["member_since"] = datetime.fromtimestamp(member.member_since)
-                ps2_player_object["rank_history"] = [rank]
+                ps2_player_object["rank"] = member.rank
+                ps2_player_object["rank_history"] = [rank_history]
                 data.append(ps2_player_object)
                 # Write to the DB
             if not data:
@@ -85,6 +86,17 @@ class PS2OutfitMembers(commands.Cog):
                     '$push': {'rejoined_outfit_date': datetime.now()},
                     '$set': {'active_member': True}
                 })
+    
+    async def update_member_ranks(self, updated_ranks, collection):
+        if collection is not None and len(updated_ranks) != 0:
+            for member in updated_ranks:
+                collection.update_one({'_id': member.id}, {
+                    '$push': {'rank_history': {
+                        "rank": member.rank,
+                        "time": datetime.now()
+                    }},
+                    '$set': {'rank': member.rank}
+                })
 
     @tasks.loop(minutes=1.0)
     async def update_outfit_members(self):
@@ -102,7 +114,7 @@ class PS2OutfitMembers(commands.Cog):
                     "_id": 1,
                     "left_outfit_date": 1,
                     "active_member": 1,
-                    "rank_history": 1
+                    "rank": 1
                 })
                 db_members = []
                 for result in db_result:
@@ -116,12 +128,18 @@ class PS2OutfitMembers(commands.Cog):
                 for member in live_members:
                     live_member_ids.append(member.id)
                     # List comprehension:
-                    # If a dictionary in the list of dictionaries (db_members) does not have a key "_id" with a value equal to the member.id then:
+                    # If a dictionary in the list of dictionaries (db_members) does not have a key "_id" with a value equal to the member.id then
+                    # add the member to the new_members list
                     if not any(d.get('_id') == member.id for d in db_members):
                         new_members.append(member)
 
                     elif any(d.get('_id') == member.id and d.get('active_member') is False for d in db_members):
                         returning_members.append(member)
+                    else:
+                        # Check for any changes in rank
+                        for db_member in db_members:
+                            if db_member.get('_id') == member.id and db_member.get('rank') != member.rank:
+                                updated_ranks.append(member)
 
                 # Establish which members have left the outfit
                 left_members = []
@@ -133,6 +151,7 @@ class PS2OutfitMembers(commands.Cog):
                 await self.add_new_members(new_members, collection)
                 await self.member_rejoined_outfit(returning_members, collection)
                 await self.member_left_outfit(left_members, collection)
+                await self.update_member_ranks(updated_ranks, collection)
 
         except Exception as exception:
             logging.error("Failed to update PS2 Outfit Member Collection", exc_info=exception)
