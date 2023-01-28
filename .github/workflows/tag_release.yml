@@ -1,0 +1,37 @@
+---
+name: Bump version
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pre_release_branches: develop
+
+      - name: Create a GitHub release
+        if: ${{ contains(fromJson( '[ "refs/heads/master" ]' ), github.ref) }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+
+      - name: Create a GitHub pre-release
+        if: ${{ contains(fromJson( '[ "refs/heads/develop" ]' ), github.ref) }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          prerelease: true

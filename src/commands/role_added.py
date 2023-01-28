@@ -87,6 +87,5 @@ class MemberRoleUpdate(commands.Cog):
         url="https://forums.daybreakgames.com/ps2/styles/PS2/xenforo/avatars/avatar_l.png"
     )
 
-
 def setup(client):
     client.add_cog(MemberRoleUpdate(client))
