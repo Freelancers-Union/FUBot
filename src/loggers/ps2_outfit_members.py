@@ -62,7 +62,6 @@ class PS2OutfitMembers(commands.Cog):
                 ps2_player_object["outfit_id"] = member.outfit_id
                 ps2_player_object["member_since"] = datetime.fromtimestamp(member.member_since)
                 ps2_player_object["rank_history"] = [rank]
-
                 data.append(ps2_player_object)
                 # Write to the DB
             if not data:
