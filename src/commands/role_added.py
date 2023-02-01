@@ -1,5 +1,8 @@
+from datetime import datetime
+import logging
 import disnake
 from disnake.ext import commands
+from database_connector import Database
 
 
 class MemberRoleUpdate(commands.Cog):
@@ -7,7 +10,11 @@ class MemberRoleUpdate(commands.Cog):
     Triggers when a member role changes
 
     """
-    def __init__(self, client: commands.Bot):
+    def __init__(self,
+    client: commands.Bot,
+    db: Database,):
+        self.db = db.DATABASE
+        self.collection = self.db["members"]
         self.client = client
         self.onboard_roles = ["Planetside 2"]
         self.onboard_embeds = {}
@@ -26,12 +33,20 @@ class MemberRoleUpdate(commands.Cog):
         after : class : disnake.Member after change
 
         """
+
         try:
+            # Check if the member has gained a role
             if len(before.roles) < len(after.roles):
-                for i in (set(before.roles) ^ set(after.roles)):
-                    gained_role = i
-                if str(gained_role.name) in self.onboard_roles:
-                    await after.send(embed=self.onboard_embeds[str(gained_role.name)])
+                for gained in (set(before.roles) ^ set(after.roles)):
+                    await self._add_role(gained, after)
+                # Check if the user has gained a role that has an onboarding message
+                    if str(gained.name) in self.onboard_roles:
+                        await after.send(embed=self.onboard_embeds[str(gained.name)])
+                        return
+            # Check if the member has lost a role
+            elif len(before.roles) > len(after.roles):
+                for lost in (set(before.roles) ^ set(after.roles)):
+                    await self._remove_role(lost, after)
                     return
         except disnake.HTTPException:
             raise
@@ -41,7 +56,38 @@ class MemberRoleUpdate(commands.Cog):
             raise
         except disnake.ValueError:
             raise
+    
+    async def _add_role(self, role, member):
+        """
+        Adds a role to a member
 
+        Parameters
+        ----------
+        role : class : disnake.Role
+        member : class : disnake.Member
+
+        """
+        self.collection.update_one({'discord_user.id': str(member.id)}, {
+            '$push': {'discord_user.roles': {
+                "role": role.name,
+                "timestamp": datetime.utcnow()
+                }}
+            })
+
+    async def _remove_role(self, role, member):
+        """
+        Removes a role from a member
+
+        Parameters
+        ----------
+        role : class : disnake.Role
+        member : class : disnake.Member
+
+        """
+        logging.info(f"Removing role {role.name} from {member.name}")
+        self.collection.update_one({'discord_user.id': str(member.id)}, {
+            '$pull': {'discord_user.roles': {"role": role.name}}
+        })
 
     ps2_onboard_payload = disnake.Embed(
         title="Welcome to PlanetSide 2 with Freelancers Union!",
@@ -87,5 +133,40 @@ class MemberRoleUpdate(commands.Cog):
         url="https://forums.daybreakgames.com/ps2/styles/PS2/xenforo/avatars/avatar_l.png"
     )
 
+    @commands.slash_command(dm_permission=False)
+    @commands.default_member_permissions(manage_guild=True)
+    async def sync_roles(
+            self,
+            inter: disnake.ApplicationCommandInteraction
+    ):
+        """
+        Manually Sync Roles
+        Only available to Guild Administrators
+        """
+        await inter.response.defer(ephemeral=True)
+        await inter.edit_original_message("Syncing roles...")
+        members = inter.guild.members
+        while members:
+            try:
+                member = members.pop()
+                db_record = Database.find_one("members", {'discord_user.id': str(member.id)})
+                # Add missing roles
+                if db_record:
+                    for role in member.roles:
+                        if role.name not in [r["role"] for r in db_record['discord_user']['roles']]:
+                            await self._add_role(role, member)
+
+                    # Remove surplus roles
+                    for role in db_record['discord_user']['roles']:
+                        if role['role'] not in [r.name for r in member.roles]:
+                            role_class = disnake.utils.get(inter.guild.roles, name=role['role'])
+                            if role_class:
+                                await self._remove_role(role_class, member)
+                await inter.edit_original_message("Sync complete")
+            except Exception as e:
+                logging.error(e)
+                await inter.edit_original_message(f"Error syncing: {e}")
+
+
 def setup(client):
-    client.add_cog(MemberRoleUpdate(client))
+    client.add_cog(MemberRoleUpdate(client, db = Database))
