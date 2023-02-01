@@ -67,6 +67,7 @@ class MemberRoleUpdate(commands.Cog):
         member : class : disnake.Member
 
         """
+        logging.info(f"Discord : Adding role {role.name} to {member.name}")
         self.collection.update_one({'discord_user.id': str(member.id)}, {
             '$push': {'discord_user.roles': {
                 "role": role.name,
@@ -84,7 +85,7 @@ class MemberRoleUpdate(commands.Cog):
         member : class : disnake.Member
 
         """
-        logging.info(f"Removing role {role.name} from {member.name}")
+        logging.info(f"Discord : Removing role {role.name} from {member.name}")
         self.collection.update_one({'discord_user.id': str(member.id)}, {
             '$pull': {'discord_user.roles': {"role": role.name}}
         })
