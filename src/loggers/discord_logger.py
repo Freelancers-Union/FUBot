@@ -1,10 +1,6 @@
-from database_connector import Database
 import logging
-import os
 import datetime
-import asyncio
-import time
-import typing
+from database_connector import Database
 import pymongo.collection
 import disnake
 from disnake.ext import commands
@@ -40,9 +36,6 @@ class DiscordMemberLogger(commands.Cog):
 
         try:
             self.collection = db.init_timeseries_db(db_collection_name, collection_options)
-            # This will create a task. currently, the loop will be run forever by the bot in disnake bots code
-            loop = asyncio.get_event_loop()
-            loop.create_task(self.discord_guild_events())
         except Exception as exception:
             logging.error("Failed to initialize Discord member logger", exc_info=exception)
 
@@ -76,7 +69,13 @@ class DiscordMemberLogger(commands.Cog):
             }
         )
 
-    async def _add_member_profile(self, member):
+    async def add_member_profile(self, member):
+        """
+        Adds a new member to the database
+        Parameters
+        ----------
+        member: disnake.Member
+        """
         # Query the DB to see if this user has appeared before.
         query = {"discord_user.id": str(member.id)}
         db_entry = Database.find_one("members", query)
@@ -91,11 +90,13 @@ class DiscordMemberLogger(commands.Cog):
                 disc_obj[ele] = str(getattr(member, ele))
             data["discord_user"] = disc_obj
             Database.insert_one("members", data)
-        else:
+            logging.info(f"Added new member {member.name} to the database")
+        elif str(db_entry["discord_user"]["joined_at"]) != str(member.joined_at):
             # Update their rejoined date
             update_data = {}
             update_data = {"$set": {'discord_user.re-joined': member.joined_at}}
             Database.update_one("members", query, update_data)
+            logging.info(f"{member.name} rejoined the guild")
 
         # TODO: We will at some point need to extend this to handle a single user in multiple tracked guilds.
         # But let's cross that bridge when we get to it.
@@ -116,7 +117,7 @@ class DiscordMemberLogger(commands.Cog):
         guild = member.guild.id
         if guild in self._monitored_guilds:
             await self._save_member_count(guild, member.guild.member_count)
-            await self._add_member_profile(member)
+            await self.add_member_profile(member)
 
     @commands.Cog.listener("on_member_remove")
     async def on_raw_member_remove(self, payload):

@@ -33,15 +33,15 @@ discordClientToken = os.getenv('DISCORDTOKEN')
 Botdescription = "The serious bot for the casual Discord."
 
 Database.initialize()
+logging.info("Starting Arma Logger...")
 arma_logger = ArmaLogger(Database)
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("?"),
     description=Botdescription,
     intents=intents,
-    sync_commands_debug=False
+    command_sync_flags=commands.CommandSyncFlags.default()
 )
-
 
 @bot.event
 async def on_ready():
@@ -179,5 +179,6 @@ bot.load_extension("loggers.discord_logger")
 bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
 bot.load_extension("send_intro")
+bot.load_extension("helpers.sync_commands")
 
 bot.run(discordClientToken)
