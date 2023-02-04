@@ -12,11 +12,8 @@ class MemberRoleUpdate(commands.Cog):
     Triggers when a member role changes
     """
     def __init__(self,
-    client: commands.Bot,
-    db: Database,):
-        self.db = db.DATABASE
+    client: commands.Bot):
         self.DiscordDBActions = DiscordDB()
-        self.collection = self.db["members"]
         self.client = client
         self.onboard_roles = ["Planetside 2"]
         self.onboard_embeds = {}
@@ -106,4 +103,4 @@ class MemberRoleUpdate(commands.Cog):
     )
 
 def setup(client):
-    client.add_cog(MemberRoleUpdate(client, db = Database))
+    client.add_cog(MemberRoleUpdate(client))
