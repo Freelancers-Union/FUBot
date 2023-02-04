@@ -17,11 +17,12 @@ class Database(object):
 
     @staticmethod
     def initialize():
-        print(Database.URI)
         try:
+            logging.info("Initializing Database...")
             client = pymongo.MongoClient(Database.URI, serverSelectionTimeoutMS=5000)
             Database.DATABASE = client["freelancers_union"]
-            print(client.list_database_names())
+            logging.info(f"Current Databases initialized: {client.list_database_names()}")
+            logging.info(f"Current Collections initialized: {Database.DATABASE.list_collection_names()}")
         except pymongo.errors.ServerSelectionTimeoutError:
             logging.exception("DB server connection timed out.")
         else:
