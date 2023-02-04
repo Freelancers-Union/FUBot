@@ -32,14 +32,13 @@ class ArmaLogger:
         """
         try:
             response = self.server_query.query_game_server()
-            player_count = response["players"]
-            mission = response["description"]
+            player_count = response.get("players")
+            mission = response.get("description")
         except Exception as exception:
             player_count = -1
             mission = "None"
             logging.error("Failed to log ArmA server status", exc_info=exception)
-
-        if self.collection is not None:
+        if player_count is not None and mission is not None and self.collection is not None:
             timestamp = datetime.datetime.utcnow().replace(microsecond=0, second=0)
 
             self.collection.insert_one({
