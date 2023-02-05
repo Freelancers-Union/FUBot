@@ -71,9 +71,10 @@ class EditorEventMenu(disnake.ui.View):
         self.guild = guild
         event = None
         for _event in event_list:
-            if _event.name is event_name:
+            if _event.name == event_name:
                 event = _event
-        self.event = None
+        self.event = event
+        pass
 
     @disnake.ui.role_select(row=0)
     async def _event_editor_role_select(self, role_select: disnake.ui.RoleSelect, inter: disnake.MessageInteraction):
@@ -118,6 +119,7 @@ class EditorEventModal(disnake.ui.Modal):
                 custom_id="description",
                 value=event.description if event else None,
                 style=disnake.TextInputStyle.paragraph,
+                required=False
             ),
             disnake.ui.TextInput(
                 label="(opt) Secondary title",
@@ -125,7 +127,8 @@ class EditorEventModal(disnake.ui.Modal):
                 custom_id="secondary_title",
                 value=event.secondary_tite if event else None,
                 style=disnake.TextInputStyle.short,
-                max_length=50,
+                required=False,
+                max_length=100,
             ),
             disnake.ui.TextInput(
                 label="(opt) Secondary text",
@@ -133,6 +136,7 @@ class EditorEventModal(disnake.ui.Modal):
                 custom_id="optional_text",
                 value=event.secondary_text if event else None,
                 style=disnake.TextInputStyle.paragraph,
+                required=False
             )
         ]
         super().__init__(title=title, components=components)
