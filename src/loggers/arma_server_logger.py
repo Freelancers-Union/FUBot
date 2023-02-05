@@ -34,15 +34,20 @@ class ArmaLogger:
             response = self.server_query.query_game_server()
             player_count = response.get("players")
             mission = response.get("description")
-        except Exception as exception:
-            player_count = -1
-            mission = "None"
-            logging.error("Failed to log ArmA server status", exc_info=exception)
-        if player_count is not None and mission is not None and self.collection is not None:
-            timestamp = datetime.datetime.utcnow().replace(microsecond=0, second=0)
+            if self.collection is not None:
+                timestamp = datetime.datetime.utcnow()
+                last = self.collection.find_one(sort=[("timestamp", pymongo.DESCENDING)])
 
-            self.collection.insert_one({
-                "metadata": {"mission": mission},
-                "player_count": player_count,
-                "timestamp": timestamp
-            })
+                player_count = player_count if player_count is not None else -1
+                mission = mission if player_count is not None else None
+
+                if not player_count:
+                    logging.info("ArmA player count unchanged")
+                if last["player_count"] != player_count:
+                    self.collection.insert_one({
+                        "metadata": {"mission": mission},
+                        "player_count": player_count,
+                        "timestamp": timestamp
+                    })
+        except Exception as exception:
+            logging.error("Something went wrong logging ArmA3 server", exc_info=exception)
