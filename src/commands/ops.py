@@ -167,8 +167,16 @@ async def vfus(Message):
     )
     return Message
 
+
 async def webhook_send(event):
-    async with aiohttp.ClientSession() as session:
-        webhook = Webhook.from_url(os.getenv('INTERLINK_WEBHOOK'), session=session)
-        message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
-        await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
+    """
+
+    Parameters
+    ----------
+    Send a webhook to the interlink discord
+    """
+    if os.getenv('INTERLINK_WEBHOOK'):
+        async with aiohttp.ClientSession() as session:
+            webhook = Webhook.from_url(os.getenv('INTERLINK_WEBHOOK'), session=session)
+            message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
+            await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
