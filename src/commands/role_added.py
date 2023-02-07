@@ -1,13 +1,19 @@
+from datetime import datetime
+import logging
 import disnake
 from disnake.ext import commands
+from database_connector import Database
+from loggers.discord_logger import DiscordMemberLogger
+from helpers.discord_db_actions import DiscordDB
 
 
 class MemberRoleUpdate(commands.Cog):
     """
     Triggers when a member role changes
-
     """
-    def __init__(self, client: commands.Bot):
+    def __init__(self,
+    client: commands.Bot):
+        self.DiscordDBActions = DiscordDB()
         self.client = client
         self.onboard_roles = ["Planetside 2"]
         self.onboard_embeds = {}
@@ -19,6 +25,8 @@ class MemberRoleUpdate(commands.Cog):
         """
         listens for changes to members such as role change
         If role is onboardable, DM onboarding message.
+        If a role is removed, remove from database
+        If a role is added, add to database
 
         Parameters
         ----------
@@ -26,12 +34,20 @@ class MemberRoleUpdate(commands.Cog):
         after : class : disnake.Member after change
 
         """
+
         try:
+            # Check if the member has gained a role
             if len(before.roles) < len(after.roles):
-                for i in (set(before.roles) ^ set(after.roles)):
-                    gained_role = i
-                if str(gained_role.name) in self.onboard_roles:
-                    await after.send(embed=self.onboard_embeds[str(gained_role.name)])
+                for gained in (set(before.roles) ^ set(after.roles)):
+                    await self.DiscordDBActions.add_role(gained, after)
+                # Check if the user has gained a role that has an onboarding message
+                    if str(gained.name) in self.onboard_roles:
+                        await after.send(embed=self.onboard_embeds[str(gained.name)])
+                        return
+            # Check if the member has lost a role
+            elif len(before.roles) > len(after.roles):
+                for lost in (set(before.roles) ^ set(after.roles)):
+                    await self.DiscordDBActions.remove_role(lost, after)
                     return
         except disnake.HTTPException:
             raise
@@ -41,7 +57,6 @@ class MemberRoleUpdate(commands.Cog):
             raise
         except disnake.ValueError:
             raise
-
 
     ps2_onboard_payload = disnake.Embed(
         title="Welcome to PlanetSide 2 with Freelancers Union!",
