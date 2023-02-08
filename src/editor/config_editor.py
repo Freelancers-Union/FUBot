@@ -41,9 +41,6 @@ class Editor(commands.Cog):
         edit stuff
         """
         await inter.response.send_message(embed=self.embed, view=EditorMenu(), ephemeral=True)
-        # await inter.response.send_message("Sending intro message to DM...", ephemeral=True)
-        # embeds = await self.paginator()
-        # await inter.author.send(content=None, embed=embeds[0], view=newMenu(embeds))
 
 # def setup(bot):
 #     bot.add_cog(Editor(bot))
