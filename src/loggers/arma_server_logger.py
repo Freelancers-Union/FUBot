@@ -1,6 +1,7 @@
 import logging
 import os
 import datetime
+import pymongo
 from steam import SteamQuery
 from database_connector import Database
 
