@@ -25,7 +25,8 @@ async def event_message(
         "FUEL": {"short_title":"FUEL", "ts_channel": "FUEL (Emerging Leaders)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
         "FUGG": {"short_title":"FUGG", "ts_channel": "FUGG (Galaxy Group)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
         "Huntsmen": {"short_title":"Huntsmen", "ts_channel": "Huntsmen", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
-        "ArmaOps": {"short_title":"ArmaOps", "ts_channel": "", "game": "Arma 3", "ping_role": "Arma 3", "color": 0xb641d}
+        "ArmaOps": {"short_title":"ArmaOps", "ts_channel": "", "game": "Arma 3", "ping_role": "Arma 3", "color": 0xb641d},
+        "CombinedArms": {"short_title":"CombinedArms", "ts_channel": "Combined Arms", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F}
     }
 
     game = ops_dict[event]["game"]
@@ -54,6 +55,8 @@ async def event_message(
                                                str(teamspeak_channel),
                                            label="Click to open TeamSpeak")
             Message = await message_embed(message_body, ops_dict[event])
+
+            # Finds an image and uses it
             Message.set_image(
                 file=disnake.File(fp=random.choice(glob.glob("./assets/splash_art/" + str(ops_dict[event]["short_title"].lower()) + "/*.png")))
             )
@@ -167,6 +170,12 @@ async def vfus(Message):
     )
     return Message
 
+async def combinedarms(Message):
+    Message.add_field(
+        name="Infantry, Armor and Air",
+        value="Combined Arms!",
+    )
+    return Message
 
 async def webhook_send(event):
     """
