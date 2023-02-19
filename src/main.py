@@ -7,11 +7,8 @@ import disnake
 from disnake.ext import commands
 import auraxium
 from auraxium import ps2
-import census
 import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
-import commands.get_player as get_player
-import commands.get_outfit as get_outfit
 import commands.ops as ops
 from database_connector import Database
 from loggers.arma_server_logger import ArmaLogger
@@ -47,56 +44,6 @@ bot = commands.Bot(
 async def on_ready():
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
-
-
-@bot.slash_command()
-async def player_card(
-        inter: disnake.CommandInteraction,
-        character_name: str,
-):
-    """
-    Get character information for a given character
-
-    Parameters
-    ----------
-    character_name: character name to search for
-    """
-    await inter.response.defer()
-    try:
-        player_card = await get_player.get_player(character_name)
-        if player_card is not None:
-            await inter.edit_original_message(" ", embed=player_card)
-        else:
-            await inter.edit_original_message("Could not find character: " + str(character_name))
-    except Exception as e:
-        await inter.edit_original_message("Hmm, looks like something went wrong.")
-        logging.exception(e)
-
-
-@bot.slash_command()
-async def outfit(
-        inter: disnake.ApplicationCommandInteraction,
-        tag: str = 0,
-        name: str = 0,
-):
-    """
-    Get Outfit information for a given outfit
-
-    Parameters
-    ----------
-    name: Full outfit name
-    tag: Outfit tag
-    """
-    await inter.response.defer()
-    try:
-        outfit_card = await get_outfit.get_outfit(tag, name)
-        if outfit_card is not None:
-            await inter.edit_original_message("", embed=outfit_card)
-        else:
-            await inter.edit_original_message("Could not find outfit: " + str(name) + str(tag))
-    except Exception as e:
-        await inter.edit_original_message("Hmm, looks like something went wrong.")
-        logging.exception(e)
 
 
 async def autocomplete_event(inter, string: str) -> List[str]:
@@ -175,6 +122,7 @@ bot.load_extension("commands.role_added")
 bot.load_extension("commands.new_discord_members")
 bot.load_extension("commands.link_ps2_discord")
 bot.load_extension("commands.squad_markup")
+bot.load_extension("commands.ps2_lookup")
 bot.load_extension("loggers.discord_logger")
 bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
