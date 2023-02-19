@@ -4,8 +4,8 @@ import datetime
 import asyncio
 import pymongo.collection
 import auraxium
-from auraxium import event, ps2
-from disnake.ext import commands, tasks
+from auraxium import event
+from disnake.ext import commands
 from database_connector import Database
 from census import Census
 
