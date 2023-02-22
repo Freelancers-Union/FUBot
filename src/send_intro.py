@@ -1,7 +1,13 @@
+import os
+import logging
+import datetime
 from typing import List
+import aiohttp
 import disnake
+from disnake import Webhook
 from disnake.ext import commands
 from disnake.enums import ButtonStyle
+import helpers.discord_checks as dc
 
 
 class Menu(disnake.ui.View):
@@ -19,6 +25,7 @@ class Menu(disnake.ui.View):
         self._update_state()
 
     def _update_state(self) -> None:
+        self.member.disabled = self.index != len(self.embeds) - 1
         self.first_page.disabled = self.prev_page.disabled = self.index == 0
         self.last_page.disabled = self.next_page.disabled = self.index == len(self.embeds) - 1
 
@@ -36,9 +43,17 @@ class Menu(disnake.ui.View):
 
         await inter.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    # @disnake.ui.button(emoji="🗑️", style=disnake.ButtonStyle.red)
-    # async def remove(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
-    #     await inter.response.edit_message(view=None)
+    @disnake.ui.button(label="Membership", style=disnake.ButtonStyle.green)
+    async def member(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await self.webhook_send(author=inter.author)
+        request = disnake.Embed(
+              title="Membership",
+              description="Request received!\nAn Officer will be in touch soon to get you onboard :ship:\n\nIn the meantime, head over and chat with the rest of the community in the [#general](https://discord.com/channels/282514718445273089/282514718445273089) channel!",
+              colour=disnake.Colour(14812691),
+          ).set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/986678839008690176/1071460284922855444/09-membership.png"
+          )
+        await inter.response.edit_message(embed=request, view=self)
 
     @disnake.ui.button(emoji="▶", style=disnake.ButtonStyle.secondary)
     async def next_page(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
@@ -53,6 +68,21 @@ class Menu(disnake.ui.View):
         self._update_state()
 
         await inter.response.edit_message(embed=self.embeds[self.index], view=self)
+
+    async def webhook_send(self,author=None):
+        member_request = disnake.Embed(
+              title="Membership Request <:fu:914187604168171581>",
+              description=f"{author.mention} has requested membership!\nPlease contact them to get them onboard :ship:",
+              colour=disnake.Colour(14812691)
+          ).set_footer(
+            text=f"{datetime.datetime.now().strftime(fmt='%d/%m/%Y %H:%M')}"
+          )
+        if os.getenv('OFFICERS_WEBHOOK'):
+            async with aiohttp.ClientSession() as session:
+                webhook = Webhook.from_url(os.getenv('OFFICERS_WEBHOOK'), session=session)
+                await webhook.send(embed=member_request)
+                return
+
 
 class SendIntro(commands.Cog):
 
@@ -136,7 +166,7 @@ class SendIntro(commands.Cog):
 
           disnake.Embed(
               title="Membership",
-              description="*FU membership means identifying with the goals and values of the community. \nBecoming a member is **your choice**, not something we need you to become.\nYou can still play with us without being a member.*\n\nTo become a member:\n:white_small_square: (Optional but recommended) Read the [Introduction](https://wiki.fugaming.org/intro-module) document on our Wiki\n:white_small_square: (1/2) Contact an Officer about an introduction meeting on TS\n:white_small_square: (2/2) Attend a scheduled introduction meeting. See [#schedule](https://discordapp.com/channels/282514718445273089/539192935258783744)\n:white_small_square: During the meeting the Officer will discuss any questions you have regarding FU (assuming you've read the intro document or played with us for some time)\n:white_small_square: You will be offered FU membership during the meeting which you can accept or reject. \n:white_small_square: If you reject membership you will be given Guest status on our discord and not notified again about introduction events. You may at any time ask for membership should you change your mind.\n\nMembership gives you the member rank in PlanetSide, the **[FU]** tag on TS and exclusive access to the Discord member's channel category. \n\n**Membership is completely optional**, accept if you wish to associate with the community and wear the **[FU]** tag.",
+              description="*FU membership means identifying with the goals and values of the community. \nBecoming a member is **your choice**, not something we need you to become.\nYou can still play with us without being a member.*\n\nMembership gives you the member rank in PlanetSide, the **[FU]** tag on TS and exclusive access to Member only events and the Discord member's channels. \n\n**To become a member:**\n:white_small_square: (Optional but recommended) Read the [Introduction](https://wiki.fugaming.org/intro-module) document on our Wiki\n:white_small_square: Click **Membership** at the bottom of this message.\n\nIf you don't want membership right now you will be given Guest status on our discord and not notified again about introduction events. \nYou may at any time ask for membership should you change your mind.",
               colour=disnake.Colour(14812691),
           ).set_thumbnail(
             url="https://cdn.discordapp.com/attachments/986678839008690176/1071460284922855444/09-membership.png"
