@@ -41,7 +41,8 @@ class Ps2Lookup(commands.Cog):
     async def player(
             self,
             inter: disnake.ApplicationCommandInteraction,
-            character_name: str
+            character_name: str,
+            private: bool = False
     ):
         """
         Get information about a player
@@ -49,8 +50,9 @@ class Ps2Lookup(commands.Cog):
         Parameters
         ----------
         character_name: character name to search for
+        private: whether to show the message as a private message (default: False)
         """
-        await inter.response.defer()
+        await inter.response.defer(ephemeral=private)
         await inter.edit_original_message(f"Looking up {character_name}... :mag:")
         try:
             ps2_char = await Census.get_character(character_name = character_name)
@@ -63,21 +65,21 @@ class Ps2Lookup(commands.Cog):
                 await inter.edit_original_message(content = None, embed=Message)
             else:
                 await inter.edit_original_message(content = None, embed = disnake.Embed(
-                    title = "Character Not Found :confused:",
+                    title = "Character Not Found 😕",
                     description = f"Could not find {character_name}, please check spelling and try again."
                 ))
         except auraxium.errors.CensusError as e:
             logging.error(e)
-            await inter.edit_original_message("Census API Error. :confused:")
+            await inter.edit_original_message("Census API Error. 😕")
         except auraxium.errors.MaintenanceError as e:
             logging.error(e)
-            await inter.edit_original_message("Census API Maintenance. :confused:")
+            await inter.edit_original_message("Census API Maintenance. 😕")
         except auraxium.errors.AuraxiumException as e:
             logging.error(e)
-            await inter.edit_original_message("Generic Error. :confused:")
+            await inter.edit_original_message("Generic Error. 😕")
         except Exception as e:
             logging.error(e)
-            await inter.edit_original_message("Generic Error. :confused:")
+            await inter.edit_original_message("Generic Error. 😕")
 
 
     async def render_character_message(self,
@@ -137,7 +139,8 @@ class Ps2Lookup(commands.Cog):
             self,
             inter: disnake.ApplicationCommandInteraction,
             outfit_tag: str = None,
-            outfit_name: str = None
+            outfit_name: str = None,
+            private: bool = False
     ):
         """
         Get information about an outfit
@@ -146,8 +149,9 @@ class Ps2Lookup(commands.Cog):
         ----------
         outfit_name: outfit name to search for
         outfit_tag: outfit tag to search for
+        private: whether to show the message as a private message (default: False)
         """
-        await inter.response.defer()
+        await inter.response.defer(ephemeral=private)
         await inter.edit_original_message(f"Looking up Outfit... :mag:")
         try:
             outfit = await Census.get_outfit(outfit_name = outfit_name, outfit_tag = outfit_tag)
@@ -156,21 +160,21 @@ class Ps2Lookup(commands.Cog):
                 await inter.edit_original_message(content = None, embed=Message)
             else:
                 await inter.edit_original_message(content = None, embed = disnake.Embed(
-                    title = "Outfit Not Found :confused:",
+                    title = "Outfit Not Found 😕",
                     description = f"Could not find that outfit, please check spelling and try again."
                 ))  
         except auraxium.errors.CensusError as e:
             logging.error(e)
-            await inter.edit_original_message("Census API Error. :confused:")
+            await inter.edit_original_message("Census API Error. 😕")
         except auraxium.errors.MaintenanceError as e:
             logging.error(e)
-            await inter.edit_original_message("Census API Maintenance. :confused:")
+            await inter.edit_original_message("Census API Maintenance. 😕")
         except auraxium.errors.AuraxiumException as e:
             logging.error(e)
-            await inter.edit_original_message("Generic Error. :confused:")
+            await inter.edit_original_message("Generic Error. 😕")
         except Exception as e:
             logging.error(e)
-            await inter.edit_original_message("Generic Error. :confused:")
+            await inter.edit_original_message("Generic Error. 😕")
 
 
     async def render_outfit_message(self,
