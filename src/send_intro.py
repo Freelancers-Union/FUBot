@@ -1,26 +1,41 @@
+import os
+import logging
+import datetime
 from typing import List
 import disnake
 from disnake.ext import commands
 from disnake.enums import ButtonStyle
+import helpers.discord_checks as dc
 
 
 class Menu(disnake.ui.View):
-    def __init__(self, embeds: List[disnake.Embed]):
+    def __init__(self, embeds: List[disnake.Embed], member = disnake.Member):
         super().__init__(timeout=None)
+        self.guild_member = member
         self.embeds = embeds
         self.index = 0
+        self.member_role = "Member"
+        self.notification_channel = "officers"
+        self.requested = False
 
         # Sets the footer of the embeds with their respective page numbers.
         for i, embed in enumerate(self.embeds):
-            green_dots = "⚪️" * (i + 1)
-            white_dots = "⚫️" * (len(self.embeds) - i - 1)
-            embed.set_footer(text=f"{green_dots}{white_dots}\n\nIf this message stops responding, you can regenerate it using /intro")
+            white_dots = "⚪️" * (i + 1)
+            black_dots = "⚫️" * (len(self.embeds) - i - 1)
+            embed.set_footer(text=f"{white_dots}{black_dots}\n\nIf this message stops responding, you can regenerate it using /intro in the FU server")
 
         self._update_state()
 
     def _update_state(self) -> None:
+        # self.member.disabled = self.index != len(self.embeds) - 1
         self.first_page.disabled = self.prev_page.disabled = self.index == 0
         self.last_page.disabled = self.next_page.disabled = self.index == len(self.embeds) - 1
+        if self.index == len(self.embeds) - 1 and self.requested is False:
+            member_role = disnake.utils.get(self.guild_member.roles, name=self.member_role)
+            if member_role is None:
+                self.add_item(self.member)
+        else:
+            self.remove_item(self.member)
 
     @disnake.ui.button(emoji="⏪", style=disnake.ButtonStyle.blurple)
     async def first_page(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
@@ -36,9 +51,19 @@ class Menu(disnake.ui.View):
 
         await inter.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    # @disnake.ui.button(emoji="🗑️", style=disnake.ButtonStyle.red)
-    # async def remove(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
-    #     await inter.response.edit_message(view=None)
+    @disnake.ui.button(label="Membership", style=disnake.ButtonStyle.green)
+    async def member(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await self.notify_send(author=inter.author)
+        self.remove_item(self.member)
+        request = disnake.Embed(
+              title="Membership",
+              description="Request received!\nAn Officer will be in touch soon to get you onboard :ship:\n\nIn the meantime, head over and chat with the rest of the community in the [#general](https://discord.com/channels/282514718445273089/282514718445273089) channel!",
+              colour=disnake.Colour(14812691),
+          ).set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/986678839008690176/1071460284922855444/09-membership.png"
+          )
+        self.requested = True
+        await inter.response.edit_message(embed=request, view=self)
 
     @disnake.ui.button(emoji="▶", style=disnake.ButtonStyle.secondary)
     async def next_page(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
@@ -54,10 +79,32 @@ class Menu(disnake.ui.View):
 
         await inter.response.edit_message(embed=self.embeds[self.index], view=self)
 
+    async def notify_send(self,author=None):
+        member_request = disnake.Embed(
+              title="Membership Request",
+              description="Please contact this player to get them onboard! :ship:",
+              colour=disnake.Colour(14812691)
+          ).add_field(
+                name="User:",
+                value=f"{author.mention}"
+          )
+        channel = disnake.utils.get(self.guild_member.guild.channels, name=self.notification_channel)
+        if channel is not None:
+            await channel.send(
+            embed=member_request,
+            components=[
+            disnake.ui.Button(label="Assign to me", style=disnake.ButtonStyle.success, custom_id="assign")
+        ],)
+
+
 class SendIntro(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.member_role = "Member"
+        self.public_role = "Public player"
+        self.guest_role = "Guest"
+        self.notification_channel = "community-announcements"
 
     async def paginator(self):
         # Creates the embeds as a list.
@@ -112,7 +159,7 @@ class SendIntro(commands.Cog):
 
           disnake.Embed(
               title="Community Leadership",
-              description="*Leadership on a longer timespan*\n\n:white_small_square: **The Community**, with its sub-divisions, are led by **Officers**.\n:white_small_square: Officers cooperate to **create content** and **develop the community**. \n:white_small_square: An Officer contributes what is **within their reasonable limits**.\n:white_small_square: In you are interested to learn more about leadership contact Mordus#5149",
+              description="*Leadership on a longer timespan*\n\n:white_small_square: **The Community**, with its sub-divisions, are led by **Officers**.\n:white_small_square: Officers cooperate to **create content** and **develop the community**. \n:white_small_square: An Officer contributes what is **within their reasonable limits**.\n:white_small_square: If you are interested to learn more about leadership contact Mordus#5149",
               colour=disnake.Colour(10425888),
           ).set_thumbnail(
             url="https://cdn.discordapp.com/attachments/986678839008690176/1071460286269227068/05-leadership.png"
@@ -136,7 +183,7 @@ class SendIntro(commands.Cog):
 
           disnake.Embed(
               title="Membership",
-              description="*FU membership means identifying with the goals and values of the community. \nBecoming a member is **your choice**, not something we need you to become.\nYou can still play with us without being a member.*\n\nTo become a member:\n:white_small_square: (Optional but recommended) Read the [Introduction](https://wiki.fugaming.org/intro-module) document on our Wiki\n:white_small_square: (1/2) Contact an Officer about an introduction meeting on TS\n:white_small_square: (2/2) Attend a scheduled introduction meeting. See [#schedule](https://discordapp.com/channels/282514718445273089/539192935258783744)\n:white_small_square: During the meeting the Officer will discuss any questions you have regarding FU (assuming you've read the intro document or played with us for some time)\n:white_small_square: You will be offered FU membership during the meeting which you can accept or reject. \n:white_small_square: If you reject membership you will be given Guest status on our discord and not notified again about introduction events. You may at any time ask for membership should you change your mind.\n\nMembership gives you the member rank in PlanetSide, the **[FU]** tag on TS and exclusive access to the Discord member's channel category. \n\n**Membership is completely optional**, accept if you wish to associate with the community and wear the **[FU]** tag.",
+              description="*FU membership means identifying with the goals and values of the community. \nBecoming a member is **your choice**, not something we need you to become.\nYou can still play with us without being a member.*\n\nMembership gives you the member rank in PlanetSide, the **[FU]** tag on TS and exclusive access to Member only events and the Discord member's channels. \n\n**To become a member:**\n:white_small_square: (Optional but recommended) Read the [**Introduction**](https://wiki.fugaming.org/intro-module) document on our Wiki\n:white_small_square: Click the **Membership** button at the bottom of this message.\n\nIf you don't want membership right now you will be given Guest status on our discord and not notified again about introduction events. \nYou may at any time ask for membership should you change your mind.",
               colour=disnake.Colour(14812691),
           ).set_thumbnail(
             url="https://cdn.discordapp.com/attachments/986678839008690176/1071460284922855444/09-membership.png"
@@ -146,20 +193,94 @@ class SendIntro(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-
-        # Send a DM to the new member
+        """
+        Send a DM of the intro message
+        """
         embeds = await self.paginator()
-        await member.send(content=None, embed=embeds[0], view = Menu(embeds))
+        await member.send(content=None, embed=embeds[0], view=Menu(embeds=embeds, member=member))
 
-    @commands.slash_command(dm_permission=True)
+    @commands.slash_command(dm_permission=False)
     async def intro(self, inter):
         """
         Send a DM of the intro message
         """
-        await inter.response.send_message("Sending intro message to DM...", ephemeral=True)
+        await inter.response.send_message("Check your DMs!", ephemeral=True)
         embeds = await self.paginator()
-        await inter.author.send(content=None, embed=embeds[0], view=Menu(embeds))
+        await inter.author.send(content=None, embed=embeds[0], view=Menu(embeds=embeds, member=inter.author))
 
+    @commands.Cog.listener("on_button_click")
+    async def onboard_listener(self, inter: disnake.MessageInteraction):
+        """
+        Onboarding listener
+            Handles the onboarding task message in Officer chat.
+
+        Args:
+            inter (disnake.MessageInteraction): The interaction
+
+        Returns:
+            None
+        """
+        try:
+            if inter.component.custom_id not in ["assign", "accepted", "rejected"]:
+                return
+            Embed = inter.message.embeds[0]
+            new_member = inter.guild.get_member(int(Embed.fields[0].value[2:-1]))
+
+            if inter.component.custom_id == "assign":
+                # Update the embed to show the new member has been assigned to an officer
+                Embed.add_field(
+                    name="Assigned To:",
+                    value=f"{inter.author.mention}",
+                    inline=False
+                ).set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                Embed.colour = disnake.Colour(12757760)
+                if inter.component.custom_id == "assign":
+                    await inter.response.edit_message(embed=Embed, components=[
+                    disnake.ui.Button(label="Accepted", style=disnake.ButtonStyle.green, custom_id="accepted"),
+                    disnake.ui.Button(label="Rejected", style=disnake.ButtonStyle.red, custom_id="rejected")
+                ])
+
+            elif inter.component.custom_id == "accepted":
+                # Update the embed to show the new member has accepted and add the member role
+                
+                await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.member_role),
+                                        reason="Accepted membership")
+                await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
+                                        reason="Accepted membership")
+                Embed.colour = disnake.Colour(1150720)
+                Embed.description = f"{new_member.mention} has accepted membership!"
+                Embed.remove_field(1)
+                Embed.remove_field(0)
+                Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                await inter.response.edit_message(embed=Embed, components=None)
+
+                # announce the new member in the notification channel
+                channel = disnake.utils.get(inter.guild.channels, name=self.notification_channel)
+                if channel is not None:
+                    await channel.send(
+                    embed=disnake.Embed(
+                        title="New Member 🎉",
+                        description=f"{new_member.mention} has completed the Introduction Module and is now a Member of The Freelancers Union!",
+                        colour=disnake.Colour(14812691)
+                    ).set_thumbnail(
+                        file=disnake.File(fp="./assets/splash_art/fu/fu-logo.png")
+                    ))
+
+            elif inter.component.custom_id == "rejected":
+                # Update the embed to show the new member has declined.
+                Embed.colour = disnake.Colour(14812691)
+                Embed.description = f"{new_member.mention} has declined membership."
+                Embed.remove_field(1)
+                Embed.remove_field(0)
+                Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.guest_role),
+                                        reason="Rejected membership")
+                await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
+                                        reason="Rejected membership")
+                await inter.response.edit_message(embed=Embed, components=None)
+        except Exception as e:
+            logging.exception(e)
+            await inter.response.edit_message(embed=None, content="Something went wrong, you should check the user's roles", components=None)
 
 def setup(bot):
     bot.add_cog(SendIntro(bot))
