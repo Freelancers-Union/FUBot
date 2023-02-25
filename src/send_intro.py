@@ -81,7 +81,7 @@ class Menu(disnake.ui.View):
 
     async def notify_send(self,author=None):
         member_request = disnake.Embed(
-              title="Membership Request <:fu:914187604168171581>",
+              title="Membership Request",
               description="Please contact this player to get them onboard! :ship:",
               colour=disnake.Colour(14812691)
           ).add_field(
@@ -102,6 +102,9 @@ class SendIntro(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.member_role = "Member"
+        self.public_role = "Public player"
+        self.guest_role = "Guest"
+        self.notification_channel = "community-announcements"
 
     async def paginator(self):
         # Creates the embeds as a list.
@@ -156,7 +159,7 @@ class SendIntro(commands.Cog):
 
           disnake.Embed(
               title="Community Leadership",
-              description="*Leadership on a longer timespan*\n\n:white_small_square: **The Community**, with its sub-divisions, are led by **Officers**.\n:white_small_square: Officers cooperate to **create content** and **develop the community**. \n:white_small_square: An Officer contributes what is **within their reasonable limits**.\n:white_small_square: In you are interested to learn more about leadership contact Mordus#5149",
+              description="*Leadership on a longer timespan*\n\n:white_small_square: **The Community**, with its sub-divisions, are led by **Officers**.\n:white_small_square: Officers cooperate to **create content** and **develop the community**. \n:white_small_square: An Officer contributes what is **within their reasonable limits**.\n:white_small_square: If you are interested to learn more about leadership contact Mordus#5149",
               colour=disnake.Colour(10425888),
           ).set_thumbnail(
             url="https://cdn.discordapp.com/attachments/986678839008690176/1071460286269227068/05-leadership.png"
@@ -217,46 +220,67 @@ class SendIntro(commands.Cog):
         Returns:
             None
         """
+        try:
+            if inter.component.custom_id not in ["assign", "accepted", "rejected"]:
+                return
+            Embed = inter.message.embeds[0]
+            new_member = inter.guild.get_member(int(Embed.fields[0].value[2:-1]))
 
-        if inter.component.custom_id not in ["assign", "accepted", "rejected"]:
-            return
-        Embed = inter.message.embeds[0]
-
-        if inter.component.custom_id == "assign":
-            # Update the embed to show the new member has been assigned to an officer
-            Embed.add_field(
-                name="Assigned To:",
-                value=f"{inter.author.mention}",
-                inline=False
-            ).set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-            Embed.colour = disnake.Colour(12757760)
             if inter.component.custom_id == "assign":
-                await inter.response.edit_message(embed=Embed, components=[
-                disnake.ui.Button(label="Accepted", style=disnake.ButtonStyle.green, custom_id="accepted"),
-                disnake.ui.Button(label="Rejected", style=disnake.ButtonStyle.red, custom_id="rejected")
-            ])
+                # Update the embed to show the new member has been assigned to an officer
+                Embed.add_field(
+                    name="Assigned To:",
+                    value=f"{inter.author.mention}",
+                    inline=False
+                ).set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                Embed.colour = disnake.Colour(12757760)
+                if inter.component.custom_id == "assign":
+                    await inter.response.edit_message(embed=Embed, components=[
+                    disnake.ui.Button(label="Accepted", style=disnake.ButtonStyle.green, custom_id="accepted"),
+                    disnake.ui.Button(label="Rejected", style=disnake.ButtonStyle.red, custom_id="rejected")
+                ])
 
-        elif inter.component.custom_id == "accepted":
-            # Update the embed to show the new member has accepted and add the member role
-            new_member = inter.guild.get_member(int(inter.message.embeds[0].fields[0].value[2:-1]))
-            await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.member_role),
-                                       reason="Accepted membership")
-            Embed.colour = disnake.Colour(1150720)
-            Embed.description = f"{new_member.mention} has accepted membership!"
-            Embed.remove_field(1)
-            Embed.remove_field(0)
-            Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-            await inter.response.edit_message(embed=Embed, components=None)
+            elif inter.component.custom_id == "accepted":
+                # Update the embed to show the new member has accepted and add the member role
+                
+                await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.member_role),
+                                        reason="Accepted membership")
+                await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
+                                        reason="Accepted membership")
+                Embed.colour = disnake.Colour(1150720)
+                Embed.description = f"{new_member.mention} has accepted membership!"
+                Embed.remove_field(1)
+                Embed.remove_field(0)
+                Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                await inter.response.edit_message(embed=Embed, components=None)
 
-        elif inter.component.custom_id == "rejected":
-            # Update the embed to show the new member has declined.
-            new_member = inter.guild.get_member(int(inter.message.embeds[0].fields[0].value[2:-1]))
-            Embed.colour = disnake.Colour(14812691)
-            Embed.description = f"{new_member.mention} has declined membership."
-            Embed.remove_field(1)
-            Embed.remove_field(0)
-            Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-            await inter.response.edit_message(embed=Embed, components=None)
+                # announce the new member in the notification channel
+                channel = disnake.utils.get(inter.guild.channels, name=self.notification_channel)
+                if channel is not None:
+                    await channel.send(
+                    embed=disnake.Embed(
+                        title="New Member 🎉",
+                        description=f"{new_member.mention} has completed the Introduction Module and is now a Member of The Freelancers Union!",
+                        colour=disnake.Colour(14812691)
+                    ).set_thumbnail(
+                        url="https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p_2.png"
+                    ))
+
+            elif inter.component.custom_id == "rejected":
+                # Update the embed to show the new member has declined.
+                Embed.colour = disnake.Colour(14812691)
+                Embed.description = f"{new_member.mention} has declined membership."
+                Embed.remove_field(1)
+                Embed.remove_field(0)
+                Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
+                await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.guest_role),
+                                        reason="Rejected membership")
+                await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
+                                        reason="Rejected membership")
+                await inter.response.edit_message(embed=Embed, components=None)
+        except Exception as e:
+            logging.exception(e)
+            await inter.response.edit_message(embed=None, content="Something went wrong, you should check the user's roles", components=None)
 
 def setup(bot):
     bot.add_cog(SendIntro(bot))
