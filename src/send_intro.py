@@ -263,7 +263,7 @@ class SendIntro(commands.Cog):
                         description=f"{new_member.mention} has completed the Introduction Module and is now a Member of The Freelancers Union!",
                         colour=disnake.Colour(14812691)
                     ).set_thumbnail(
-                        url="https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p_2.png"
+                        file=disnake.File(fp="./assets/splash_art/fu/fu-logo.png")
                     ))
 
             elif inter.component.custom_id == "rejected":
