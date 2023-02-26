@@ -15,10 +15,6 @@ class MemberRoleUpdate(commands.Cog):
     client: commands.Bot):
         self.DiscordDBActions = DiscordDB()
         self.client = client
-        self.onboard_roles = ["Planetside 2"]
-        self.onboard_embeds = {}
-        self.onboard_embeds["Planetside 2"] = self.ps2_onboard_payload
-
 
     @commands.Cog.listener("on_member_update")
     async def on_member_update(self, before: disnake.Member, after: disnake.Member):
