@@ -1,19 +1,44 @@
 import os
+import logging
 import urllib.parse
 import random
 import glob
 import time
+import datetime
 from typing import List
+import pymongo.collection
 import disnake
 from disnake.ext import commands
 from disnake import Webhook
 import aiohttp
+from database_connector import Database
 import helpers.discord_checks as dc
 
 class AnnounceEvent(commands.Cog):
     """
     Class cog for ps2 squad markup help message.
     """
+    def __init__(
+                self,
+                bot: commands.Bot,
+                db: Database
+        ):
+            """
+            initializes ps2 logger.
+            Parameters
+            ----------
+            db: Database class instance to use
+            """
+            self.collection: pymongo.collection.Collection
+
+            db_collection_name = "discord_event_log"
+            collection_options = {'timeField': 'timestamp', 'metaField': 'event', 'granularity': 'minutes'}
+
+            try:
+                self.collection = db.init_timeseries_db(db_collection_name, collection_options)
+            except Exception as exception:
+                logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
+
 
     @commands.slash_command(dm_permission=False)
     async def announce(self, inter):
@@ -86,6 +111,7 @@ class AnnounceEvent(commands.Cog):
                 await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                 delete_after=18000)
                 await inter.edit_original_message("Posted a " + str(ops_dict[event]["short_title"]) + " announcement to " + channel.mention)
+                await self.log_event(ops_dict[event], inter)
                 if ops_dict[event]["game"] == "Planetside 2":
                     await self.webhook_send(ops_dict[event])
             except Exception as e:
@@ -211,5 +237,27 @@ class AnnounceEvent(commands.Cog):
                 message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
                 await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
 
+    async def log_event(self, event, inter: disnake.CommandInteraction):
+        """
+        Log the event to the database
+
+        Parameters
+        ----------
+        event : dict
+            The event to log
+        inter : disnake.CommandInteraction
+            The interaction that triggered the event
+        """
+        timestamp = datetime.datetime.utcnow()
+        self.collection.insert_one(
+            {
+                "metadata": {"announcer": str(inter.author.id)},
+                "event":event["short_title"],
+                "game": event["game"],
+                "timestamp": timestamp
+            }
+        )
+
+
 def setup(bot):
-    bot.add_cog(AnnounceEvent(bot))
+    bot.add_cog(AnnounceEvent(bot, Database))
