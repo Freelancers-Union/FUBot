@@ -2,13 +2,13 @@ import os
 import re
 import logging
 import datetime
-import flatdict
 import auraxium
+from auraxium import ps2
 import disnake
 from disnake.ext import commands
 from bson.objectid import ObjectId
 from bson.dbref import DBRef
-import census
+from census import Census
 from database_connector import Database
 
 
@@ -27,8 +27,6 @@ class LinkPs2(commands.Cog):
             Discord Bot class
         client : auraxium.event.EventClient
             The Auraxium Event client
-        census_client : auraxium.Client
-            The Auraxium census Client
         account_name : str
             The name of the PS2 account to associate
         """
@@ -42,6 +40,13 @@ class LinkPs2(commands.Cog):
         self.login_trigger = None
 
     def create_trigger(self):
+        """Creates a trigger for PS2 character logon events.
+
+        Returns
+        -------
+        login_trigger : auraxium.Trigger
+            The trigger for the PS2 character.
+        """
         self.login_trigger = auraxium.Trigger(
             auraxium.event.PlayerLogin,
             characters=self.characters,
@@ -52,6 +57,13 @@ class LinkPs2(commands.Cog):
         return self.login_trigger
 
     async def login_check(self):
+        """Checks if the PS2 character has logged in.
+
+        Returns
+        -------
+        bool
+            True if the character has logged in.
+        """
         try:
             get_login_trigger = self.client.get_trigger(
                 name=str(self.characters[0].name)
@@ -70,34 +82,25 @@ class LinkPs2(commands.Cog):
 
 
 class InitiateDiscordPs2Link(commands.Cog):
+    """
+
+    Class cog for initiating the PS2 and Discord account linking process.
+
+    """
     def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.login_checks = {}
-        self.client = auraxium.event.EventClient(
-            service_id=os.getenv("CENSUS_TOKEN")
-        )
-        self.census_client = auraxium.Client(service_id=str(os.getenv("CENSUS_TOKEN")))
-
-    async def ps2_get_char(self, account_name):
-        """Queries the PS2 Census API and checks if a character exists.
-
+        """
         Parameters
         ----------
-        account_name : str
-            The name of the PS2 character to check.
-
-        Returns
-        ------
-        characters : list(ps2.Character)
-            list of matching characters.
+        bot : commands.Bot
+            Discord Bot class
         """
-        character, *unused_tuple = await census.get_character(
-            account_name, self.census_client
-        )
-        return character
+        self.bot = bot
+        self.login_checks = {}
+        # self.census_client = auraxium.Client(service_id=str(os.getenv("CENSUS_TOKEN")))
 
     async def check_ps2_db(self, ps2_char):
-        """Queries the mongoDB for existing ps2_char.
+        """
+        Queries the mongoDB for existing ps2_char.
 
         Parameters
         ----------
@@ -160,7 +163,8 @@ class InitiateDiscordPs2Link(commands.Cog):
             return
 
         # Check if this PS2 character exists, get the character object if it does.
-        ps2_char = await self.ps2_get_char(account_name)
+        # ps2_char = await self.census_client.get_by_name(ps2.Character, account_name)
+        ps2_char = await Census.get_character(account_name)
         if ps2_char is None:
             await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
                                               f"\n character {account_name} doesn't exist")
@@ -229,12 +233,12 @@ class InitiateDiscordPs2Link(commands.Cog):
                     )
                     return
                 else:
+                    logging.info(f"Linked {ps2_char.name} to {inter.author.name}")
                     await inter.edit_original_message(
-                        "You've successfully connected accounts! :tada:\nPS2: **"
+                        "You've successfully connected accounts! :tada:\nPS2: "
                         + str(self.login_checks[account_name].characters[0].name)
-                        + "**\nDiscord: **"
+                        + "\nDiscord: "
                         + str(inter.author.name)
-                        + "**"
                     )
 
                     del self.login_checks[account_name]

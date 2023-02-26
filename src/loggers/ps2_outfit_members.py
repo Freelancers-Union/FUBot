@@ -1,11 +1,8 @@
 import logging
-import os
 from datetime import datetime
 from database_connector import Database
-import census
+from census import Census
 import pymongo.collection
-from auraxium import event, ps2
-import auraxium
 from disnake.ext import commands, tasks
 
 
@@ -30,21 +27,9 @@ class PS2OutfitMembers(commands.Cog):
                 elif "timeseries" in current_collection_options.keys():
                     raise Exception(f"collection {collection_name} exists, but is a timeseries")
 
-            self.client = auraxium.event.EventClient(service_id=os.getenv('CENSUS_TOKEN'))
-            self.update_outfit_members.start()
         except Exception as exception:
             logging.error("Failed to initialize PS2 Outfit Member Collection", exc_info=exception)
 
-    def cog_unload(self):
-        self.update_outfit_members.cancel()
-
-    async def _get_api_outfit_members(self, outfit):
-        outfit, online_members = await census.get_outfit(
-            outfit_name=0,
-            outfit_tag=str(outfit),
-            client=self.client)
-        live_members = await outfit.members()
-        return live_members
 
     async def add_new_members(self, new_members, collection):
         if collection is not None and len(new_members) != 0:
@@ -107,7 +92,8 @@ class PS2OutfitMembers(commands.Cog):
             # For each outfit: Get a list of all outfit members from the API
             for outfit in self._monitored_outfits:
                 collection = self.db["ps2_outfit_members_" + str(outfit)]
-                live_members = await self._get_api_outfit_members(outfit)
+                api_outfit = await Census.get_outfit(outfit_tag=outfit)
+                live_members = await api_outfit.members()
 
                 # Get a list of dictionaries of members in the DB
                 db_result = collection.find({}, {
