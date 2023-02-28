@@ -47,11 +47,15 @@ class Census(object):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
                     data = await response.json()
-            
+            if data is None or data['outfit_list'] is None:
+                return None
             online_members = []
             for member in data['outfit_list'][0]['members']:
                 if member['character']['online_status'] != 0:
                     online_members.append(member['character_id'])
+        except IndexError as e:
+            raise e
+            return None
         except Exception as e:
             raise e
             return None
