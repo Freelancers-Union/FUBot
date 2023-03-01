@@ -68,6 +68,8 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         @client.trigger(event=event.PlayerLogout, worlds=[10])
         async def logged_out(_event: event.PlayerLogout):
             character = await Census.get_character(character_id=_event.character_id)
+            if character is None:
+                return
             outfit = await character.outfit()
             if not outfit:
                 return
@@ -78,6 +80,8 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         @client.trigger(event=event.PlayerLogin, worlds=[10])
         async def logged_in(_event: event.PlayerLogin):
             character = await Census.get_character(character_id=_event.character_id)
+            if character is None:
+                return
             outfit = await character.outfit()
             if not outfit:
                 return

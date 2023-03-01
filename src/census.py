@@ -1,5 +1,4 @@
 import os
-import aiohttp
 import logging
 import requests
 import auraxium
@@ -42,16 +41,14 @@ class Census(object):
         -------
         list of online members
         """
-        url = f"https://census.daybreakgames.com/{os.getenv('CENSUS_TOKEN')}/get/ps2/outfit?alias_lower={outfit.alias_lower}&c:show=name,outfit_id&c:join=outfit_member^inject_at:members^show:character_id%27rank^outer:0^list:1(character^show:name.first^inject_at:character^outer:0^on:character_id(characters_online_status^inject_at:online_status^show:online_status^outer:0(world^on:online_status^to:world_id^outer:0^show:world_id^inject_at:ignore_this))"
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    data = await response.json()
-            
-            online_members = []
-            for member in data['outfit_list'][0]['members']:
-                if member['character']['online_status'] != 0:
-                    online_members.append(member['character_id'])
+            member_ids = []
+            for member in await outfit.members():
+                member_ids.append(member.character_id)
+            online_members = await auraxium.ps2.Character.get_online(*member_ids, client=Census.CLIENT)
+        except IndexError as e:
+            raise e
+            return None
         except Exception as e:
             raise e
             return None
