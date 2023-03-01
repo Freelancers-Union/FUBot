@@ -43,7 +43,7 @@ class ArmaLogger:
                 mission = mission if player_count is not None else None
 
                 if not player_count:
-                    logging.info("ArmA player count unchanged")
+                    logging.debug("ArmA player count unchanged")
                 if last["player_count"] != player_count:
                     self.collection.insert_one({
                         "metadata": {"mission": mission},
