@@ -56,3 +56,22 @@ class DiscordDB(object):
         except Exception as e:
             logging.error(f"Discord : Error removing role {role.name} from {member.name} : {e}")
             raise e
+
+
+    @staticmethod
+    async def get_members_by_role(role):
+        """
+        Gets all members with a role
+
+        Parameters
+        ----------
+        role : class : disnake.Role
+
+        """
+        members=[]
+        try:
+            members=DiscordDB.COLLECTION.find({'discord_user.roles.role': role.name})
+            return members
+        except Exception as e:
+            logging.error(f"Discord : Error getting members with role {role.name} : {e}")
+            raise e
