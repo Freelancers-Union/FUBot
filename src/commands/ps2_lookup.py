@@ -1,6 +1,5 @@
 import os
 import logging
-import aiohttp
 import disnake
 from disnake.ext import commands
 import auraxium
