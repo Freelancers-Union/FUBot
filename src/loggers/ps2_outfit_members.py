@@ -17,6 +17,8 @@ class PS2OutfitMembers(commands.Cog):
             self.db = _db.DATABASE
             # check if the database contains such collection
             self._monitored_outfits = ["FU", "nFUc", "vFUs", "SNGE"]
+            logging.info("Synchronising outfit members with database...")
+            self.update_outfit_members.start()
 
             for outfit in self._monitored_outfits:
                 collection_name = "ps2_outfit_members_" + str(outfit)
@@ -30,6 +32,8 @@ class PS2OutfitMembers(commands.Cog):
         except Exception as exception:
             logging.error("Failed to initialize PS2 Outfit Member Collection", exc_info=exception)
 
+    def cog_unload(self):
+        self.update_outfit_members.cancel()
 
     async def add_new_members(self, new_members, collection):
         if collection is not None and len(new_members) != 0:
@@ -49,7 +53,6 @@ class PS2OutfitMembers(commands.Cog):
                 ps2_player_object["rank"] = member.rank
                 ps2_player_object["rank_history"] = [rank_history]
                 data.append(ps2_player_object)
-                # Write to the DB
             if not data:
                 return
             else:
@@ -59,6 +62,7 @@ class PS2OutfitMembers(commands.Cog):
         if collection is not None and len(old_members) != 0:
             for member in old_members:
                 if member.get("active_member") is True:
+                    logging.info(f"Updating {member.get('name')} as leaving the outfit")
                     collection.update_one({'_id': member.get("_id")}, {
                         '$push': {'left_outfit_date': datetime.now()},
                         '$set': {'active_member': False}
@@ -67,6 +71,7 @@ class PS2OutfitMembers(commands.Cog):
     async def member_rejoined_outfit(self, returning_members, collection):
         if collection is not None and len(returning_members) != 0:
             for member in returning_members:
+                logging.info(f"Updating {member.name} as rejoining the outfit")
                 collection.update_one({'_id': member.id}, {
                     '$push': {'rejoined_outfit_date': datetime.now()},
                     '$set': {'active_member': True}
@@ -75,6 +80,7 @@ class PS2OutfitMembers(commands.Cog):
     async def update_member_ranks(self, updated_ranks, collection):
         if collection is not None and len(updated_ranks) != 0:
             for member in updated_ranks:
+                logging.info(f"Updating rank for {member.name} to {member.rank}")
                 collection.update_one({'_id': member.id}, {
                     '$push': {'rank_history': {
                         "rank": member.rank,
@@ -92,7 +98,7 @@ class PS2OutfitMembers(commands.Cog):
             # For each outfit: Get a list of all outfit members from the API
             for outfit in self._monitored_outfits:
                 collection = self.db["ps2_outfit_members_" + str(outfit)]
-                api_outfit = await Census.get_outfit(outfit_tag=outfit)
+                api_outfit = await Census.get_outfit(outfit_tag=outfit, synchro=True)
                 live_members = await api_outfit.members()
 
                 # Get a list of dictionaries of members in the DB

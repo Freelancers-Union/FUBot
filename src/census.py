@@ -55,14 +55,16 @@ class Census(object):
         return online_members
 
     @staticmethod
-    async def get_outfit(outfit_name: str = None, outfit_tag: str = None):
+    async def get_outfit(outfit_name: str = None, outfit_tag: str = None, synchro: bool = False):
         outfit = None
         try:
             if outfit_tag is not None:
-                logging.info(f"looking up PS2 Outfit details for: {outfit_tag}")
+                if synchro is False:
+                    logging.info(f"looking up PS2 Outfit details for: {outfit_tag}")
                 outfit = await Census.CLIENT.get(ps2.Outfit, alias_lower = outfit_tag.lower())
             elif outfit_name is not None:
-                logging.info(f"looking up PS2 Outfit details for: {outfit_name}")
+                if synchro is False:
+                    logging.info(f"looking up PS2 Outfit details for: {outfit_name}")
                 outfit = await Census.CLIENT.get(ps2.Outfit, name_lower = outfit_name.lower())
             else:
                 return None

@@ -5,7 +5,7 @@ import asyncio
 import pymongo.collection
 import auraxium
 from auraxium import event
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 from database_connector import Database
 from census import Census
 
@@ -22,12 +22,14 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         ----------
         db: Database class instance to use
         """
+        self.db = db.DATABASE
         FU_id = 37509488620602936
         nFUc_id = 37558455247570544
         vFUs_id = 37558804429669935
         SNGE_id = 37516191867639145
         self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id, SNGE_id}
         self.collection: pymongo.collection.Collection
+        self.cache_outfit_member_ids = []
 
         db_collection_name = "ps2_outfit_player_log"
         collection_options = {'timeField': 'timestamp', 'metaField': 'outfit', 'granularity': 'minutes'}
@@ -39,6 +41,31 @@ class Ps2OutfitPlayerLogger(commands.Cog):
             loop.create_task(self.ps2_outfit_events())
         except Exception as exception:
             logging.error("Failed to initialize PlanetSide outfit player logger", exc_info=exception)
+        # This step is required to initially build the cache on start-up.
+        # The loop will then run every hour to refresh the cache
+        try:
+            for outfit in ["FU","nFUc","vFUs","SNGE"]:
+                collection = self.db["ps2_outfit_members_" + str(outfit)]
+                db_result = collection.find({}, {"_id": 1})
+                for result in db_result:
+                    self.cache_outfit_member_ids.append(result.get("_id"))
+            logging.info(f"Loaded {len(self.cache_outfit_member_ids)} characters into cache")
+        except Exception as exception:
+            logging.error("Failed to load outfit member IDs into cache", exc_info=exception)
+        self.refresh_cache.start()
+
+
+    @tasks.loop(hours=1.0)
+    async def refresh_cache(self):
+        try:
+            for outfit in ["FU","nFUc","vFUs","SNGE"]:
+                collection = self.db["ps2_outfit_members_" + str(outfit)]
+                db_result = collection.find({}, {"_id": 1})
+                for result in db_result:
+                    self.cache_outfit_member_ids.append(result.get("_id"))
+            logging.info(f"Loaded {len(self.cache_outfit_member_ids)} characters into cache")
+        except Exception as exception:
+            logging.error("Failed to load outfit member IDs into cache", exc_info=exception)
 
     async def _save_player_count(self, outfit):
         """
@@ -65,7 +92,7 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         """
         client = auraxium.event.EventClient(service_id=os.getenv('CENSUS_TOKEN'))
 
-        @client.trigger(event=event.PlayerLogout, worlds=[10])
+        @client.trigger(event=event.PlayerLogout, worlds=[10], characters=self.cache_outfit_member_ids)
         async def logged_out(_event: event.PlayerLogout):
             character = await Census.get_character(character_id=_event.character_id)
             if character is None:
@@ -77,7 +104,7 @@ class Ps2OutfitPlayerLogger(commands.Cog):
                 logging.info(f"Player [{outfit.alias}] {character.name} logged out")
                 await self._save_player_count(outfit)
 
-        @client.trigger(event=event.PlayerLogin, worlds=[10])
+        @client.trigger(event=event.PlayerLogin, worlds=[10], characters=self.cache_outfit_member_ids)
         async def logged_in(_event: event.PlayerLogin):
             character = await Census.get_character(character_id=_event.character_id)
             if character is None:
