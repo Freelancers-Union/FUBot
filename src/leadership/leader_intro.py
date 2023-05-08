@@ -1,22 +1,15 @@
-import os
 import logging
-import datetime
 from typing import List
 import disnake
 from disnake.ext import commands
 from disnake.enums import ButtonStyle
-import helpers.discord_checks as dc
 
 
 class Menu(disnake.ui.View):
     def __init__(self, embeds: List[disnake.Embed], member = disnake.Member):
         super().__init__(timeout=None)
-        self.guild_member = member
         self.embeds = embeds
         self.index = 0
-        self.member_role = "Member"
-        self.notification_channel = "officers"
-        self.requested = False
 
         # Sets the footer of the embeds with their respective page numbers.
         for i, embed in enumerate(self.embeds):
@@ -27,15 +20,9 @@ class Menu(disnake.ui.View):
         self._update_state()
 
     def _update_state(self) -> None:
-        # self.member.disabled = self.index != len(self.embeds) - 1
+        # Shows or hides the appropriate buttons depending on the current page.
         self.first_page.disabled = self.prev_page.disabled = self.index == 0
         self.last_page.disabled = self.next_page.disabled = self.index == len(self.embeds) - 1
-        # if self.index == len(self.embeds) - 1 and self.requested is False:
-        #     member_role = disnake.utils.get(self.guild_member.roles, name=self.member_role)
-        #     if member_role is None:
-        #         self.add_item(self.member)
-        # else:
-        #     self.remove_item(self.member)
 
     @disnake.ui.button(emoji="⏪", style=disnake.ButtonStyle.blurple)
     async def first_page(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
@@ -65,36 +52,15 @@ class Menu(disnake.ui.View):
 
         await inter.response.edit_message(embed=self.embeds[self.index], view=self)
 
-    # async def notify_send(self,author=None):
-    #     member_request = disnake.Embed(
-    #           title=f"Membership Request - {author.name}",
-    #           description="Please contact this player to get them onboard! :ship:",
-    #           colour=disnake.Colour(14812691)
-    #       ).add_field(
-    #             name="User:",
-    #             value=f"{author.mention}"
-    #       )
-    #     channel = disnake.utils.get(self.guild_member.guild.channels, name=self.notification_channel)
-    #     if channel is not None:
-    #         await channel.send(
-    #         embed=member_request,
-    #         components=[
-    #         disnake.ui.Button(label="Assign to me", style=disnake.ButtonStyle.success, custom_id="assign")
-    #     ],)
-
 
 class LeaderIntro(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        # self.member_role = "Member"
-        # self.public_role = "Public player"
-        # self.guest_role = "Guest"
-        # self.notification_channel = "community-announcements"
         self.onboard_channel = None
 
     async def paginator(self):
-        # Creates the embeds as a list.
+        # Creates each embed message as a list.
         s3_assets = "https://fu-static-assets.s3.eu-west-1.amazonaws.com/intro-icons/"
         embeds = [
           disnake.Embed(
@@ -133,13 +99,6 @@ class LeaderIntro(commands.Cog):
         ]
         return embeds
 
-    # @commands.Cog.listener()
-    # async def on_member_join(self, member):
-    #     """
-    #     Send a DM of the intro message
-    #     """
-    #     embeds = await self.paginator()
-    #     await member.send(content=None, embed=embeds[0], view=Menu(embeds=embeds, member=member))
 
     @commands.slash_command(dm_permission=True)
     async def leadership(
@@ -150,104 +109,13 @@ class LeaderIntro(commands.Cog):
     @leadership.sub_command()
     async def intro(self, inter):
         """
-        Send a DM of the intro message
+        Start your journey into leadership with FU
         """
+        logging.info(f"{inter.author} opened leadership intro")
         await inter.response.send_message("Check your DMs!", ephemeral=True)
         embeds = await self.paginator()
         await inter.author.send(content=None, embed=embeds[0], view=Menu(embeds=embeds, member=inter.author))
 
-    # @commands.Cog.listener("on_button_click")
-    # async def onboard_listener(self, inter: disnake.MessageInteraction):
-    #     """
-    #     Onboarding listener
-    #         Handles the onboarding task message in Officer chat.
-
-    #     Args:
-    #         inter (disnake.MessageInteraction): The interaction
-
-    #     Returns:
-    #         None
-    #     """
-    #     try:
-    #         if inter.component.custom_id not in ["assign", "accepted", "rejected"]:
-    #             return
-    #         Embed = inter.message.embeds[0]
-    #         new_member = inter.guild.get_member(int(Embed.fields[0].value[2:-1]))
-
-    #         if inter.component.custom_id == "assign":
-
-    #             # Create a private channel for the new member and the officer
-    #             overwrites = {
-    #                 inter.guild.default_role: disnake.PermissionOverwrite(view_channel=False),
-    #                 new_member: disnake.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
-    #                 inter.author: disnake.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
-    #                 self.bot.user: disnake.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True, manage_channels=True, manage_messages=True)
-    #             }
-    #             self.onboard_channel = await inter.guild.create_text_channel(name=f"onboarding-{new_member.name}",overwrites=overwrites)
-    #             for member in [new_member, inter.author]:
-    #                 await self.onboard_channel.set_permissions(
-    #                                                     target=member,
-    #                                                     view_channel=True,
-    #                                                     send_messages=True,
-    #                                                     read_message_history=True,
-    #                                                     )
-
-    #             # Update the embed to show the new member has been assigned to an officer
-    #             Embed.description = f"Created private channel: {self.onboard_channel.mention}\nChannel will self-destruct once onboarding is complete."
-    #             Embed.add_field(
-    #                 name="Assigned To:",
-    #                 value=f"{inter.author.mention}",
-    #                 inline=False
-    #             ).set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-    #             Embed.colour = disnake.Colour(12757760)
-    #             await inter.response.edit_message(embed=Embed, components=[
-    #             disnake.ui.Button(label="Accepted", style=disnake.ButtonStyle.green, custom_id="accepted"),
-    #             disnake.ui.Button(label="Rejected", style=disnake.ButtonStyle.red, custom_id="rejected")
-    #         ])
-
-    #         elif inter.component.custom_id == "accepted":
-    #             # Update the embed to show the new member has accepted and add the member role
-                
-    #             await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.member_role),
-    #                                     reason="Accepted membership")
-    #             await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
-    #                                     reason="Accepted membership")
-    #             Embed.colour = disnake.Colour(1150720)
-    #             Embed.description = f"{new_member.mention} has accepted membership!"
-    #             Embed.remove_field(1)
-    #             Embed.remove_field(0)
-    #             Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-    #             await inter.response.edit_message(embed=Embed, components=None)
-    #             await self.onboard_channel.delete()
-
-    #             # announce the new member in the notification channel
-    #             channel = disnake.utils.get(inter.guild.channels, name=self.notification_channel)
-    #             if channel is not None:
-    #                 await channel.send(
-    #                 embed=disnake.Embed(
-    #                     title="New Member 🎉",
-    #                     description=f"{new_member.mention} has completed the Introduction Module and is now a Member of The Freelancers Union!",
-    #                     colour=disnake.Colour(14812691)
-    #                 ).set_thumbnail(
-    #                     file=disnake.File(fp="./assets/splash_art/fu/fu-logo.png")
-    #                 ))
-
-    #         elif inter.component.custom_id == "rejected":
-    #             # Update the embed to show the new member has declined.
-    #             Embed.colour = disnake.Colour(14812691)
-    #             Embed.description = f"{new_member.mention} has declined membership."
-    #             Embed.remove_field(1)
-    #             Embed.remove_field(0)
-    #             Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
-    #             await new_member.add_roles(disnake.utils.get(inter.guild.roles, name=self.guest_role),
-    #                                     reason="Rejected membership")
-    #             await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
-    #                                     reason="Rejected membership")
-    #             await inter.response.edit_message(embed=Embed, components=None)
-    #             await self.onboard_channel.delete()
-    #     except Exception as e:
-    #         logging.exception(e)
-    #         await inter.send(embed=None, content="Something went wrong, you should check the user's roles", components=None)
 
 def setup(bot):
     bot.add_cog(LeaderIntro(bot))
