@@ -128,5 +128,6 @@ bot.load_extension("loggers.ps2_outfit_members")
 bot.load_extension("loggers.ps2_outfit_logger")
 bot.load_extension("send_intro")
 bot.load_extension("helpers.sync_commands")
+bot.load_extension("leadership.leader_intro")
 
 bot.run(discordClientToken)
