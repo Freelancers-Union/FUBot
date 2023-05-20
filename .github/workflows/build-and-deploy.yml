@@ -26,6 +26,9 @@ jobs:
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
       INTERLINK_WEBHOOK: ${{ secrets.INTERLINK_WEBHOOK }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_OAUTH_TOKEN }}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
 

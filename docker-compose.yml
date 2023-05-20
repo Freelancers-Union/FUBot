@@ -16,6 +16,8 @@ services:
     - MONGO_PASSWORD=${MONGO_PASSWORD}
     - ARMA_HOST=fu-server.lan
     - ARMA_QUERY_PORT=2303
+    - OPENAI_API_KEY=${OPENAI_API_KEY}
+    - GITHUB_TOKEN=${GITHUB_TOKEN}
     depends_on:
       mongodb:
         condition: service_healthy
