@@ -30,15 +30,15 @@ class AiWiki(commands.Cog):
 
         self.prompt_template = self.create_prompt("""
 You are a search interface for a wiki of the Freelancers Union gaming community..
-You are asked a question by a user, and you must answer it using the information in wiki.
+Users will ask you questions or for your opinion on a topic.
 you will be given access to relevant parts of the wiki related to the question.
 You will be given a question and a context. You may add additional context if you wish.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
 You will be scored based on how many questions you answer correctly.
 Answers should be rich and detailed, but not too long.
-You may add additional context if you wish.
+You may add information from outside of the wiki but it should be relevant to the question.
 Your answers will be posted into a discord channel.
-Tone should be friendly and helpful.
+Tone should be that of a mentor or teacher.
 Only respond with answers to questions, not with questions of your own.
 Do not add fluff to your answers.
 Only answer the question if you are at least 90% confident in your answer.
@@ -69,9 +69,9 @@ Question: {question}
         await inter.response.defer(ephemeral=True)
 
         qa = RetrievalQA.from_chain_type(
-            llm=OpenAI(
-                model_name="text-curie-001",
-                temperature=0.5
+            llm=ChatOpenAI(
+                model_name="gpt-3.5-turbo",
+                temperature=0.8
                 ),
             chain_type="stuff",
             retriever=self.vectordb.as_retriever(),
@@ -109,9 +109,9 @@ Question: {question}
         """Loads the documents from the git repo and returns them as a list."""
         paths = (".md", ".html")
         if not os.path.exists("./wiki/"):
-            oauth_token = os.getenv("GITHUB_OAUTH_TOKEN")
+            oauth_token = os.getenv("GITHUB_TOKEN")
             loader = GitLoader(
-                    clone_url=f"https://oauth2:{oauth_token}G@github.com/Freelancers-Union/wiki",
+                    clone_url=f"https://oauth2:{oauth_token}@github.com/Freelancers-Union/wiki",
                     repo_path="./wiki/",
                     branch="master",
                     file_filter=lambda file_path: file_path.endswith(paths)
@@ -123,8 +123,6 @@ Question: {question}
                     file_filter=lambda file_path: file_path.endswith(paths)
                 )
         documents = loader.load()
-        print("####################################################################################################################")
-        print(documents[0])
         return documents
 
 
