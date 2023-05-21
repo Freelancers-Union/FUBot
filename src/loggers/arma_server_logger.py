@@ -16,7 +16,10 @@ class ArmALogger(Cog):
         except Exception as exception:
             logging.error("Failed to initialize ArmA logger", exc_info=exception)
 
-    @tasks.loop(seconds=5)
+    def cog_unload(self):
+        self.log_server_status.cancel()
+
+    @tasks.loop(minutes=5)
     async def log_server_status(self):
         """
             Logs the max amount of players in server currently.
@@ -37,7 +40,7 @@ class ArmALogger(Cog):
                 mission=mission,
             )
 
-            if last is None or last.online_players != new.online_players:
+            if last is None or last.online_players != new.player_count:
                 await new.insert()
         except Exception as exception:
             logging.error("Something went wrong logging ArmA3 server", exc_info=exception)

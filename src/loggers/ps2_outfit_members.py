@@ -1,153 +1,195 @@
 import logging
-from datetime import datetime
-from database_connector import Database
 from census import Census
-import pymongo.collection
+
+from datetime import datetime
 from disnake.ext import commands, tasks
+from models.ps2.outfit_with_member_characters import Ps2OutfitMember
+
+from database.models.planetside2 import Ps2Character, RankHistory
+from beanie.operators import In, Set, Push
 
 
 class PS2OutfitMembers(commands.Cog):
     def __init__(
-            self,
-            _db: Database,
-            bot: commands.Bot
+            self
     ):
         try:
-            self.bot = bot
-            self.db = _db.DATABASE
-            # check if the database contains such collection
-            self._monitored_outfits = ["FU", "nFUc", "vFUs", "SNGE"]
+            # todo: this should be read from the database
+            FU_id = 37509488620602936
+            nFUc_id = 37558455247570544
+            vFUs_id = 37558804429669935
+            SNGE_id = 37516191867639145
+            Dig_id = 37509488620604883
+            BHO_id = 37534120470912916
+            CTIA_id = 37569919291763416
+            self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
             logging.info("Synchronising outfit members with database...")
             self.update_outfit_members.start()
-
-            for outfit in self._monitored_outfits:
-                collection_name = "ps2_outfit_members_" + str(outfit)
-                current_collection_options = self.db[collection_name].options()
-
-                if collection_name not in self.db.list_collection_names():
-                    self.db.create_collection(name=collection_name)
-                elif "timeseries" in current_collection_options.keys():
-                    raise Exception(f"collection {collection_name} exists, but is a timeseries")
 
         except Exception as exception:
             logging.error("Failed to initialize PS2 Outfit Member Collection", exc_info=exception)
 
     def cog_unload(self):
+        logging.info("Unloading PS2 Outfit Member logging cog")
         self.update_outfit_members.cancel()
 
-    async def add_new_members(self, new_members, collection):
-        if collection is not None and len(new_members) != 0:
-            data = []
-            for member in new_members:
-                ps2_player_object = {}
-                character_obj = await member.character()
-                rank_history = {
-                    "rank": member.rank,
-                    "time": datetime.now()
-                }
-                ps2_player_object["_id"] = member.id
-                ps2_player_object["name"] = str(character_obj.name)
-                ps2_player_object["active_member"] = True
-                ps2_player_object["outfit_id"] = member.outfit_id
-                ps2_player_object["member_since"] = datetime.fromtimestamp(member.member_since)
-                ps2_player_object["rank"] = member.rank
-                ps2_player_object["rank_history"] = [rank_history]
-                data.append(ps2_player_object)
-            if not data:
-                return
-            else:
-                collection.insert_many(data)
-
-    async def member_left_outfit(self, old_members, collection):
-        if collection is not None and len(old_members) != 0:
-            for member in old_members:
-                if member.get("active_member") is True:
-                    logging.info(f"Updating {member.get('name')} as leaving the outfit")
-                    collection.update_one({'_id': member.get("_id")}, {
-                        '$push': {'left_outfit_date': datetime.now()},
-                        '$set': {'active_member': False}
-                    })
-
-    async def member_rejoined_outfit(self, returning_members, collection):
-        if collection is not None and len(returning_members) != 0:
-            for member in returning_members:
-                logging.info(f"Updating {member.name} as rejoining the outfit")
-                collection.update_one({'_id': member.id}, {
-                    '$push': {'rejoined_outfit_date': datetime.now()},
-                    '$set': {'active_member': True}
-                })
-    
-    async def update_member_ranks(self, updated_ranks, collection):
-        if collection is not None and len(updated_ranks) != 0:
-            for member in updated_ranks:
-                logging.info(f"Updating rank for {member.name} to {member.rank}")
-                collection.update_one({'_id': member.id}, {
-                    '$push': {'rank_history': {
-                        "rank": member.rank,
-                        "time": datetime.now()
-                    }},
-                    '$set': {'rank': member.rank}
-                })
-
-    @tasks.loop(minutes=1.0)
+    @tasks.loop(minutes=30.0)
     async def update_outfit_members(self):
         """
             Updates each outfit collection with the latest Outfit member information
         """
         try:
             # For each outfit: Get a list of all outfit members from the API
-            for outfit in self._monitored_outfits:
-                collection = self.db["ps2_outfit_members_" + str(outfit)]
-                api_outfit = await Census.get_outfit(outfit_tag=outfit, synchro=True)
-                live_members = await api_outfit.members()
+            for outfit_id in self._monitored_outfits:
+                current_members = await Census.get_outfit_with_member_characters(outfit_id)
 
                 # Get a list of dictionaries of members in the DB
-                db_result = collection.find({}, {
-                    "_id": 1,
-                    "left_outfit_date": 1,
-                    "active_member": 1,
-                    "rank": 1
-                })
-                db_members = []
-                for result in db_result:
-                    db_members.append(result)
+                db_members = await Ps2Character.find_many(Ps2Character.outfit_id == outfit_id).project(
+                    Ps2Character
+                ).to_list()
+
+                if not db_members:
+                    logging.info("Outfit {} has no members in the database. adding {} members".format(
+                        outfit_id,
+                        len(current_members))
+                    )
+                    await _add_new_members(current_members, outfit_id)
+                    continue
 
                 # Establish which members are new and which have rejoined
-                new_members = []
-                returning_members = []
-                live_member_ids = []
-                updated_ranks = []
-                for member in live_members:
-                    live_member_ids.append(member.id)
-                    # List comprehension:
-                    # If a dictionary in the list of dictionaries (db_members) does not have a key "_id" with a value equal to the member.id then
-                    # add the member to the new_members list
-                    if not any(d.get('_id') == member.id for d in db_members):
+                new_members: list[Ps2OutfitMember] = []
+                outdated_ranks: list[Ps2Character] = []
+                for member in current_members:
+                    # Check if the member is already in the database
+                    db_character = next((db_member for db_member in db_members if db_member.id == member.character_id),
+                                        None)
+                    if db_character:
+                        # Check for any changes in rank
+                        if db_character.rank != member.rank:
+                            db_character.rank = member.rank
+                            outdated_ranks.append(db_character)
+                        db_members.remove(db_character)
+                    else:
                         new_members.append(member)
 
-                    elif any(d.get('_id') == member.id and d.get('active_member') is False for d in db_members):
-                        returning_members.append(member)
-                    else:
-                        # Check for any changes in rank
-                        for db_member in db_members:
-                            if db_member.get('_id') == member.id and db_member.get('rank') != member.rank:
-                                updated_ranks.append(member)
+                logging.info("Outfit {} has {} new, {} left and {} ranks are outdated".format(
+                    outfit_id, len(new_members), len(db_members), len(outdated_ranks)
+                ))
 
-                # Establish which members have left the outfit
-                left_members = []
-                for member in db_members:
-                    if member.get('_id') not in live_member_ids:
-                        left_members.append(member)
+                # everyone left in the db_members list has left the outfit
+                await _member_left_outfit(db_members, outfit_id)
 
                 # Perform database actions
-                await self.add_new_members(new_members, collection)
-                await self.member_rejoined_outfit(returning_members, collection)
-                await self.member_left_outfit(left_members, collection)
-                await self.update_member_ranks(updated_ranks, collection)
+                await _add_new_members(new_members, outfit_id)
+                await _update_member_ranks(outdated_ranks)
 
         except Exception as exception:
             logging.error("Failed to update PS2 Outfit Member Collection", exc_info=exception)
 
 
+async def _update_member_ranks(outdated_rank_members: list[Ps2Character]):
+    """
+    Saves to database the new rank of each member in the list.
+    This assumes that the character object already has the new rank already set
+    Parameters
+    ----------
+    outdated_rank_members:
+        List of Ps2Character objects with outdated ranks.
+    """
+    for member in outdated_rank_members:
+        await Ps2Character.find_one(Ps2Character.id == member.character_id).update_one(
+            Set({Ps2Character.rank: member.rank}),
+            Push({
+                Ps2Character.rank_history: RankHistory(
+                    name=member.rank,
+                    outfit_id=member.outfit_id,
+                    added=datetime.now()
+                )
+            })
+        )
+
+
+async def _member_left_outfit(db_characters: list[Ps2Character], outfit_id: int):
+    """
+    Updates the database to reflect that the member has left the outfit
+    Parameters
+    ----------
+    db_characters:
+        List of PS2 characters that have left the outfit
+    outfit_id:
+        The outfit id of the outfit that the members have left
+    """
+    await Ps2Character.find(In(Ps2Character.id, [character.id for character in db_characters])).update(
+        Set({
+            Ps2Character.outfit_id: None,
+            Ps2Character.rank: None,
+            Ps2Character.joined: None,
+        }),
+        Push({
+            Ps2Character.rank_history: RankHistory(
+                name="LEFT",
+                outfit_id=outfit_id,
+                added=datetime.now(),
+            )
+        })
+    )
+
+
+async def _add_new_members(new_members: list[Ps2OutfitMember], outfit_id: int):
+    for member in new_members:
+        db_char = await Ps2Character.find_one(Ps2Character.id == member.character_id)
+        if db_char:
+            await db_char.update(
+                Set({
+                    Ps2Character.rank: member.rank,
+                    Ps2Character.outfit_id: outfit_id,
+                    Ps2Character.joined: member.member_since_date,
+                }),
+                Push({
+                    Ps2Character.rank_history: RankHistory(
+                        name=member.rank,
+                        outfit_id=outfit_id,
+                        added=member.member_since_date
+                    )
+                })
+            )
+        else:
+            await Ps2Character(
+                id=member.character_id,
+                outfit_id=outfit_id,
+                name=member.character.name.first,
+                rank=member.rank,
+                joined=member.member_since_date,
+                left=None,
+                rank_history=[
+                    RankHistory(
+                        name=member.rank,
+                        outfit_id=outfit_id,
+                        added=member.member_since_date
+                    )
+                ]
+            ).insert()
+
+
 def setup(bot: commands.Bot):
-    bot.add_cog(PS2OutfitMembers(bot=bot, _db=Database))
+    bot.add_cog(PS2OutfitMembers())
+
+
+# # todo: delete this
+# import os
+#
+# logging.basicConfig(
+#     level=os.getenv('LOGLEVEL'),
+#     format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s'
+# )
+
+# import asyncio
+# from database import init_database, get_mongo_uri
+# async def main():
+#     await init_database(get_mongo_uri(), "FUBot")
+#     await PS2OutfitMembers().update_outfit_members()
+#
+#
+# if __name__ == '__main__':
+#     loop = asyncio.get_event_loop()
+#     loop.run_until_complete(main())

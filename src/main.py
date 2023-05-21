@@ -1,11 +1,11 @@
 import os
 import logging
+from fubot import FUBot
 import datetime
 from typing import List
 import aiocron
 import disnake
 from disnake.ext import commands
-import auraxium
 from auraxium import ps2
 import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
@@ -16,9 +16,10 @@ import re
 
 from database import init_database, get_mongo_uri
 
-
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(
+    level=os.getenv('LOGLEVEL'),
+    format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s'
+)
 
 # Discord Intents
 intents = disnake.Intents.default()
@@ -29,24 +30,25 @@ intents.guilds = True
 # Initialize the bot
 
 discordClientToken = os.getenv('DISCORDTOKEN')
-Botdescription = "The serious bot for the casual Discord."
+bot_description = "The serious bot for the casual Discord."
 
-# Database.initialize()
-
-bot = commands.Bot(
+bot = FUBot(
     command_prefix=commands.when_mentioned_or("?"),
-    description=Botdescription,
+    description=bot_description,
     intents=intents,
     command_sync_flags=commands.CommandSyncFlags.default()
 )
 
+
 @bot.event
 async def on_connect():
-    logging.info("Connected to Discord. Initializing Database...")
-
-    await init_database(get_mongo_uri(), "FUBot")
-    print("Database initialized.")
-    bot.load_extension("loggers.arma_server_logger")
+    try:
+        logging.info("Connected to Discord. Initializing Database.")
+        await init_database(get_mongo_uri(), "FUBot")
+    except Exception as e:
+        logging.exception(e)
+        logging.error("Failed to initialize database. Exiting...")
+        exit(1)
 
 
 @bot.event
@@ -121,16 +123,17 @@ async def on_ready():
 #     except Exception as e:
 #         logging.exception(e)
 
-
-## Load cog extensions into the bot
+logging.info("Loading extensions...")
+# # Load cog extensions into the bot
 # bot.load_extension("commands.role_added")
 # bot.load_extension("commands.new_discord_members")
 # bot.load_extension("commands.link_ps2_discord")
 # bot.load_extension("commands.squad_markup")
 # bot.load_extension("commands.ps2_lookup")
-# bot.load_extension("loggers.discord_logger")
+bot.load_extension("loggers.discord_logger")
 # bot.load_extension("loggers.ps2_outfit_members")
 # bot.load_extension("loggers.ps2_outfit_logger")
+# bot.load_extension("loggers.arma_server_logger")
 # bot.load_extension("send_intro")
 # bot.load_extension("helpers.sync_commands")
 

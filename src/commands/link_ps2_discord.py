@@ -1,15 +1,16 @@
 import os
 import re
 import logging
-import datetime
+from typing import Union
+
 import auraxium
 from auraxium import ps2
 import disnake
 from disnake.ext import commands
-from bson.objectid import ObjectId
-from bson.dbref import DBRef
 from census import Census
-from database_connector import Database
+from database.models.members import Member
+from database.models.planetside2 import Ps2Character
+from beanie.operators import Push
 
 
 class LinkPs2(commands.Cog):
@@ -87,6 +88,7 @@ class InitiateDiscordPs2Link(commands.Cog):
     Class cog for initiating the PS2 and Discord account linking process.
 
     """
+
     def __init__(self, bot: commands.Bot):
         """
         Parameters
@@ -96,49 +98,18 @@ class InitiateDiscordPs2Link(commands.Cog):
         """
         self.bot = bot
         self.login_checks = {}
-        # self.census_client = auraxium.Client(service_id=str(os.getenv("CENSUS_TOKEN")))
-
-    async def check_ps2_db(self, ps2_char):
-        """
-        Queries the mongoDB for existing ps2_char.
-
-        Parameters
-        ----------
-        ps2_char : class auraxium.ps2.Character
-            The PS2 character to check.
-
-        Returns
-        ------
-        characters : bool
-            True if the character exists in the db.
-        """
-        try:
-            ps2_record = Database.find_one(
-                "members",
-                {
-                    "ps2_characters.$id": { '$in': [ ps2_char.id ] },
-                }
-            )
-        except Exception as e:
-            raise e
-
-        if ps2_record is None:
-            return False, None
-
-        member_id = ps2_record["discord_user"]["id"]
-        return True, member_id
 
     @commands.slash_command(dm_permission=True)
     async def ps2(
-        self,
-        inter: disnake.ApplicationCommandInteraction
+            self,
+            inter: disnake.ApplicationCommandInteraction
     ):
         pass
 
     @ps2.sub_command_group()
     async def link(
-        self,
-        inter: disnake.ApplicationCommandInteraction
+            self,
+            inter: disnake.ApplicationCommandInteraction
     ):
         pass
 
@@ -159,12 +130,12 @@ class InitiateDiscordPs2Link(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         if not re.match(pattern="^[a-zA-Z0-9]*$", string=account_name):
-            await inter.edit_original_message("PlanetSide 2 character names are alphanumeric, are you sure you spelt that right?")
+            await inter.edit_original_message("PlanetSide 2 character names are alphanumeric, are you sure you spelt " +
+                                              "that right?")
             return
 
         # Check if this PS2 character exists, get the character object if it does.
-        # ps2_char = await self.census_client.get_by_name(ps2.Character, account_name)
-        ps2_char = await Census.get_character(account_name)
+        ps2_char: ps2.Character = await Census.get_character(account_name)
         if ps2_char is None:
             await inter.edit_original_message("Impossible. Perhaps the Archives are incomplete." +
                                               f"\n character {account_name} doesn't exist")
@@ -172,17 +143,17 @@ class InitiateDiscordPs2Link(commands.Cog):
 
         try:
             # Check if this PS2 character already claimed.
-            ps2_db_check, member_id = await self.check_ps2_db(ps2_char)
+            member = await Member.find_one(ps2_char.id in Member.ps2_characters)
             # If the account is already claimed, inform the user.
-            if ps2_db_check is True:
-                if str(member_id) == str(inter.author.id):
+            if member:
+                if str(member.discord.id) == str(inter.author.character_id):
                     await inter.edit_original_message(
-                        str(ps2_char.name) + " is already connected to your account!"
+                        str(ps2_char.name.first) + " is already connected to your account!"
                     )
                     raise NameError
                 else:
                     await inter.edit_original_message(
-                        str(ps2_char.name) + " is already connected to another FU member!" +
+                        str(ps2_char.name.first) + " is already connected to another FU member!" +
                         "\nIf this is an issue, contact the Bot Devs `@BotDevs`"
                     )
                     raise NameError
@@ -233,10 +204,10 @@ class InitiateDiscordPs2Link(commands.Cog):
                     )
                     return
                 else:
-                    logging.info(f"Linked {ps2_char.name} to {inter.author.name}")
+                    logging.info(f"Linked {ps2_char.name.first} to {inter.author.name}")
                     await inter.edit_original_message(
                         "You've successfully connected accounts! :tada:\nPS2: "
-                        + str(self.login_checks[account_name].characters[0].name)
+                        + str(ps2_char.name.first)
                         + "\nDiscord: "
                         + str(inter.author.name)
                     )
@@ -248,7 +219,7 @@ class InitiateDiscordPs2Link(commands.Cog):
                 return
 
 
-async def add_to_db(ps2_char, author):
+async def add_to_db(ps2_char: ps2.Character, author: Union[disnake.Member, disnake.User]):
     """
     Inserts new Documents or updates existing ones in the MongoDB
 
@@ -261,53 +232,13 @@ async def add_to_db(ps2_char, author):
         The discord Member class of the user
 
     """
-
-    # Check if the character is in a tracked outfit
-    FU_id = 37509488620602936
-    nFUc_id = 37558455247570544
-    vFUs_id = 37558804429669935
-    tracked_outfits = [FU_id, nFUc_id, vFUs_id]
-    if await ps2_char.outfit() is not None:
-        outfit = await ps2_char.outfit()
-        if outfit.id not in tracked_outfits:
-            pass
-        else:
-            # Reference the character in the outfit collection to the member object
-            char_reference = DBRef(f"ps2_outfit_members_{str(outfit.alias)}",
-                                ps2_char.id
-            )
-            try:
-                Database.update_one("members", {"discord_user.id": str(author.id)}, {
-                    '$push': {'ps2_characters': char_reference}
-                })
-                return
-            except Exception as e:
-                logging.error("Failed to update database", exc_info=e)
-
     # Create a new document for the member
-    ps2_player_object = {}
-    ps2_player_object["_id"] = ps2_char.id
-    ps2_player_object["name"] = str(ps2_char.name)
-    ps2_player_object["active_member"] = True
-    outfit_object = await ps2_char.outfit_member()
-    if outfit_object is not None:
-        rank = {
-            "rank": outfit_object.rank,
-            "time": datetime.datetime.utcnow()
-        }
-        ps2_player_object["outfit_id"] = str(outfit_object.id)
-        ps2_player_object["member_since"] = datetime.datetime.fromtimestamp(outfit_object.member_since)
-        ps2_player_object["rank_history"] = [rank]
-    try:
-        Database.insert_one("ps2_other_characters", ps2_player_object)
-        char_reference = DBRef("ps2_other_characters",
-                                ps2_char.id
-            )
-        Database.update_one("members", {"discord_user.id": str(author.id)}, {
-            '$push': {'ps2_characters': char_reference}
-        })
-    except Exception as e:
-        raise e
+    await Ps2Character(
+        id=ps2_char.id,
+        name=ps2_char.name.first,
+    ).save()
+    await Member.find_one(Member.discord.id == author.id).update(Push({Member.ps2_character_ids: ps2_char.id}))
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(InitiateDiscordPs2Link(bot))

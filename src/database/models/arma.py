@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from beanie import Document, TimeSeriesConfig, Granularity
 from pydantic import Field, BaseModel
@@ -10,14 +9,15 @@ class ArmAPlayer(BaseModel):
     score: int
     duration: int
 
+
 class OnlineFUArmaPlayers(Document):
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(actory=datetime.utcnow())
     online_count: int = -1
-    online_players: Optional[List[ArmAPlayer]]
-    mission: Optional[str]
+    online_players: list[ArmAPlayer] | None
+    mission: str | None
 
     class Settings:
-        name = "arma_online_outfit_member_log"
+        name = "arma_online_member_log"
         timeseries = TimeSeriesConfig(
             time_field="timestamp",  # Required
             meta_field="mission",  # Optional

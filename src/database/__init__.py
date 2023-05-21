@@ -1,13 +1,7 @@
-import sys
 import os
-from typing import Sequence, Type, TypeVar, Optional
-
+from typing import Type
 from beanie import init_beanie, Document
-from pydantic import BaseModel, validator, Field
 from motor.motor_asyncio import AsyncIOMotorClient
-
-# importing everything from all python files in this folder to automatically get all documents with gather_documents()
-
 
 
 def get_mongo_uri():
@@ -27,8 +21,10 @@ def get_all_documents() -> list[Type[Document]]:
     """Returns a list of all MongoDB document models defined."""
     from .models.arma import OnlineFUArmaPlayers
     from .models.members import Member
-    from .models.planetside2 import Ps2character, OnlineOutfitMemberLog
-    documents = [OnlineFUArmaPlayers, Member, Ps2character, OnlineOutfitMemberLog]
+    from .models.planetside2 import Ps2Character, OnlineOutfitMemberTS
+    from database.models.discord import DiscordGuildTS
+
+    documents = [OnlineFUArmaPlayers, Member, Ps2Character, OnlineOutfitMemberTS, DiscordGuildTS]
     return documents
 
 
@@ -48,7 +44,8 @@ async def init_database(mongo_uri: str, db_name: str):
     client = AsyncIOMotorClient(str(mongo_uri))
     await init_beanie(
         database=getattr(client, db_name),
-        document_models=db_list,  # type: ignore[arg-type]
+        document_models=db_list,
+        allow_index_dropping=True
     )
     return
     # This is the place we can add some default data to the database if needed

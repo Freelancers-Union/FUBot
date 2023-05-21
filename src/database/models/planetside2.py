@@ -1,34 +1,42 @@
-from typing import Optional, List
 from datetime import datetime
 
-from beanie import Document, Indexed, TimeSeriesConfig, Granularity
+from beanie import Document, Indexed, TimeSeriesConfig, Granularity, PydanticObjectId
 from pydantic import BaseModel, Field
 
 
-class HistoryRank(BaseModel):
+class RankHistory(BaseModel):
     name: str
     outfit_id: int
     added: datetime
 
 
-class Ps2character(Document):
+class Ps2Character(Document):
     id: Indexed(int)
-    current_outfit_id: Indexed(int)
-    name: str
-    rank: Optional[str]
-    rank_history: Optional[List[HistoryRank]]
-    joined: datetime
-    left: Optional[datetime]
-
-
-class OnlineOutfitMemberLog(Document):
-    timestamp: datetime = Field(default_factory=datetime.now)
-    metadata: str
+    outfit_id: Indexed(int, unique=False) | None
+    name: str | None
+    rank: str | None
+    rank_history: list[RankHistory] | None
+    joined: datetime | None
 
     class Settings:
-        name = "ps2_online_outfit_member_log"
+        name = "ps2_characters"
+        projection = {
+            "_id": 1,
+            "outfit_id": 1,
+            "rank": 1
+        }
+
+
+class OnlineOutfitMemberTS(Document):
+    timestamp: datetime = Field(default=datetime.utcnow())
+    outfit_id: int
+    online_count: int
+    id: PydanticObjectId
+
+    class Settings:
+        name = "ps2_online_outfit_member_ts"
         timeseries = TimeSeriesConfig(
             time_field="timestamp",  # Required
-            meta_field="metadata",  # Optional
+            meta_field="outfit_id",  # Optional
             granularity=Granularity.minutes,  # Optional
         )
