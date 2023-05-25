@@ -22,7 +22,7 @@ class PS2OutfitMembers(commands.Cog):
             Dig_id = 37509488620604883
             BHO_id = 37534120470912916
             CTIA_id = 37569919291763416
-            self._monitored_outfits: {int} = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
+            self._monitored_outfits: dict[int] = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
             logging.info("Synchronising outfit members with database...")
             self.update_outfit_members.start()
 

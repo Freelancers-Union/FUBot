@@ -1,5 +1,5 @@
 import logging
-import datetime
+from datetime import datetime
 import disnake
 from disnake.ext import commands
 from beanie.operators import Set, Push
@@ -9,7 +9,7 @@ from database.models.discord import DiscordGuildTS, DiscordGuildTSMetadata, Disc
 from database.models.members import Member
 
 
-async def _add_member_profile(member: disnake.Member):
+async def add_member_profile(member: disnake.Member):
     """
     Adds a new member to the database
 
@@ -31,7 +31,7 @@ async def _add_member_profile(member: disnake.Member):
                 nick=member.nick,
                 joined=member.joined_at,
                 is_present=True,
-                roles=[DiscordUserRole(id=role.id, name=role.name) for role in member.roles],
+                roles=[DiscordUserRole(id=role.id, name=role.name, added=datetime.utcnow()) for role in member.roles],
                 presence_history=[]
             )
         )
@@ -54,7 +54,7 @@ async def _member_left(member: disnake.Member):
         logging.warning(f"Member {member.name} left but was not found in the database")
     presence_history_record = DiscordUserPresence(
         joined=member.joined_at,
-        left=datetime.datetime.utcnow()
+        left=datetime.utcnow()
     )
     await db_member.upsert(
         Set({
@@ -90,6 +90,7 @@ async def _save_member_count(guild_id: int, current_count: int, role_id=None):
     """
 
     await DiscordGuildTS(
+        timestamp=datetime.utcnow(),
         member_count=current_count,
         metadata=DiscordGuildTSMetadata(guild_id=guild_id, role=role_id)
     ).insert()
@@ -113,7 +114,7 @@ class DiscordMemberLogger(commands.Cog):
 
         FU_guild_id = 282514718445273089
         FU_demo_guild_id = 914185528268689428
-        self._monitored_guilds: {int} = {FU_guild_id, FU_demo_guild_id}
+        self._monitored_guilds: dict[int] = {FU_guild_id, FU_demo_guild_id}
 
     def add_guild(self, guild_id: int):
         """
@@ -131,7 +132,7 @@ class DiscordMemberLogger(commands.Cog):
         if guild_id in self._monitored_guilds:
             logging.info(f"Member {member.id} joined {member.guild.id}")
             await _save_member_count(guild_id, member.guild.member_count)
-            await _add_member_profile(member)
+            await add_member_profile(member)
 
     @commands.Cog.listener("on_member_remove")
     async def on_raw_member_remove(self, member: disnake.Member):

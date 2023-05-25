@@ -1,11 +1,10 @@
+from datetime import datetime
 import disnake
-from beanie.operators import Push, Pull
+from beanie.operators import Push, Pull, ElemMatch
 from disnake.ext import commands
 
 from database.models.discord import DiscordUserRole
 from database.models.members import Member
-from loggers.discord_logger import DiscordMemberLogger
-from helpers.discord_db_actions import DiscordDB
 
 
 class MemberRoleUpdate(commands.Cog):
@@ -36,18 +35,20 @@ class MemberRoleUpdate(commands.Cog):
             for gained in (set(before.roles) ^ set(after.roles)):
                 await Member.find_one({Member.discord.id: before.id}).update(
                     Push({
-                        Member.discord.roles: DiscordUserRole(id=gained.id, name=gained.name),
-                    }
-                    ))
+                        Member.discord.roles: DiscordUserRole(
+                            id=gained.id, 
+                            name=gained.name, 
+                            added=datetime.utcnow()
+                        ),
+                    })
+                    )
 
         # Check if the member has lost a role
         elif len(before.roles) > len(after.roles):
             for lost in (set(before.roles) ^ set(after.roles)):
                 await Member.find_one({Member.discord.id: before.id}).update(
-                    Pull({
-                        Member.discord.roles: DiscordUserRole(id=lost.id),
-                    }
-                    ))
+                    Pull({Member.discord.roles: ElemMatch({"id": lost.id})})
+                    )
 
 
 def setup(client):

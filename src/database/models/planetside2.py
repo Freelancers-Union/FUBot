@@ -11,12 +11,15 @@ class RankHistory(BaseModel):
 
 
 class Ps2Character(Document):
-    id: Indexed(int)
+    id: Indexed(int) = Field(title="_id")
     outfit_id: Indexed(int, unique=False) | None
     name: str | None
     rank: str | None
     rank_history: list[RankHistory] | None
     joined: datetime | None
+
+    # def __init__(self):
+    #     super.__init__()
 
     class Settings:
         name = "ps2_characters"
@@ -28,10 +31,9 @@ class Ps2Character(Document):
 
 
 class OnlineOutfitMemberTS(Document):
-    timestamp: datetime = Field(default=datetime.utcnow())
+    timestamp: datetime
     outfit_id: int
     online_count: int
-    id: PydanticObjectId
 
     class Settings:
         name = "ps2_online_outfit_member_ts"

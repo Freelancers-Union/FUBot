@@ -11,7 +11,7 @@ class ArmAPlayer(BaseModel):
 
 
 class OnlineFUArmaPlayers(Document):
-    timestamp: datetime = Field(actory=datetime.utcnow())
+    timestamp: datetime
     online_count: int = -1
     online_players: list[ArmAPlayer] | None
     mission: str | None

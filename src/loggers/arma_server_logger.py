@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 from steam import SteamQuery
@@ -38,9 +39,10 @@ class ArmALogger(Cog):
                     self.server_query.query_player_info()
                 ],
                 mission=mission,
+                timestamp=datetime.utcnow()
             )
 
-            if last is None or last.online_players != new.player_count:
+            if last is None or last.online_count != new.online_count or new.online_count > 0:
                 await new.insert()
         except Exception as exception:
             logging.error("Something went wrong logging ArmA3 server", exc_info=exception)

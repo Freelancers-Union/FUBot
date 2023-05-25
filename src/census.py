@@ -42,26 +42,39 @@ class Census(object):
 
     @staticmethod
     async def get_online_outfit_members(outfit: ps2.Outfit) -> list[ps2.Character]:
-        """
-        Get a list of online members of an outfit
+        """Return the online friends of the given character."""
+        query = outfit.query()
+        query.show("outfit_id")
 
-        Parameters
-        ----------
-        outfit: outfit to get online members of
+        member_join = query.create_join("outfit_member")
+        member_join.set_inject_at("members")
+        member_join.set_list(True)
+        member_join.set_outer(False)
+        member_join.show("character_id", "rank")
 
-        Returns
-        -------
-        list of online members
-        """
-        try:
-            member_ids = []
-            for member in await outfit.members():
-                member_ids.append(member.character_id)
-            online_members = await auraxium.ps2.Character.get_online(*member_ids, client=Census.CLIENT)
-        except IndexError as e:
-            raise e
-        except Exception as e:
-            raise e
+        character_join = member_join.create_join("character")
+        character_join.set_inject_at("character")
+        character_join.set_fields("character_id")
+        character_join.set_outer(False)
+
+        online_status_join = character_join.create_join("characters_online_status")
+        online_status_join.set_inject_at("online_status")
+        online_status_join.set_outer(False)
+        online_status_join.show("online_status")
+
+        # this filters out all members who aren't online
+        world_join = online_status_join.create_join("world")
+        world_join.set_inject_at("ignore")
+        world_join.set_fields("online_status", "world_id")
+        world_join.set_outer(False)
+        world_join.show("world_id")
+
+        data = await Census.CLIENT.request(query)
+
+        online_members: list = []
+        if data["outfit_list"]:
+            members = data['outfit_list'][0]['members']
+            online_members = [auraxium.ps2.Character(d["character"], Census.CLIENT) for d in members]
 
         return online_members
 

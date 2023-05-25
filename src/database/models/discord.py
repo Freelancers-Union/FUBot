@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 class DiscordUserRole(BaseModel):
     id: int
     name: str | None
-    added: datetime | None= Field(default=datetime.utcnow())
-
+    added: datetime | None
 
 class DiscordUserPresence(BaseModel):
     joined: datetime
@@ -15,7 +14,7 @@ class DiscordUserPresence(BaseModel):
 
 
 class DiscordUser(BaseModel):
-    id: Indexed(int)
+    id: Indexed(int) = Field(title="_id")
     name: Indexed(str) | None
     nick: str | None
     joined: datetime | None
@@ -30,7 +29,7 @@ class DiscordGuildTSMetadata(BaseModel):
 
 
 class DiscordGuildTS(Document):
-    timestamp: datetime = Field(default=datetime.utcnow())
+    timestamp: datetime
     metadata: DiscordGuildTSMetadata
     member_count: int
 
