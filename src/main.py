@@ -1,18 +1,13 @@
 import os
 import logging
 from fubot import FUBot
-import datetime
-from typing import List
 import aiocron
 import disnake
 from disnake.ext import commands
-from auraxium import ps2
 import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
 import commands.ops as ops
-# from database_connector import Database
 import emoji
-import re
 
 from database import init_database, get_mongo_uri
 
@@ -70,7 +65,7 @@ async def on_ready():
     logging.info("FUBot is ready!")
 
 
-async def autocomplete_event(inter, string: str) -> List[str]:
+async def autocomplete_event(inter, string: str) -> list[str]:
     events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
     return [event for event in events if string.lower() in event.lower()]
 
@@ -86,6 +81,10 @@ async def announce_event(
 
     Parameters
     ----------
+    inter:
+        The interaction object.
+    event:
+        The name of the event to announce.
     message_body: The message to attach to the announcement.'
 
     """

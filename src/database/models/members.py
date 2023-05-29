@@ -1,5 +1,4 @@
-from beanie import Document, Link
-from database.models.planetside2 import Ps2Character
+from beanie import Document
 from database.models.discord import DiscordUser
 
 

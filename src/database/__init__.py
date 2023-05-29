@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 def get_mongo_uri():
     port: str = ":" + str(os.getenv("MONGO_PORT")) if os.getenv("MONGO_PORT") else ""
-    URI = (
+    uri = (
             "mongodb://"
             + str(os.getenv('MONGO_USERNAME'))
             + ":"
@@ -14,7 +14,7 @@ def get_mongo_uri():
             + "@" + str(os.getenv('MONGO_ADDRESS'))
             + port + "/"
     )
-    return URI
+    return uri
 
 
 def get_all_documents() -> list[Type[Document]]:

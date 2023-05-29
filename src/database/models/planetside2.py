@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from beanie import Document, Indexed, TimeSeriesConfig, Granularity, PydanticObjectId
+from beanie import Document, Indexed, TimeSeriesConfig, Granularity
 from pydantic import BaseModel, Field
 
 
@@ -17,9 +17,6 @@ class Ps2Character(Document):
     rank: str | None
     rank_history: list[RankHistory] | None
     joined: datetime | None
-
-    # def __init__(self):
-    #     super.__init__()
 
     class Settings:
         name = "ps2_characters"

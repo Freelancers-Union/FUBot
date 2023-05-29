@@ -22,7 +22,7 @@ class PS2OutfitMembers(commands.Cog):
             Dig_id = 37509488620604883
             BHO_id = 37534120470912916
             CTIA_id = 37569919291763416
-            self._monitored_outfits: dict[int] = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
+            self._monitored_outfits: set[int] = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
             logging.info("Synchronising outfit members with database...")
             self.update_outfit_members.start()
 
@@ -173,23 +173,3 @@ async def _add_new_members(new_members: list[Ps2OutfitMember], outfit_id: int):
 
 def setup(bot: commands.Bot):
     bot.add_cog(PS2OutfitMembers())
-
-
-# # todo: delete this
-# import os
-#
-# logging.basicConfig(
-#     level=os.getenv('LOGLEVEL'),
-#     format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s'
-# )
-
-# import asyncio
-# from database import init_database, get_mongo_uri
-# async def main():
-#     await init_database(get_mongo_uri(), "FUBot")
-#     await PS2OutfitMembers().update_outfit_members()
-#
-#
-# if __name__ == '__main__':
-#     loop = asyncio.get_event_loop()
-#     loop.run_until_complete(main())

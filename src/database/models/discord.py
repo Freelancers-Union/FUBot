@@ -8,6 +8,7 @@ class DiscordUserRole(BaseModel):
     name: str | None
     added: datetime | None
 
+
 class DiscordUserPresence(BaseModel):
     joined: datetime
     left: datetime

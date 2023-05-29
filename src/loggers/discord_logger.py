@@ -114,7 +114,7 @@ class DiscordMemberLogger(commands.Cog):
 
         FU_guild_id = 282514718445273089
         FU_demo_guild_id = 914185528268689428
-        self._monitored_guilds: dict[int] = {FU_guild_id, FU_demo_guild_id}
+        self._monitored_guilds: set[int] = {FU_guild_id, FU_demo_guild_id}
 
     def add_guild(self, guild_id: int):
         """

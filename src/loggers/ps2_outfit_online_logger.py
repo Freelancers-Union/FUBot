@@ -26,7 +26,7 @@ class Ps2OutfitPlayerLogger(commands.Cog):
         Dig_id = 37509488620604883
         BHO_id = 37534120470912916
         CTIA_id = 37569919291763416
-        self._monitored_outfits: dict[int] = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
+        self.monitored_outfits: set[int] = {FU_id, nFUc_id, vFUs_id, SNGE_id, Dig_id, BHO_id, CTIA_id}
 
         try:
             bot.loop.create_task(self.ps2_outfit_events())
@@ -35,7 +35,7 @@ class Ps2OutfitPlayerLogger(commands.Cog):
 
     async def ps2_outfit_events(self) -> None:
         """
-        Creates event listeners for log in/out events. 
+        Creates event listeners for log in/out events.
         Events for monitored outfits are saved to the database
         """
         client = event.EventClient(service_id=os.getenv('CENSUS_TOKEN'))
@@ -47,15 +47,20 @@ class Ps2OutfitPlayerLogger(commands.Cog):
             Saves the player count of an outfit to the database
 
             Parameters
-            ----------         
-            outfit: Class of outfit to save
+            ----------
+            _event: Union[event.PlayerLogin, event.PlayerLogout]
+                The event to that triggered the function
             """
             db_character = await Ps2Character.find_one(Ps2Character.id == _event.character_id)
-            if not db_character:
+            if not db_character or not db_character.outfit_id:
                 return
-            
+
+            if db_character.outfit_id not in self.monitored_outfits:
+                return
+
             if db_character.outfit_id not in cached_ps2_outfits.keys():
-                cached_ps2_outfits[db_character.outfit_id] = await Census.CLIENT.get_by_id(ps2.Outfit, db_character.outfit_id)
+                cached_ps2_outfits[db_character.outfit_id] = await Census.CLIENT.get_by_id(ps2.Outfit,
+                                                                                           db_character.outfit_id)
 
             online_count = await Census.get_online_outfit_members(cached_ps2_outfits[db_character.outfit_id])
             await OnlineOutfitMemberTS(
