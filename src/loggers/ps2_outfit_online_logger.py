@@ -63,8 +63,6 @@ class Ps2OutfitPlayerLogger(commands.Cog):
                 outfit_id=db_character.outfit_id,
                 timestamp=datetime.datetime.utcnow()
             ).insert()
-            logging.info(f"Saved outfit {cached_ps2_outfits[db_character.outfit_id].name} player count of {len(online_count)}")
-
 
         @client.trigger(event=event.PlayerLogout, worlds=[10])
         async def logged_out(_event: event.PlayerLogout):

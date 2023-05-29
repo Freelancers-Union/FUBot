@@ -97,7 +97,7 @@ async def _update_member_ranks(outdated_rank_members: list[Ps2Character]):
         List of Ps2Character objects with outdated ranks.
     """
     for member in outdated_rank_members:
-        await Ps2Character.find_one(Ps2Character.id == member.character_id).update_one(
+        await Ps2Character.find_one(Ps2Character.id == member.id).update_one(
             Set({Ps2Character.rank: member.rank}),
             Push({
                 Ps2Character.rank_history: RankHistory(

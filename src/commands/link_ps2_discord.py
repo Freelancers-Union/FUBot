@@ -50,7 +50,7 @@ class LinkPs2(commands.Cog):
         """
         self.login_trigger = auraxium.Trigger(
             auraxium.event.PlayerLogin,
-            characters=self.characters,
+            zters=self.characters,
             single_shot=True,
             name=str(self.characters[0].name),
         )
@@ -143,10 +143,10 @@ class InitiateDiscordPs2Link(commands.Cog):
 
         try:
             # Check if this PS2 character already claimed.
-            member = await Member.find_one(ps2_char.id in Member.ps2_characters)
+            member = await Member.find_one({Member.ps2_character_ids: ps2_char.id})
             # If the account is already claimed, inform the user.
             if member:
-                if str(member.discord.id) == str(inter.author.character_id):
+                if str(member.discord.id) == str(inter.author.id):
                     await inter.edit_original_message(
                         str(ps2_char.name.first) + " is already connected to your account!"
                     )
