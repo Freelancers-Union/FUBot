@@ -143,7 +143,7 @@ class InitiateDiscordPs2Link(commands.Cog):
 
         try:
             # Check if this PS2 character already claimed.
-            member = await Member.find_one(Ps2Character.characters == ps2_char.id)
+            member = await Member.find_one(Member.ps2_character_ids == ps2_char.id)
             # If the account is already claimed, inform the user.
             if member:
                 if str(member.discord.id) == str(inter.author.id):
