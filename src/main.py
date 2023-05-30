@@ -1,22 +1,20 @@
 import os
 import logging
-import datetime
-from typing import List
+from fubot import FUBot
 import aiocron
 import disnake
 from disnake.ext import commands
-import auraxium
-from auraxium import ps2
 import helpers.discord_checks as dc
 import commands.new_discord_members as new_discord_members
 import commands.ops as ops
-from database_connector import Database
-from loggers.arma_server_logger import ArmaLogger
 import emoji
-import re
 
-logging.basicConfig(level=logging.os.getenv('LOGLEVEL'), format='%(asctime)s %(funcName)s: %(message)s ',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
+from database import init_database, get_mongo_uri
+
+logging.basicConfig(
+    level=os.getenv('LOGLEVEL'),
+    format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s'
+)
 
 # Discord Intents
 intents = disnake.Intents.default()
@@ -27,18 +25,39 @@ intents.guilds = True
 # Initialize the bot
 
 discordClientToken = os.getenv('DISCORDTOKEN')
-Botdescription = "The serious bot for the casual Discord."
+bot_description = "The serious bot for the casual Discord."
 
-Database.initialize()
-logging.info("Starting Arma Logger...")
-arma_logger = ArmaLogger(Database)
-
-bot = commands.Bot(
+bot = FUBot(
     command_prefix=commands.when_mentioned_or("?"),
-    description=Botdescription,
+    description=bot_description,
     intents=intents,
     command_sync_flags=commands.CommandSyncFlags.default()
 )
+
+
+@bot.event
+async def on_connect():
+    try:
+        logging.info("Connected to Discord. Initializing Database.")
+        await init_database(get_mongo_uri(), "FUBot")
+    except Exception as e:
+        logging.exception(e)
+        logging.error("Failed to initialize database. Exiting...")
+        exit(1)
+    logging.info("Loading extensions...")
+    # Load cog extensions into the bot
+    bot.load_extension("commands.role_added")
+    bot.load_extension("commands.new_discord_members")
+    bot.load_extension("commands.link_ps2_discord")
+    bot.load_extension("commands.squad_markup")
+    bot.load_extension("commands.ps2_lookup")
+    bot.load_extension("loggers.discord_logger")
+    bot.load_extension("loggers.ps2_outfit_members")
+    bot.load_extension("loggers.ps2_outfit_online_logger")
+    bot.load_extension("loggers.arma_server_logger")
+    bot.load_extension("send_intro")
+    bot.load_extension("helpers.sync_commands")
+
 
 @bot.event
 async def on_ready():
@@ -46,7 +65,7 @@ async def on_ready():
     logging.info("FUBot is ready!")
 
 
-async def autocomplete_event(inter, string: str) -> List[str]:
+async def autocomplete_event(inter, string: str) -> list[str]:
     events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
     return [event for event in events if string.lower() in event.lower()]
 
@@ -62,6 +81,10 @@ async def announce_event(
 
     Parameters
     ----------
+    inter:
+        The interaction object.
+    event:
+        The name of the event to announce.
     message_body: The message to attach to the announcement.'
 
     """
@@ -112,21 +135,5 @@ async def send_scheduled_message():
     except Exception as e:
         logging.exception(e)
 
-
-@aiocron.crontab("*/10 * * * *")
-async def log_arma_server_status():
-    arma_logger.log_server_status()
-
-# Load cog extensions into the bot
-bot.load_extension("commands.role_added")
-bot.load_extension("commands.new_discord_members")
-bot.load_extension("commands.link_ps2_discord")
-bot.load_extension("commands.squad_markup")
-bot.load_extension("commands.ps2_lookup")
-bot.load_extension("loggers.discord_logger")
-bot.load_extension("loggers.ps2_outfit_members")
-bot.load_extension("loggers.ps2_outfit_logger")
-bot.load_extension("send_intro")
-bot.load_extension("helpers.sync_commands")
 
 bot.run(discordClientToken)
