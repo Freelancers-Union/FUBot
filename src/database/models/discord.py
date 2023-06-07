@@ -26,7 +26,6 @@ class DiscordUser(BaseModel):
 
 class DiscordGuildTSMetadata(BaseModel):
     guild_id: Indexed(int)
-    role_id: Indexed(int) | None
 
 
 class DiscordGuildTS(Document):

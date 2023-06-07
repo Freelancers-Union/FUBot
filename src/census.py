@@ -7,6 +7,8 @@ import aiohttp
 import requests
 import auraxium
 from auraxium import ps2, Client
+from auraxium.models import CharacterAchievement
+from models.ps2.general import Ps2RibbonIDs
 
 # from models.ps2.outfit_with_member_characters import OutfitMemberList
 from models.ps2.outfit_with_member_characters import Ps2OutfitMember
@@ -115,6 +117,7 @@ class Census(object):
         -------
         character object
         """
+
         try:
             if character_name is not None:
                 character = await Census.CLIENT.get_by_name(auraxium.ps2.Character, character_name)
@@ -142,6 +145,49 @@ class Census(object):
             async with session.get(member_list_query.url(), allow_redirects=False) as resp:
                 response = await resp.json()
                 return [Ps2OutfitMember(member) for member in response["outfit_member_list"]]
+    
+    @staticmethod
+    async def get_outfit_member_ribbons(outfit: ps2.Outfit, ribbon_IDs: list[Ps2RibbonIDs]) -> dict[int, list[CharacterAchievement]]:
+            """
+            Get the SL and PL stats for an outfit
+
+            Parameters
+            ----------
+            outfit: 
+                outfit to get stats for
+            ribbon_IDs:
+                list of ribbon IDs to get stats for
+
+            Returns
+            -------
+            dict of ribbon ID to list of CharacterAchievement objects
+            """
+
+            member_list_query = auraxium.census.Query(collection="outfit_member", service_id=Census.CLIENT.service_id)
+            query: auraxium.census.Query = outfit.members().query
+            query.limit(5000)
+            query.show("character_id")
+
+            achievement_join = query.create_join("characters_achievement")
+            achievement_join.set_fields("character_id", "character_id")
+            achievement_join.set_inject_at("achievements")
+            achievement_join.set_list(True)
+            for value in ribbon_IDs:
+                achievement_join.add_term(field="achievement_id", value=value.value)
+
+            data = await Census.CLIENT.request(query)
+
+            rbbons: dict[int, list[CharacterAchievement]] = {}
+            for ribbon in ribbon_IDs:
+                rbbons[ribbon.value] = []
+            for character in data["outfit_member_list"]:
+                if "achievements" in character.keys():
+                    for _achievement in character["achievements"]:
+                        achievement = CharacterAchievement(**_achievement)
+                        rbbons[achievement.achievement_id].append(achievement)
+
+            return rbbons
+
 
 # todo: delete this
 # async def main():

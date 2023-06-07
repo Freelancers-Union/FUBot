@@ -1,7 +1,9 @@
+
 from datetime import datetime
 
 from beanie import Document, Indexed, TimeSeriesConfig, Granularity
 from pydantic import BaseModel, Field
+from models.ps2.general import Ps2RibbonIDs
 
 
 class RankHistory(BaseModel):
@@ -39,3 +41,40 @@ class OnlineOutfitMemberTS(Document):
             meta_field="outfit_id",  # Optional
             granularity=Granularity.minutes,  # Optional
         )
+
+
+class Ps2RibbonMetaData(BaseModel):
+    character_id: int
+    ribbon_id: int
+
+
+class PS2RibbonTS(Document):
+    """
+    Timeseries of ribbon counts
+    timestamp: datetime
+        Timestamp of the count
+    count: int  
+        Count of the ribbon
+    meta: Ps2RibbonMetaData
+        Metadata of the ribbon
+    """
+    timestamp: datetime
+    ribbon_count: int
+    meta: Ps2RibbonMetaData
+
+    class Settings:
+        name = "ps2_ribbon_ts"
+        timeseries = TimeSeriesConfig(
+            time_field="timestamp",  # Required
+            meta_field="meta",  # Optional
+            granularity=Granularity.hours,  # Optional
+        )
+    
+    async def get_top_ribbons_in_timpespan(
+            self,
+            ribbon_id: Ps2RibbonIDs,
+            start: datetime,
+            end: datetime
+        ):
+        #  some stuff here isn't supported by beanie yet
+        self.aggregate()

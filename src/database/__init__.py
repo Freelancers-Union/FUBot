@@ -21,10 +21,10 @@ def get_all_documents() -> list[Type[Document]]:
     """Returns a list of all MongoDB document models defined."""
     from .models.arma import OnlineFUArmaPlayers
     from .models.members import Member
-    from .models.planetside2 import Ps2Character, OnlineOutfitMemberTS
+    from .models.planetside2 import Ps2Character, OnlineOutfitMemberTS, PS2RibbonTS
     from database.models.discord import DiscordGuildTS
 
-    documents = [OnlineFUArmaPlayers, Member, Ps2Character, OnlineOutfitMemberTS, DiscordGuildTS]
+    documents = [OnlineFUArmaPlayers, Member, Ps2Character, OnlineOutfitMemberTS, DiscordGuildTS, PS2RibbonTS]
     return documents
 
 
