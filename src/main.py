@@ -39,7 +39,7 @@ bot = FUBot(
 async def on_connect():
     try:
         logging.info("Connected to Discord. Initializing Database.")
-        await init_database(get_mongo_uri(), "FUBot")
+        # await init_database(get_mongo_uri(), "FUBot")
     except Exception as e:
         logging.exception(e)
         logging.error("Failed to initialize database. Exiting...")
@@ -66,7 +66,7 @@ async def on_ready():
 
 
 async def autocomplete_event(inter, string: str) -> list[str]:
-    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps", "CombinedArms"]
     return [event for event in events if string.lower() in event.lower()]
 
 
