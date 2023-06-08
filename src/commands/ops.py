@@ -16,6 +16,7 @@ async def event_message(
 ):
     ops_dict = {
         "Drill": {"short_title":"Drill" ,"ts_channel": "Outfit Drill", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "CombinedArms": {"short_title":"combinedarms" ,"ts_channel": "Combined Arms", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
         "nFUc": {"short_title":"nFUc" ,"ts_channel": "nFUc", "game": "Planetside 2", "ping_role": "nFUc", "color": 0x004b80},
         "vFUs": {"short_title":"vFUs", "ts_channel": "vFUs", "game": "Planetside 2", "ping_role": "vFUs", "color": 0x440E62},
         "Casual": {"short_title":"Casual", "ts_channel": "Casual Play", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
@@ -60,8 +61,6 @@ async def event_message(
             await channel.send(role_to_ping.mention, embed=Message, components=team_speak,
                                delete_after=18000)
             await inter.edit_original_message("Posted a " + str(ops_dict[event]["short_title"]) + " announcement to " + channel.mention)
-            if ops_dict[event]["game"] == "Planetside 2":
-                await webhook_send(ops_dict[event])
         except Exception as e:
             raise e
 
@@ -167,16 +166,9 @@ async def vfus(Message):
     )
     return Message
 
-
-async def webhook_send(event):
-    """
-
-    Parameters
-    ----------
-    Send a webhook to the interlink discord
-    """
-    if os.getenv('INTERLINK_WEBHOOK'):
-        async with aiohttp.ClientSession() as session:
-            webhook = Webhook.from_url(os.getenv('INTERLINK_WEBHOOK'), session=session)
-            message = "FU has started an event!\n**" + str(event["short_title"]) + "**\n<t:" + str(int(time.time())) + ":R>"
-            await webhook.send(message, username='FUBot', avatar_url='https://www.fugaming.org/uploads/1/3/0/9/130953309/editor/pslogo1417p.png?1617516785')
+async def combinedarms(Message):
+    Message.add_field(
+        name="Join the conversation on TeamSpeak",
+        value="For chat, tactics and discussion.",
+    )
+    return Message

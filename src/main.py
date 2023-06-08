@@ -66,7 +66,7 @@ async def on_ready():
 
 
 async def autocomplete_event(inter, string: str) -> list[str]:
-    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps"]
+    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps", "CombinedArms"]
     return [event for event in events if string.lower() in event.lower()]
 
 
