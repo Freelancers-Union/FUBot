@@ -1,5 +1,5 @@
 import sys
-import os
+import os, yaml
 from langchain.vectorstores import Chroma
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -49,7 +49,6 @@ Use the following pieces of context to answer the question at the end.
 
 Question: {question}
         """)
-
 
 
     @commands.slash_command(dm_permission=True)
