@@ -36,7 +36,7 @@ class Ps2OutfitRibbonLogger(commands.Cog):
     def cog_unload(self):
         self.ps2_outft_ribbon_saver.cancel()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=60)
     async def ps2_outft_ribbon_saver(self) -> None:
         for outfit_id in self.monitored_outfits:
             outfit = await Census.CLIENT.get_by_id(ps2.Outfit, outfit_id)
