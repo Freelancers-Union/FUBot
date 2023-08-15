@@ -1,21 +1,23 @@
+from datetime import datetime
 import logging
 import disnake
 from disnake.ext import commands
-from database_connector import Database
-from loggers.discord_logger import DiscordMemberLogger
-from helpers.discord_db_actions import DiscordDB
+from beanie.operators import Push, Pull
+
+from database.models.discord import DiscordUserRole
+from database.models.members import Member
+from loggers.discord_logger import DiscordMemberLogger, add_member_profile
 
 
 class DiscordSync(commands.Cog):
     """
     Class cog for Discord sync commands
     """
+
     def __init__(self,
-            client: commands.Bot,
-            db: Database
-            ):
-        self.db = db.DATABASE
-        self.client = client
+                 bot: commands.Bot
+                 ):
+        self.bot = bot
 
     @staticmethod
     async def sync_roles(guild: disnake.Guild):
@@ -26,31 +28,41 @@ class DiscordSync(commands.Cog):
         ----------
         guild : class : disnake.Guild
         """
-        DiscordDBActions = DiscordDB()
         members = guild.members
-        discordLogger = DiscordMemberLogger(commands.Bot, Database)
         while members:
             try:
                 member = members.pop()
-                db_record = Database.find_one("members", {'discord_user.id': str(member.id)})
+                db_member = await Member.find_one({Member.discord.id: member.id})
                 # Add missing roles
-                if db_record:
+                if db_member:
                     for role in member.roles:
-                        if role.name not in [r["role"] for r in db_record['discord_user']['roles']]:
-                            await DiscordDBActions.add_role(role, member)
+                        if role.id not in [r.id for r in db_member.discord.roles]:
+                            await Member.find_one({Member.discord.id: role.id}).update(
+                                Push({
+                                    Member.discord.roles: DiscordUserRole(
+                                        added=datetime.utcnow(),
+                                        id=role.id,
+                                        name=role.name
+                                    ),
+                                })
+                            )
 
                     # Remove surplus roles
-                    for role in db_record['discord_user']['roles']:
-                        if role['role'] not in [r.name for r in member.roles]:
+                    for role in db_member.discord.roles:
+                        if role.id not in [r.id for r in member.roles]:
                             role_class = disnake.utils.get(guild.roles, name=role['role'])
                             if role_class:
-                                await DiscordDBActions.remove_role(role_class, member)
+                                await Member.find_one({Member.discord.id: role.id}).update(
+                                    Pull({
+                                        Member.discord.roles: DiscordUserRole(id=role.id),
+                                    })
+                                )
                 else:
-                    await discordLogger.add_member_profile(member = member)
+                    await add_member_profile(member=member)
             except Exception as e:
                 logging.error(e)
 
-    @commands.slash_command(dm_permission=True)
+    @commands.slash_command(dm_permission=False, default_member_permissions=disnake.Permissions(administrator=True))
     async def sync(self, inter):
         pass
 
@@ -60,6 +72,7 @@ class DiscordSync(commands.Cog):
             inter: disnake.ApplicationCommandInteraction
     ):
         pass
+
     @discord.sub_command()
     async def roles(
             self,
@@ -78,10 +91,6 @@ class DiscordSync(commands.Cog):
         await self.sync_roles(inter.guild)
         await inter.edit_original_message("Sync complete! :tada:")
 
+
 def setup(bot: commands.Bot):
-    bot.add_cog(DiscordSync(bot, Database))
-    DiscordRoleSync = DiscordSync(bot, Database)
-    logging.info("Syncing Discord roles...")
-    for guild in bot.guilds:
-        if guild is not None:
-            DiscordRoleSync.sync_roles(guild=guild)
+    bot.add_cog(DiscordSync(bot))

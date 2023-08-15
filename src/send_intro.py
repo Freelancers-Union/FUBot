@@ -105,7 +105,6 @@ class SendIntro(commands.Cog):
         self.public_role = "Public player"
         self.guest_role = "Guest"
         self.notification_channel = "community-announcements"
-        self.onboard_channel = None
 
     async def paginator(self):
         # Creates the embeds as a list.
@@ -237,9 +236,9 @@ class SendIntro(commands.Cog):
                     inter.author: disnake.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
                     self.bot.user: disnake.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True, manage_channels=True, manage_messages=True)
                 }
-                self.onboard_channel = await inter.guild.create_text_channel(name=f"onboarding-{new_member.name}",overwrites=overwrites)
+                onboarding_channel = await inter.guild.create_text_channel(name=f"onboarding-{str(new_member.name).lower()}",overwrites=overwrites)
                 for member in [new_member, inter.author]:
-                    await self.onboard_channel.set_permissions(
+                    await onboarding_channel.set_permissions(
                                                         target=member,
                                                         view_channel=True,
                                                         send_messages=True,
@@ -247,7 +246,7 @@ class SendIntro(commands.Cog):
                                                         )
 
                 # Update the embed to show the new member has been assigned to an officer
-                Embed.description = f"Created private channel: {self.onboard_channel.mention}\nChannel will self-destruct once onboarding is complete."
+                Embed.description = f"Created private channel: {onboarding_channel.mention}\nChannel will self-destruct once onboarding is complete."
                 Embed.add_field(
                     name="Assigned To:",
                     value=f"{inter.author.mention}",
@@ -272,7 +271,8 @@ class SendIntro(commands.Cog):
                 Embed.remove_field(0)
                 Embed.set_footer(text=f"Last updated: {datetime.datetime.now().strftime('%d/%m %H:%M')}")
                 await inter.response.edit_message(embed=Embed, components=None)
-                await self.onboard_channel.delete()
+                onboarding_channel = await dc.get_channel(inter, channel_name=f"onboarding-{str(new_member.name).lower()}")
+                await onboarding_channel.delete()
 
                 # announce the new member in the notification channel
                 channel = disnake.utils.get(inter.guild.channels, name=self.notification_channel)
@@ -298,7 +298,9 @@ class SendIntro(commands.Cog):
                 await new_member.remove_roles(disnake.utils.get(inter.guild.roles, name=self.public_role),
                                         reason="Rejected membership")
                 await inter.response.edit_message(embed=Embed, components=None)
-                await self.onboard_channel.delete()
+                onboarding_channel = await dc.get_channel(inter, channel_name=f"onboarding-{str(new_member.name).lower()}")
+                logging.info(f"Deleting channel {onboarding_channel}\n{new_member.name}")
+                await onboarding_channel.delete()
         except Exception as e:
             logging.exception(e)
             await inter.send(embed=None, content="Something went wrong, you should check the user's roles", components=None)

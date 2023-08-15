@@ -1,54 +1,52 @@
+from datetime import datetime
 import logging
 import os
-import datetime
-import pymongo
 from steam import SteamQuery
-from database_connector import Database
+from disnake.ext.commands import Cog, Bot
+from disnake.ext import tasks
+from database.models.arma import OnlineFUArmaPlayers, ArmAPlayer
 
 
-class ArmaLogger:
-    def __init__(self, _db: Database):
+class ArmALogger(Cog):
+
+    def __init__(self, bot: Bot):
         try:
-            db = _db.DATABASE
-            # check if the database contains such collection
-            collection_options = {'timeField': 'timestamp', 'metaField': 'mission', 'granularity': 'hours'}
-            collection_name = "arma_player_count"
-            current_collection_options = db[collection_name].options()
-
-            if collection_name not in db.list_collection_names():
-                db.create_collection(name=collection_name, timeseries=collection_options,
-                                     expireAfterSeconds=94608000)
-            elif "timeseries" not in current_collection_options.keys():
-                raise Exception(f"collection {collection_name} exists, but isn't timeseries")
-
-            self.collection = db[collection_name]
+            self.bot = bot
             self.server_query = SteamQuery(os.getenv("ARMA_HOST"), int(os.getenv("ARMA_QUERY_PORT")))
+            self.log_server_status.start()
         except Exception as exception:
             logging.error("Failed to initialize ArmA logger", exc_info=exception)
 
-    def log_server_status(self):
+    def cog_unload(self):
+        self.log_server_status.cancel()
+
+    @tasks.loop(minutes=5)
+    async def log_server_status(self):
         """
             Logs the max amount of players in server currently.
-            If it can't connect to arma, it saves -1 as player count
+            If it can't connect to ArmA, it saves -1 as player count
         """
         try:
             response = self.server_query.query_game_server()
-            player_count = response.get("players")
+            player_count: int = response.get("players")
             mission = response.get("description")
-            if self.collection is not None:
-                timestamp = datetime.datetime.utcnow()
-                last = self.collection.find_one(sort=[("timestamp", pymongo.DESCENDING)])
 
-                player_count = player_count if player_count is not None else -1
-                mission = mission if player_count is not None else None
+            last = await OnlineFUArmaPlayers.find().sort(-OnlineFUArmaPlayers.timestamp).first_or_none()
+            new = OnlineFUArmaPlayers(
+                online_count=player_count,
+                online_players=[
+                    ArmAPlayer(name=player.name, score=player.score, duration=player.duration) for player in
+                    self.server_query.query_player_info()
+                ],
+                mission=mission,
+                timestamp=datetime.utcnow()
+            )
 
-                if not player_count:
-                    logging.debug("ArmA player count unchanged")
-                if last["player_count"] != player_count:
-                    self.collection.insert_one({
-                        "metadata": {"mission": mission},
-                        "player_count": player_count,
-                        "timestamp": timestamp
-                    })
+            if last is None or last.online_count != new.online_count or new.online_count > 0:
+                await new.insert()
         except Exception as exception:
             logging.error("Something went wrong logging ArmA3 server", exc_info=exception)
+
+
+def setup(bot: Bot):
+    bot.add_cog(ArmALogger(bot))

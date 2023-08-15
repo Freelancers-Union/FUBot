@@ -1,43 +1,120 @@
 import logging
-import datetime
-from database_connector import Database
-import pymongo.collection
+from datetime import datetime
 import disnake
 from disnake.ext import commands
+from beanie.operators import Set, Push
+
+from database.models.discord import DiscordGuildTS, DiscordGuildTSMetadata, DiscordUser, DiscordUserPresence, \
+    DiscordUserRole
+from database.models.members import Member
+
+
+async def add_member_profile(member: disnake.Member):
+    """
+    Adds a new member to the database
+
+    Parameters
+    ----------
+    member: disnake.Member
+    """
+    db_member = Member.find_one(Member.discord.id == member.id)
+    # If new to the DB, add a new entry.
+    await db_member.upsert(
+        Set({
+            Member.discord.is_present: True,
+            Member.discord.joined: member.joined_at,
+        }),
+        on_insert=Member(
+            discord=DiscordUser(
+                id=member.id,
+                name=member.name,
+                nick=member.nick,
+                joined=member.joined_at,
+                is_present=True,
+                roles=[DiscordUserRole(id=role.id, name=role.name, added=datetime.utcnow()) for role in member.roles],
+                presence_history=[]
+            )
+        )
+    )
+# TODO: We will at some point need to extend this to handle a single user in multiple tracked guilds.
+#  But let's cross that bridge when we get to it.
+
+
+async def _member_left(member: disnake.Member):
+    """
+    Updates the database when a member leaves the server.
+
+    Parameters
+    ----------
+    member
+        Discord member that left the server
+    """
+    db_member = Member.find_one(Member.discord.id == member.id)
+    if db_member is None:
+        logging.warning(f"Member {member.name} left but was not found in the database")
+    presence_history_record = DiscordUserPresence(
+        joined=member.joined_at,
+        left=datetime.utcnow()
+    )
+    await db_member.upsert(
+        Set({
+            Member.discord.is_present: False,
+            Member.discord.joined: None,
+            Member.discord.roles: [],
+        }),
+        Push({
+            Member.discord.presence_history: presence_history_record
+        }),
+        on_insert=Member(
+            discord=DiscordUser(
+                id=member.id,
+                name=member.name,
+                nick=member.nick,
+                joined=None,
+                roles=[],
+                is_present=False,
+                presence_history=[presence_history_record]
+            )))
+
+
+async def _save_member_count(guild_id: int, current_count: int, role_id=None):
+    """
+    Logs the total members of the guild and writes to the db
+    Triggered by join/leave events in Discord
+
+    Parameters
+    ----------
+    role_id
+    guild_id: ID of Discord guild to monitor.
+    current_count: the count to log
+    """
+
+    await DiscordGuildTS(
+        timestamp=datetime.utcnow(),
+        member_count=current_count,
+        metadata=DiscordGuildTSMetadata(guild_id=guild_id, role=role_id)
+    ).insert()
 
 
 class DiscordMemberLogger(commands.Cog):
     """
     Logs total guild member count for given guild IDs.
     Members joining or leaving will trigger the updated member count to be logged.
+
     Parameters
     ----------
-    db: Database class instance
+    bot:
+        Database class instance
     """
 
-    def __init__(
-            self,
-            bot: commands.Bot,
-            db: Database,
-    ):
+    def __init__(self):
         """
-        initializes Discord logger timeseries db
-        Parameters
-        ----------
-        db: Database class instance to use
+        Initializes Discord logger timeseries db
         """
+
         FU_guild_id = 282514718445273089
         FU_demo_guild_id = 914185528268689428
-        self._monitored_guilds: {int} = {FU_guild_id, FU_demo_guild_id}
-        self.collection: pymongo.collection.Collection
-
-        db_collection_name = "discord_member_log"
-        collection_options = {'timeField': 'timestamp', 'metaField': 'guild', 'granularity': 'minutes'}
-
-        try:
-            self.collection = db.init_timeseries_db(db_collection_name, collection_options)
-        except Exception as exception:
-            logging.error("Failed to initialize Discord member logger", exc_info=exception)
+        self._monitored_guilds: set[int] = {FU_guild_id, FU_demo_guild_id}
 
     def add_guild(self, guild_id: int):
         """
@@ -47,85 +124,24 @@ class DiscordMemberLogger(commands.Cog):
         ----------
         guild_id: ID of Discord guild to monitor.
         """
-
         self._monitored_guilds.add(guild_id)
 
-    async def _save_member_count(self, guild_id: int, current_count: int):
-        """
-        Logs the total members of the guild and writes to the db
-        Triggered by join/leave events in Discord
-        Parameters
-        ----------
-        guild_id: ID of Discord guild to monitor.
-        current_count: the count to log
-        """
-
-        timestamp = datetime.datetime.utcnow()
-        self.collection.insert_one(
-            {
-                "metadata": {"guild": guild_id},
-                "member_count": current_count,
-                "timestamp": timestamp
-            }
-        )
-
-    async def add_member_profile(self, member):
-        """
-        Adds a new member to the database
-        Parameters
-        ----------
-        member: disnake.Member
-        """
-        # Query the DB to see if this user has appeared before.
-        query = {"discord_user.id": str(member.id)}
-        db_entry = Database.find_one("members", query)
-        # If totally new to the DB, add a new entry.
-        if db_entry is None:
-            disc_obj = {}
-            data = {}
-            discord_attrs = ["id", "name", "nick"]
-            disc_obj["joined_at"] = member.joined_at
-            disc_obj["guild"] = str(member.guild.id)
-            for count, ele in enumerate(discord_attrs):
-                disc_obj[ele] = str(getattr(member, ele))
-            data["discord_user"] = disc_obj
-            Database.insert_one("members", data)
-            logging.info(f"Added new member {member.name} to the database")
-        elif str(db_entry["discord_user"]["joined_at"]) != str(member.joined_at):
-            # Update their rejoined date
-            update_data = {}
-            update_data = {"$set": {'discord_user.re-joined': member.joined_at}}
-            Database.update_one("members", query, update_data)
-            logging.info(f"{member.name} rejoined the guild")
-
-        # TODO: We will at some point need to extend this to handle a single user in multiple tracked guilds.
-        # But let's cross that bridge when we get to it.
-
-    async def _member_left(self, member):
-        # Query the DB to find the user that has left.
-        query = {"discord_user.id": str(member.id)}
-        db_entry = Database.find_one("members", query)
-        timestamp = datetime.datetime.utcnow()
-        # Update their db entry to reflect when they left.
-        if db_entry is not None:
-            update_data = {}
-            update_data = {"$set": {'discord_user.left': timestamp}}
-            Database.update_one("members", query, update_data)
-
     @commands.Cog.listener("on_member_join")
-    async def on_member_join(self, member):
-        guild = member.guild.id
-        if guild in self._monitored_guilds:
-            await self._save_member_count(guild, member.guild.member_count)
-            await self.add_member_profile(member)
+    async def on_member_join(self, member: disnake.Member):
+        guild_id = member.guild.id
+        if guild_id in self._monitored_guilds:
+            logging.info(f"Member {member.id} joined {member.guild.id}")
+            await _save_member_count(guild_id, member.guild.member_count)
+            await add_member_profile(member)
 
     @commands.Cog.listener("on_member_remove")
-    async def on_raw_member_remove(self, payload):
-        guild = payload.guild.id
-        if guild in self._monitored_guilds:
-            await self._save_member_count(guild, payload.guild.member_count)
-            await self._member_left(payload)
+    async def on_raw_member_remove(self, member: disnake.Member):
+        guild_id = member.guild.id
+        if guild_id in self._monitored_guilds:
+            logging.info(f"Member {member.id} left {member.guild.id}")
+            await _save_member_count(guild_id, member.guild.member_count)
+            await _member_left(member)
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(DiscordMemberLogger(bot, Database))
+    bot.add_cog(DiscordMemberLogger())
