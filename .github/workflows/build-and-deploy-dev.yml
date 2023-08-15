@@ -18,7 +18,7 @@ jobs:
       MONGO_ADDRESS: mongodb-dev
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-      TEAMSPEAK_PASSWORD: ${{ TEAMSPEAK_PASSWORD }}
+      TEAMSPEAK_PASSWORD: ${{ secrets.TEAMSPEAK_PASSWORD }}
     steps:
       - uses: actions/checkout@v3
 
