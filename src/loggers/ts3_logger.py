@@ -22,30 +22,6 @@ class TeamSpeak(commands.Cog):
         self.bot = bot
         self.bot.loop.create_task(self.ts3_event_listener())
         self.channel_dict = {}
-        # channel_dict = asyncio.create_task(self.get_channel_list())
-        # self.channel_dict = channel_dict
-
-    # async def get_channel_list(self):
-    #     """
-    #     Retrieves the list of channels from the TeamSpeak server and returns a dictionary
-    #     mapping channel IDs to channel names.
-
-    #     Returns
-    #     -------
-    #     dict
-    #         A dictionary mapping channel IDs to channel names.
-    #     """
-    #     channel_list = self.ts3conn.exec_("channellist")
-    #     print(f"Channels: {len(channel_list)}")
-    #     print(type(channel_list))
-    #     channel_dict = {}
-    #     for channel in channel_list:
-    #         channel_dict[channel["cid"]] = channel["channel_name"]
-    #     print(type(channel_dict))
-    #     # logging.info(
-    #     #     f"TeamSpeak event listener started\n{len(channel_dict)} channels found"
-    #     # )
-    #     return channel_dict
 
     async def get_channel_list(self):
         channel_list = self.ts3conn.exec_("channellist").parsed
@@ -78,16 +54,20 @@ class TeamSpeak(commands.Cog):
             for channel in channel_list
             if channel["pid"] in [c["cid"] for c in planetside_channels]
         )
-        other_games_clients = sum(
-            int(channel["total_clients"])
-            for channel in channel_list
-            if channel["pid"] in [c["cid"] for c in other_games_channels]
+        other_clients = (
+            sum(
+                int(channel["total_clients"])
+                for channel in channel_list
+                if channel["channel_name"] != "AFK"
+            )
+            - arma_clients
+            - planetside_clients
         )
 
         return {
             "arma": arma_clients,
             "planetside": planetside_clients,
-            "other_games": other_games_clients,
+            "other_games": other_clients,
         }
 
     async def ts3_event_listener(self):
@@ -105,18 +85,24 @@ class TeamSpeak(commands.Cog):
                 )
             except ts3.query.TS3TimeoutError:
                 pass
+            except ts3.query.TS3TransportError:
+                logging.warning("TeamSpeak connection lost. Attempting to reconnect...")
+                self.ts3conn = ts3.query.TS3Connection(
+                    self.ts3_host, self.ts3_port, self.ts3_user, self.ts3_pass
+                )
+                self.ts3conn.exec_("use", sid=self.ts3_sid)
+                self.ts3conn.exec_("clientupdate", client_nickname=self.ts3_nickname)
             else:
-                print(event[0])
-                if event[0]["reasonid"] == "0" and event[0]["client_type"] == "0":
+                if event[0]["cfid"] == "0" and event[0]["client_type"] == "0":
                     logging.info(
                         f"{event[0]['client_nickname']} connected to TeamSpeak"
                     )
                     await self.log_ts3()
                     await self.update_discord_channel()
-                if event[0]["reasonid"] == "8":
+                if event[0]["cfid"] == "1":
                     await self.log_ts3()
                     await self.update_discord_channel()
-                    logging.info(f"client disconnected from TeamSpeak")
+                    logging.info(f"A client disconnected from TeamSpeak")
 
     async def log_ts3(
         self,
@@ -143,9 +129,26 @@ class TeamSpeak(commands.Cog):
         planetside = self.bot.get_channel(1120456220558504060)
         other_games = self.bot.get_channel(1120456423134986260)
 
-        await arma.edit(name=f"Arma 3 - {channel_dict['arma']}")
-        await planetside.edit(name=f"Planetside 2 - {channel_dict['planetside']}")
-        await other_games.edit(name=f"Other Games - {channel_dict['other_games']}")
+        # Check if the client count for each game has changed
+        if arma.name != f"Arma 3 - {channel_dict['arma']}":
+            try:
+                await arma.edit(name=f"Arma 3 - {channel_dict['arma']}")
+            except Exception as e:
+                logging.error(f"Error updating Arma 3 channel name: {e}")
+
+        if planetside.name != f"Planetside 2 - {channel_dict['planetside']}":
+            try:
+                await planetside.edit(
+                    name=f"Planetside 2 - {channel_dict['planetside']}"
+                )
+            except Exception as e:
+                logging.error(f"Error updating Planetside 2 channel name: {e}")
+
+        if other_games.name != f"Other - {channel_dict['other_games']}":
+            try:
+                await other_games.edit(name=f"Other - {channel_dict['other_games']}")
+            except Exception as e:
+                logging.error(f"Error updating Other Games channel name: {e}")
 
 
 def setup(bot: commands.Bot):

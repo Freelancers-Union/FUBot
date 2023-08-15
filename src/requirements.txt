@@ -8,3 +8,4 @@ pymongo==4.2.0
 SteamQuery==1.0.2
 beanie==1.19.1
 ts3>=2.0.0b2
+pydantic==1.10.9
