@@ -16,6 +16,7 @@ services:
     - MONGO_PORT=${MONGO_PORT}
     - ARMA_HOST=fu-server.lan
     - ARMA_QUERY_PORT=2303
+    - TEAMSPEAK_PASSWORD=${TEAMSPEAK_PASSWORD}
     depends_on:
       mongodb-dev:
         condition: service_healthy

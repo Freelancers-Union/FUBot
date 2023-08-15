@@ -18,7 +18,7 @@ jobs:
       MONGO_ADDRESS: mongodb-dev
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-      INTERLINK_WEBHOOK: ${{ secrets.INTERLINK_WEBHOOK }}
+      TEAMSPEAK_PASSWORD: ${{ TEAMSPEAK_PASSWORD }}
     steps:
       - uses: actions/checkout@v3
 
