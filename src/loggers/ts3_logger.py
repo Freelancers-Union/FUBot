@@ -78,8 +78,8 @@ class TeamSpeak(commands.Cog):
         self.ts3conn.exec_("servernotifyregister", event="server")
 
         while True:
-            self.ts3conn.send_keepalive()
             try:
+                self.ts3conn.send_keepalive()
                 event = await self.bot.loop.run_in_executor(
                     None, self.ts3conn.wait_for_event, 60
                 )
