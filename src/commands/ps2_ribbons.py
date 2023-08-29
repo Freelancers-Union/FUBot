@@ -27,11 +27,13 @@ class Ps2RibbonsCog(commands.Cog):
         events = [""]
         return [event for event in events if string.lower() in event.lower()]
 
-    @stats.sub_command()
+
+    # @stats.sub_command()
+    @commands.slash_command(dm_permission=True)
     async def top_leaders(
             self,
             inter: disnake.ApplicationCommandInteraction,
-            ribbon_type: str = commands.param(choices=Ps2RibbonIDs.__members__.keys(), default=Ps2RibbonIDs.SquadLeadership.name),
+            ribbon_type: str = commands.param(choices=list(Ps2RibbonIDs.__members__.keys()), default=Ps2RibbonIDs.SquadLeadership.name),
             count: int = 10,
             hours: int = 0,
             days: int = 0,
@@ -79,7 +81,7 @@ class Ps2RibbonsCog(commands.Cog):
         # build embed 
         for index, ribbon_diff in enumerate(ribbon_diffs):
             ribbon_diff = ribbon_diffs[index]
-            embed_description += f"\n{index + 1:>4} | {ribbon_diff.diff:>6} | {ribbon_diff.latest.ribbon_count} | {ribbon_diff.player.name}"
+            embed_description += f"\n{index + 1:>4} | {ribbon_diff.diff:>6} | {ribbon_diff.latest.ribbon_count} | {ribbon_diff.character.name}"
 
         embed = disnake.Embed(
             title=embed_title,
