@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from beanie import Document, Indexed, TimeSeriesConfig, Granularity
@@ -22,11 +21,7 @@ class Ps2Character(Document):
 
     class Settings:
         name = "ps2_characters"
-        projection = {
-            "_id": 1,
-            "outfit_id": 1,
-            "rank": 1
-        }
+        projection = {"_id": 1, "outfit_id": 1, "rank": 1}
 
 
 class OnlineOutfitMemberTS(Document):
@@ -53,11 +48,12 @@ class PS2RibbonTS(Document):
     Timeseries of ribbon counts
     timestamp: datetime
         Timestamp of the count
-    count: int  
+    count: int
         Count of the ribbon
     meta: Ps2RibbonMetaData
         Metadata of the ribbon
     """
+
     timestamp: datetime
     ribbon_count: int
     meta: Ps2RibbonMetaData | None
@@ -83,131 +79,103 @@ class PS2RibbonDiff(BaseModel):
         ribbon_id: Ps2RibbonIDs,
         start: datetime,
         end: datetime,
-        count: int
+        count: int = 10,
     ):
         #  some stuff here isn't supported by beanie yet
         aggregation = PS2RibbonTS.aggregate(
             # aggregation_model=PS2RibbonDiff,
             aggregation_pipeline=[
                 {
-                    '$match': {
-                        '$and': [
-                            {
-                                'meta.ribbon_id': ribbon_id.value
-                            }, {
-                                'timestamp': {
-                                    '$gt': start,
-                                    '$lt': end
-                                }
-                            }
+                    "$match": {
+                        "$and": [
+                            {"meta.ribbon_id": ribbon_id.value},
+                            {"timestamp": {"$gt": start, "$lt": end}},
                         ]
                     }
-                }, {
-                    '$sort': {
-                        'timestamp': -1
-                    }
-                }, {
-                    '$group': {
-                        '_id': '$meta.character_id',
-                        'latest': {
-                            '$first': {
-                                'timestamp': '$timestamp',
-                                'ribbon_count': '$ribbon_count'
+                },
+                {"$sort": {"timestamp": -1}},
+                {
+                    "$group": {
+                        "_id": "$meta.character_id",
+                        "latest": {
+                            "$first": {
+                                "timestamp": "$timestamp",
+                                "ribbon_count": "$ribbon_count",
                             }
-                        }
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'ps2_ribbon_ts',
-                        'let': {
-                            'char_id': '$_id',
-                            'timestamp': start
                         },
-                        'pipeline': [
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "ps2_ribbon_ts",
+                        "let": {"char_id": "$_id", "timestamp": start},
+                        "pipeline": [
                             {
-                                '$match': {
-                                    '$expr': {
-                                        '$and': [
+                                "$match": {
+                                    "$expr": {
+                                        "$and": [
                                             {
-                                                '$eq': [
-                                                    '$meta.character_id', '$$char_id'
+                                                "$eq": [
+                                                    "$meta.character_id",
+                                                    "$$char_id",
                                                 ]
-                                            }, {
-                                                '$eq': [
-                                                    '$meta.ribbon_id', ribbon_id.value
+                                            },
+                                            {
+                                                "$eq": [
+                                                    "$meta.ribbon_id",
+                                                    ribbon_id.value,
                                                 ]
-                                            }, {
-                                                '$lt': [
-                                                    '$timestamp', '$$timestamp'
-                                                ]
-                                            }
+                                            },
+                                            {"$lt": ["$timestamp", "$$timestamp"]},
                                         ]
                                     }
                                 }
-                            }, {
-                                '$project': {
-                                    '_id': 0,
-                                    'timestamp': '$timestamp',
-                                    'ribbon_count': {
-                                        '$cond': {
-                                            'if': {
-                                                '$ne': [
-                                                    '$ribbon_count', None
-                                                ]
-                                            },
-                                            'then': '$ribbon_count',
-                                            'else': 0
-                                        }
-                                    }
-                                }
-                            }
-                        ],
-                        'as': 'previous'
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'ps2_characters',
-                        'localField': '_id',
-                        'foreignField': '_id',
-                        'as': 'character'
-                    }
-                }, {
-                    '$project': {
-                        '_id': 1,
-                        'character': {
-                            '$arrayElemAt': [
-                                '$character', 0
-                            ]
-                        },
-                        'diff': {
-                            '$subtract': [
-                                '$latest.ribbon_count',
-                                {'$first': '$previous.ribbon_count'}
-                            ]
-                        },
-                        'latest': 1,
-                        'before': {
-                            'ribbon_count': {
-                                '$first': '$previous.ribbon_count'
                             },
-                            'timestamp': {
-                                '$first': '$previous.timestamp'
-                            }
-                        }
+                            {
+                                "$project": {
+                                    "_id": 0,
+                                    "timestamp": "$timestamp",
+                                    "ribbon_count": {
+                                        "$cond": {
+                                            "if": {"$ne": ["$ribbon_count", None]},
+                                            "then": "$ribbon_count",
+                                            "else": 0,
+                                        }
+                                    },
+                                }
+                            },
+                        ],
+                        "as": "previous",
                     }
-                },  {
-                    '$match': {
-                        'before': {
-                            '$ne': None
-                        }
+                },
+                {
+                    "$lookup": {
+                        "from": "ps2_characters",
+                        "localField": "_id",
+                        "foreignField": "_id",
+                        "as": "character",
                     }
-                }, {
-                    '$sort': {
-                        'diff': -1
+                },
+                {
+                    "$project": {
+                        "_id": 1,
+                        "character": {"$arrayElemAt": ["$character", 0]},
+                        "diff": {
+                            "$subtract": [
+                                "$latest.ribbon_count",
+                                {"$first": "$previous.ribbon_count"},
+                            ]
+                        },
+                        "latest": 1,
+                        "before": {
+                            "ribbon_count": {"$first": "$previous.ribbon_count"},
+                            "timestamp": {"$first": "$previous.timestamp"},
+                        },
                     }
-                }, {
-                    '$limit': count
-                }
+                },
+                {"$match": {"before": {"$ne": None}}},
+                {"$sort": {"diff": -1}},
+                {"$limit": count},
             ]
         )
         result = await aggregation.to_list()
