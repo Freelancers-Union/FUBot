@@ -25,7 +25,6 @@ jobs:
       MONGO_DATA_DIR: /var/lib/FUBot/mongodb
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-      INTERLINK_WEBHOOK: ${{ secrets.INTERLINK_WEBHOOK }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
 
