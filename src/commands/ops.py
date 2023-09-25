@@ -13,90 +13,18 @@ async def event_message(
     event,
 ):
     ops_dict = {
-        "Drill": {
-            "short_title": "Drill",
-            "ts_channel": "Outfit Drill",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "CombinedArms": {
-            "short_title": "combinedarms",
-            "ts_channel": "Combined Arms",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "nFUc": {
-            "short_title": "nFUc",
-            "ts_channel": "nFUc",
-            "game": "Planetside 2",
-            "ping_role": "nFUc",
-            "color": 0x004B80,
-        },
-        "vFUs": {
-            "short_title": "vFUs",
-            "ts_channel": "vFUs",
-            "game": "Planetside 2",
-            "ping_role": "vFUs",
-            "color": 0x440E62,
-        },
-        "Casual": {
-            "short_title": "Casual",
-            "ts_channel": "Casual Play",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "FUAD": {
-            "short_title": "FUAD",
-            "ts_channel": "FUAD (Armoured Division)",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "FUAF": {
-            "short_title": "FUAF",
-            "ts_channel": "FUAF (Air Force)",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "FUBG": {
-            "short_title": "FUBG",
-            "ts_channel": "FUBG (Builders Group)",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "FUEL": {
-            "short_title": "FUEL",
-            "ts_channel": "FUEL (Emerging Leaders)",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "FUGG": {
-            "short_title": "FUGG",
-            "ts_channel": "FUGG (Galaxy Group)",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "Huntsmen": {
-            "short_title": "Huntsmen",
-            "ts_channel": "Huntsmen",
-            "game": "Planetside 2",
-            "ping_role": "Planetside 2",
-            "color": 0x9E0B0F,
-        },
-        "ArmaOps": {
-            "short_title": "ArmaOps",
-            "ts_channel": "",
-            "game": "Arma 3",
-            "ping_role": "Arma 3",
-            "color": 0xB641D,
-        },
+        "Drill": {"short_title":"Drill" ,"ts_channel": "Outfit Drill", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "CombinedArms": {"short_title":"combinedarms" ,"ts_channel": "Combined Arms", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "nFUc": {"short_title":"nFUc" ,"ts_channel": "nFUc", "game": "Planetside 2", "ping_role": "nFUc", "color": 0x004b80},
+        "vFUs": {"short_title":"vFUs", "ts_channel": "vFUs", "game": "Planetside 2", "ping_role": "vFUs", "color": 0x440E62},
+        "Casual": {"short_title":"Casual", "ts_channel": "Casual Play", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUAD": {"short_title":"FUAD" ,"ts_channel": "FUAD (Armoured Division)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUAF": {"short_title":"FUAF", "ts_channel": "FUAF (Air Force)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUBG": {"short_title":"FUBG", "ts_channel": "FUBG (Builders Group)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUEL": {"short_title":"FUEL", "ts_channel": "FUEL (Emerging Leaders)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "FUGG": {"short_title":"FUGG", "ts_channel": "FUGG (Galaxy Group)", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "Huntsmen": {"short_title":"Huntsmen", "ts_channel": "Huntsmen", "game": "Planetside 2", "ping_role": "Planetside 2", "color": 0x9E0B0F},
+        "ArmaOps": {"short_title":"ArmaOps", "ts_channel": "", "game": "Arma 3", "ping_role": "Arma 3", "color": 0xb641d}
     }
 
     game = ops_dict[event]["game"]
@@ -268,8 +196,8 @@ async def vfus(Message):
         value="For chat, tactics and discussion.",
     )
     return Message
-
-
+  
+  
 async def combinedarms(Message):
     Message.add_field(
         name="Join the conversation on TeamSpeak",
