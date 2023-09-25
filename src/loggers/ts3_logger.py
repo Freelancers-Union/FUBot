@@ -1,29 +1,59 @@
-#!/usr/bin/python3
 import os
-import time
-import ts3
-import datetime
-import asyncio
 import logging
+import datetime
 
+import ts3
 import disnake
-from disnake.ext import commands
+from disnake.ext import commands, tasks
+
 from database.models.ts3 import OnlineTeamspeakTS
 
 
 class TeamSpeak(commands.Cog):
     def __init__(self, bot: commands.Bot):
-
-        ts3conn = ts3.query.TS3ServerConnection(
-            f"telnet://serveradmin:{os.getenv('TEAMSPEAK_PASSWORD')}@fugaming.org:10011"
-        )
-        ts3conn.exec_("use", sid=1)
-        self.ts3conn = ts3conn
         self.bot = bot
-        self.bot.loop.create_task(self.ts3_event_listener())
+        self.ts3conn = None
         self.channel_dict = {}
+        self.routine_ts3_log.start()
+
+    def cog_unload(self):
+        self.routine_ts3_log.cancel()
+        if self.ts3conn:
+            self.ts3conn.disconnect()
+
+    async def wait_for_discord(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(minutes=1)
+    async def routine_ts3_log(self):
+        """
+        Logs the current number of connected clients to the database every 10 minutes
+        """
+        await self.log_ts3()
+        await self.update_discord_channel()
+
+    async def log_ts3(self):
+        """
+        Logs the current number of connected clients to the database
+        """
+        if not self.ts3conn:
+            self.ts3conn = ts3.query.TS3ServerConnection(
+                f"telnet://serveradmin:{os.getenv('TEAMSPEAK_PASSWORD')}@fugaming.org:10011"
+            )
+            self.ts3conn.exec_("use", sid=1)
+
+        online_count = len(self.ts3conn.exec_("clientlist"))
+        await OnlineTeamspeakTS(
+            online_count=online_count, timestamp=datetime.datetime.utcnow()
+        ).insert()
 
     async def get_channel_list(self):
+        if not self.ts3conn:
+            self.ts3conn = ts3.query.TS3ServerConnection(
+                f"telnet://serveradmin:{os.getenv('TEAMSPEAK_PASSWORD')}@fugaming.org:10011"
+            )
+            self.ts3conn.exec_("use", sid=1)
+
         channel_list = self.ts3conn.exec_("channellist").parsed
 
         # Get list of channels for each game
@@ -60,8 +90,8 @@ class TeamSpeak(commands.Cog):
                 for channel in channel_list
                 if channel["channel_name"] != "AFK"
             )
-            - arma_clients
-            - planetside_clients
+            - int(arma_clients)
+            - int(planetside_clients)
         )
 
         return {
@@ -69,56 +99,6 @@ class TeamSpeak(commands.Cog):
             "planetside": planetside_clients,
             "other_games": other_clients,
         }
-
-    async def ts3_event_listener(self):
-        """
-        Initializes the TeamSpeak connection and registers the event listener
-        """
-        # Register for events
-        self.ts3conn.exec_("servernotifyregister", event="server")
-
-        while True:
-            try:
-                self.ts3conn.send_keepalive()
-                event = await self.bot.loop.run_in_executor(
-                    None, self.ts3conn.wait_for_event, 60
-                )
-            except ts3.query.TS3TimeoutError:
-                pass
-            except ts3.query.TS3TransportError:
-                logging.warning("TeamSpeak connection lost. Attempting to reconnect...")
-                self.ts3conn = ts3.query.TS3Connection(
-                    self.ts3_host, self.ts3_port, self.ts3_user, self.ts3_pass
-                )
-                self.ts3conn.exec_("use", sid=self.ts3_sid)
-                self.ts3conn.exec_("clientupdate", client_nickname=self.ts3_nickname)
-            else:
-                if event[0]["cfid"] == "0" and event[0]["client_type"] == "0":
-                    logging.info(
-                        f"{event[0]['client_nickname']} connected to TeamSpeak"
-                    )
-                    await self.log_ts3()
-                    await self.update_discord_channel()
-                if event[0]["cfid"] == "1":
-                    await self.log_ts3()
-                    await self.update_discord_channel()
-                    logging.info(f"A client disconnected from TeamSpeak")
-
-    async def log_ts3(
-        self,
-    ):
-        """
-        Logs the current number of connected clients to the database
-
-        """
-        online_count = len(self.ts3conn.exec_("clientlist"))
-
-        await OnlineTeamspeakTS(
-            online_count=online_count, timestamp=datetime.datetime.utcnow()
-        ).insert()
-
-    def cog_unload(self):
-        self.bot.loop.create_task(self.ts3conn.disconnect())
 
     async def update_discord_channel(self):
         """
@@ -128,6 +108,7 @@ class TeamSpeak(commands.Cog):
         arma = self.bot.get_channel(1120456354251944059)
         planetside = self.bot.get_channel(1120456220558504060)
         other_games = self.bot.get_channel(1120456423134986260)
+        logging.info(f"Updating Discord voice channels with {channel_dict}")
 
         # Check if the client count for each game has changed
         if arma.name != f"Arma 3 - {channel_dict['arma']}":
@@ -149,6 +130,43 @@ class TeamSpeak(commands.Cog):
                 await other_games.edit(name=f"Other - {channel_dict['other_games']}")
             except Exception as e:
                 logging.error(f"Error updating Other Games channel name: {e}")
+
+    @routine_ts3_log.before_loop
+    async def before_routine_ts3_log(self):
+        await self.wait_for_discord()
+
+    @tasks.loop(seconds=60)
+    async def ts3_event_listener(self):
+        """
+        Initializes the TeamSpeak connection and registers the event listener
+        """
+        if not self.ts3conn:
+            self.ts3conn = ts3.query.TS3ServerConnection(
+                f"telnet://serveradmin:{os.getenv('TEAMSPEAK_PASSWORD')}@fugaming.org:10011"
+            )
+            self.ts3conn.exec_("use", sid=1)
+            self.ts3conn.exec_("servernotifyregister", event="server")
+
+        try:
+            self.ts3conn.send_keepalive()
+            event = await self.bot.loop.run_in_executor(
+                None, self.ts3conn.wait_for_event, 60
+            )
+        except ts3.query.TS3TimeoutError:
+            pass
+        except ts3.query.TS3TransportError:
+            logging.warning("TeamSpeak connection lost. Attempting to reconnect...")
+            self.ts3conn.disconnect()
+            self.ts3conn = None
+        else:
+            if event[0]["cfid"] == "0" and event[0]["client_type"] == "0":
+                logging.info(f"{event[0]['client_nickname']} connected to TeamSpeak")
+                await self.log_ts3()
+                await self.update_discord_channel()
+            if event[0]["cfid"] == "1":
+                await self.log_ts3()
+                await self.update_discord_channel()
+                logging.info(f"A client disconnected from TeamSpeak")
 
 
 def setup(bot: commands.Bot):
