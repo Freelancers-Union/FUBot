@@ -34,4 +34,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      default:
+        ipv4_address: 172.18.0.2
     restart: unless-stopped
