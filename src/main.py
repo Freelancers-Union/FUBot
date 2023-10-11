@@ -1,5 +1,6 @@
 import os
 import logging
+from cron_jobs import init_cron_jobs
 from fubot import FUBot
 import aiocron
 import disnake
@@ -37,6 +38,16 @@ bot = FUBot(
 
 @bot.event
 async def on_connect():
+    # Easyer to ask for forgiveness than permission
+    # https://stackoverflow.com/a/610923
+    try:
+        if bot.first_time_connected:
+            logging.info("Reconnected to Discord.")
+            return
+    except AttributeError:
+        bot.first_time_connected = True  # Used to prevent the bot from running the on_ready code on reconnects
+    # everything below here will only run on the first connect
+
     try:
         logging.info("Connected to Discord. Initializing Database.")
         await init_database(get_mongo_uri(), "FUBot")
@@ -44,6 +55,9 @@ async def on_connect():
         logging.exception(e)
         logging.error("Failed to initialize database. Exiting...")
         exit(1)
+
+    init_cron_jobs(bot)
+
     logging.info("Loading extensions...")
     # Load cog extensions into the bot
     bot.load_extension("commands.role_added")
