@@ -136,18 +136,4 @@ async def add_reactions(inter: disnake.ApplicationCommandInteraction,
     await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
 
 
-@aiocron.crontab("0 17 * * 5")
-async def send_scheduled_message():
-    """
-    Scheduled task to post new Discord members report.
-    Cron: Every Friday at 1700 UTC
-    """
-    weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
-    try:
-        for guild in bot.guilds:
-            await weekly_new_member_report.build_member_report(guild=guild)
-    except Exception as e:
-        logging.exception(e)
-
-
 bot.run(discordClientToken)

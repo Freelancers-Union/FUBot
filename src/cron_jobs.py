@@ -5,8 +5,8 @@ import commands.new_discord_members as new_discord_members
 
 
 class CronJob:
-    def __init__(self, expression, func=None, loop=None):
-        Cron(expression, func=func, start=True, loop=loop)
+    def __init__(self, expression, func=None):
+        Cron(expression, func=func, start=True)
 
 
 def init_cron_jobs(bot: FUBot):
@@ -22,9 +22,15 @@ def init_cron_jobs(bot: FUBot):
         weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
         try:
             for guild in bot.guilds:
-                await weekly_new_member_report.build_member_report(guild=guild)
+                for channel in guild.text_channels:
+                    if "officers" in str(channel):
+                        await channel.send(
+                            embed=await weekly_new_member_report.build_member_report(
+                                guild=guild
+                            )
+                        )
         except Exception as e:
             logging.exception(e)
 
     loop = bot.loop
-    CronJob(expression="1 17 * * 5", func=send_new_member_list, loop=loop)
+    CronJob(expression="0 17 * * 5", func=send_new_member_list)
