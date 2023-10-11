@@ -26,6 +26,9 @@ jobs:
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
       TEAMSPEAK_PASSWORD: ${{ secrets.TEAMSPEAK_PASSWORD }}
+      TEAMSPEAK_ARMA_CHANNEL_ID: 1158503094691299360
+      TEAMSPEAK_PLANETSIDE_CHANNEL_ID: 1158502875476005055
+      TEAMSPEAK_OTHER_GAMES_CHANNEL_ID: 1158503185053397002
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
 
