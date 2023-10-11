@@ -23,12 +23,13 @@ def init_cron_jobs(bot: FUBot):
         try:
             for guild in bot.guilds:
                 for channel in guild.text_channels:
-                    if "officers" in str(channel):
+                    if str(channel) == "officers":
                         await channel.send(
                             embed=await weekly_new_member_report.build_member_report(
                                 guild=guild
                             )
                         )
+                        return
         except Exception as e:
             logging.exception(e)
 
