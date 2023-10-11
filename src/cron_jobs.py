@@ -17,7 +17,7 @@ def init_cron_jobs(bot: FUBot):
     async def send_new_member_list():
         """
         Scheduled task to post new Discord members report.
-        Cron: Every Friday at 1699 UTC
+        Cron: Every Friday at 1700 UTC
         """
         weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
         try:
