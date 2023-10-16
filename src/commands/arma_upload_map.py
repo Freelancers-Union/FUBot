@@ -10,6 +10,12 @@ import urllib.parse
 
 
 async def upload_mission(url):
+    """
+    Uploads a mission file to the Arma server.
+    Base of this function was written be @necronicalpug
+
+    :param url: The url to the mission file.
+    """
     host = os.getenv("ARMA_SFTP_HOST")
     port = int(os.getenv("ARMA_SFTP_PORT"))
     username = os.getenv("ARMA_SFTP_USERNAME")
@@ -17,8 +23,6 @@ async def upload_mission(url):
     map_path = os.getenv("ARMA_SFTP_MAP_PATH")
     if not (host and port and username and password):
         raise EnvironmentError("Missing configuration for Arma server.")
-
-    # TODO: Need to fetch the login and server details from the database.
 
     # Parse the url to get the file name and check if it is a .pbo file i.e. exported mission file for A3.
     parsed_url = urllib.parse.urlparse(url)
@@ -35,7 +39,7 @@ async def upload_mission(url):
     # Open SSH connection to the server and upload the file to the correct directory.
     try:
         ssh_options = asyncssh.SSHClientConnectionOptions(
-             username=username, password=password, known_hosts=None, connect_timeout=15
+            username=username, password=password, known_hosts=None, connect_timeout=15
         )
         async with asyncssh.connect(host=host, port=port, options=ssh_options) as connection:
             async with connection.start_sftp_client() as sftp:
@@ -52,9 +56,6 @@ async def upload_mission(url):
 
 
 class ArmAMapUpload(commands.Cog):
-    """
-    """
-
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -75,7 +76,7 @@ class ArmAMapUpload(commands.Cog):
         if not any(role.name == "arma/uploader" for role in inter.author.roles):
             await inter.edit_original_message(
                 content="You do not have permission to upload missions." +
-                "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
+                        "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
             )
             return
         await inter.edit_original_message(
