@@ -14,6 +14,7 @@ class ArmALogger(Cog):
             self.bot = bot
             self.server_query = SteamQuery(os.getenv("ARMA_HOST"), int(os.getenv("ARMA_QUERY_PORT")))
             self.log_server_status.start()
+            logging.info("ArmA logger initialized")
         except Exception as exception:
             logging.error("Failed to initialize ArmA logger", exc_info=exception)
 
@@ -41,6 +42,7 @@ class ArmALogger(Cog):
                 mission=mission,
                 timestamp=datetime.utcnow()
             )
+            logging.debug(f"ArmA server last stats: {last}")
 
             if last is None or last.online_count != new.online_count or new.online_count > 0:
                 await new.insert()
