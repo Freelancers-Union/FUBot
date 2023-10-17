@@ -7,12 +7,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 def get_mongo_uri():
     port: str = ":" + str(os.getenv("MONGO_PORT")) if os.getenv("MONGO_PORT") else ""
     uri = (
-            "mongodb://"
-            + str(os.getenv('MONGO_USERNAME'))
-            + ":"
-            + str(os.getenv('MONGO_PASSWORD'))
-            + "@" + str(os.getenv('MONGO_ADDRESS'))
-            + port + "/"
+        "mongodb://"
+        + str(os.getenv("MONGO_USERNAME"))
+        + ":"
+        + str(os.getenv("MONGO_PASSWORD"))
+        + "@"
+        + str(os.getenv("MONGO_ADDRESS"))
+        + port
+        + "/"
     )
     return uri
 
@@ -23,8 +25,16 @@ def get_all_documents() -> list[Type[Document]]:
     from .models.members import Member
     from .models.planetside2 import Ps2Character, OnlineOutfitMemberTS
     from database.models.discord import DiscordGuildTS
+    from .models.ts3 import OnlineTeamspeakTS
 
-    documents = [OnlineFUArmaPlayers, Member, Ps2Character, OnlineOutfitMemberTS, DiscordGuildTS]
+    documents = [
+        OnlineFUArmaPlayers,
+        Member,
+        Ps2Character,
+        OnlineOutfitMemberTS,
+        DiscordGuildTS,
+        OnlineTeamspeakTS,
+    ]
     return documents
 
 
@@ -45,7 +55,7 @@ async def init_database(mongo_uri: str, db_name: str):
     await init_beanie(
         database=getattr(client, db_name),
         document_models=db_list,
-        allow_index_dropping=True
+        allow_index_dropping=True,
     )
     return
     # This is the place we can add some default data to the database if needed
