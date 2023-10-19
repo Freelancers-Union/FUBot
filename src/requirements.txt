@@ -1,4 +1,4 @@
-requests==2.27.1
+requests==2.31.0
 auraxium==0.2.2
 asyncio==3.4.3
 disnake==2.7.*
