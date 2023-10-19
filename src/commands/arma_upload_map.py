@@ -64,7 +64,7 @@ class ArmAMapUpload(commands.Cog):
         pass
 
     @arma.sub_command()
-    async def upload_map(
+    async def upload_mission(
             self,
             inter: disnake.ApplicationCommandInteraction
     ):
@@ -75,12 +75,12 @@ class ArmAMapUpload(commands.Cog):
         # check if user has arma/uploader role
         if not any(role.name == "arma/uploader" for role in inter.author.roles):
             await inter.edit_original_message(
-                content="You do not have permission to upload missions." +
+                content="You do not have permission to upload missions.\n" +
                         "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
             )
             return
         await inter.edit_original_message(
-            content="If you have needed role, reply with a message that has map as attachment."
+            content="Reply to this message with the attached `.pbo` file to upload the mission to the server."
         )
 
         @self.bot.event
@@ -92,7 +92,7 @@ class ArmAMapUpload(commands.Cog):
                     await message.reply("Map uploaded successfully.")
                 except Exception as ex:
                     logging.exception(f"Mission upload failed: {ex}")
-                    await message.reply(f"Mission upload failed. With error: {ex}")
+                    await message.reply(f"Mission upload failed.\nWith error:\n{ex}")
                 self.bot.remove_listener(on_message)
 
 
