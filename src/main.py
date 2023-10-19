@@ -2,11 +2,9 @@ import os
 import logging
 from cron_jobs import init_cron_jobs
 from fubot import FUBot
-import aiocron
 import disnake
 from disnake.ext import commands
 import helpers.discord_checks as dc
-import commands.new_discord_members as new_discord_members
 import commands.ops as ops
 import emoji
 
@@ -65,6 +63,7 @@ async def on_connect():
     bot.load_extension("commands.link_ps2_discord")
     bot.load_extension("commands.squad_markup")
     bot.load_extension("commands.ps2_lookup")
+    bot.load_extension("commands.arma_upload_map")
     bot.load_extension("loggers.discord_logger")
     bot.load_extension("loggers.ps2_outfit_members")
     bot.load_extension("loggers.ps2_outfit_online_logger")
