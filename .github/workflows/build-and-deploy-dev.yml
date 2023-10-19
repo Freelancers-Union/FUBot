@@ -18,6 +18,13 @@ jobs:
       MONGO_ADDRESS: mongodb-dev
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+      ARMA_HOST: ${{ secrets.ARMA_HOST }}
+      ARMA_QUERY_PORT: ${{ secrets.ARMA_QUERY_PORT }}
+      ARMA_SFTP_HOST: ${{ secrets.ARMA_SFTP_HOST }}
+      ARMA_SFTP_PORT: ${{ secrets.ARMA_SFTP_PORT }}
+      ARMA_SFTP_USERNAME: ${{ secrets.ARMA_SFTP_USERNAME }}
+      ARMA_SFTP_PASSWORD: ${{ secrets.ARMA_SFTP_PASSWORD }}
+      ARMA_SFTP_MAP_PATH: ${{ secrets.ARMA_SFTP_MAP_PATH }}
     steps:
       - uses: actions/checkout@v3
 

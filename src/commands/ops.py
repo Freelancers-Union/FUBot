@@ -93,6 +93,9 @@ async def event_message(
         except Exception as e:
             raise e
 
+        except Exception as e:
+            await inter.edit_original_message("Hmm, looks like something went wrong.")
+
 
 async def message_embed(message_body, event):
 

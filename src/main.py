@@ -1,11 +1,10 @@
 import os
 import logging
+from cron_jobs import init_cron_jobs
 from fubot import FUBot
-import aiocron
 import disnake
 from disnake.ext import commands
 import helpers.discord_checks as dc
-import commands.new_discord_members as new_discord_members
 import commands.ops as ops
 import emoji
 
@@ -37,6 +36,16 @@ bot = FUBot(
 
 @bot.event
 async def on_connect():
+    # Easyer to ask for forgiveness than permission
+    # https://stackoverflow.com/a/610923
+    try:
+        if bot.first_time_connected:
+            logging.info("Reconnected to Discord.")
+            return
+    except AttributeError:
+        bot.first_time_connected = True  # Used to prevent the bot from running the on_ready code on reconnects
+    # everything below here will only run on the first connect
+
     try:
         logging.info("Connected to Discord. Initializing Database.")
         await init_database(get_mongo_uri(), "FUBot")
@@ -44,6 +53,9 @@ async def on_connect():
         logging.exception(e)
         logging.error("Failed to initialize database. Exiting...")
         exit(1)
+
+    init_cron_jobs(bot)
+
     logging.info("Loading extensions...")
     # Load cog extensions into the bot
     bot.load_extension("commands.role_added")
@@ -51,6 +63,7 @@ async def on_connect():
     bot.load_extension("commands.link_ps2_discord")
     bot.load_extension("commands.squad_markup")
     bot.load_extension("commands.ps2_lookup")
+    bot.load_extension("commands.arma_upload_map")
     bot.load_extension("loggers.discord_logger")
     bot.load_extension("loggers.ps2_outfit_members")
     bot.load_extension("loggers.ps2_outfit_online_logger")
@@ -120,20 +133,6 @@ async def add_reactions(inter: disnake.ApplicationCommandInteraction,
     for item in sorted_list:
         await message.add_reaction(item)
     await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
-
-
-@aiocron.crontab("0 17 * * 5")
-async def send_scheduled_message():
-    """
-    Scheduled task to post new Discord members report.
-    Cron: Every Friday at 1700 UTC
-    """
-    weekly_new_member_report = new_discord_members.NewDiscordMembers(bot)
-    try:
-        for guild in bot.guilds:
-            await weekly_new_member_report.build_member_report(guild=guild)
-    except Exception as e:
-        logging.exception(e)
 
 
 bot.run(discordClientToken)
