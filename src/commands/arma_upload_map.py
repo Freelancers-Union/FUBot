@@ -1,6 +1,6 @@
+import asyncio
 import disnake
 from disnake.ext import commands
-
 import aiohttp
 import aiofiles
 import asyncssh
@@ -57,7 +57,9 @@ async def upload_mission(url):
 
 class ArmAMapUpload(commands.Cog):
     def __init__(self, bot: commands.Bot):
+        self.timeout_min = 10
         self.bot = bot
+        self.interactions: [disnake.Message] = []
 
     @commands.slash_command()
     async def arma(self, inter):
@@ -73,27 +75,48 @@ class ArmAMapUpload(commands.Cog):
         """
         await inter.response.defer(ephemeral=False)
         # check if user has arma/uploader role
-        if not any(role.name == "arma/uploader" for role in inter.author.roles):
+        if not any(role.name == "Arma Uploader" for role in inter.author.roles):
             await inter.edit_original_message(
                 content="You do not have permission to upload missions.\n" +
                         "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
             )
             return
         await inter.edit_original_message(
-            content="Reply to this message with the attached `.pbo` file to upload the mission to the server."
+            content=f"Within {self.timeout_min} min reply to this message with the attached `.pbo` "
+                    "file to upload the mission to the server."
         )
 
-        @self.bot.event
-        async def on_message(message: disnake.Message):
-            if message.author == inter.author and message.attachments and message.channel == inter.channel:
-                await message.reply("Uploading map to server...")
+        interaction_message = await inter.original_message()
+        self.interactions.append(interaction_message)
+
+        await asyncio.sleep(self.timeout_min * 60)
+        await interaction_message.edit(
+            content="To upload again, run the command again." + "\n" + interaction_message.content
+        )
+        try:
+            self.interactions.remove(interaction_message)
+        except ValueError:
+            pass
+
+    @commands.Cog.listener("on_message")
+    async def a3_map_upload_request(self, message: disnake.Message):
+        if not message.attachments or not self.interactions:
+            return
+        for interaction in self.interactions:
+            if interaction.id == message.reference.message_id:
+                self.interactions.remove(interaction)
+                await interaction.edit(content="Map upload request received." + "\n" + interaction.content)
                 try:
+                    await message.reply("Uploading map to server...")
                     await upload_mission(message.attachments[0].url)
                     await message.reply("Map uploaded successfully.")
                 except Exception as ex:
                     logging.exception(f"Mission upload failed: {ex}")
                     await message.reply(f"Mission upload failed.\nWith error:\n{ex}")
-                self.bot.remove_listener(on_message)
+                return
+
+    def cog_unload(self):
+        self.bot.remove_listener(func=self.a3_map_upload_request, name="on_message")
 
 
 def setup(bot: commands.Bot):
