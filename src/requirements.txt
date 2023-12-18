@@ -9,4 +9,4 @@ SteamQuery==1.0.2
 beanie==1.19.1
 pydantic==1.10.9
 aiofiles==23.2.1
-asyncssh==2.14.0
+asyncssh==2.14.2
