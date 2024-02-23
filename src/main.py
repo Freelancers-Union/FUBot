@@ -11,8 +11,8 @@ import emoji
 from database import init_database, get_mongo_uri
 
 logging.basicConfig(
-    level=os.getenv('LOGLEVEL'),
-    format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s'
+    level=os.getenv("LOGLEVEL"),
+    format="%(asctime)s - %(funcName)s - %(levelname)s - %(message)s",
 )
 
 # Discord Intents
@@ -23,14 +23,14 @@ intents.guilds = True
 
 # Initialize the bot
 
-discordClientToken = os.getenv('DISCORDTOKEN')
+discordClientToken = os.getenv("DISCORDTOKEN")
 bot_description = "The serious bot for the casual Discord."
 
 bot = FUBot(
     command_prefix=commands.when_mentioned_or("?"),
     description=bot_description,
     intents=intents,
-    command_sync_flags=commands.CommandSyncFlags.default()
+    command_sync_flags=commands.CommandSyncFlags.default(),
 )
 
 
@@ -43,7 +43,9 @@ async def on_connect():
             logging.info("Reconnected to Discord.")
             return
     except AttributeError:
-        bot.first_time_connected = True  # Used to prevent the bot from running the on_ready code on reconnects
+        bot.first_time_connected = (
+            True  # Used to prevent the bot from running the on_ready code on reconnects
+        )
     # everything below here will only run on the first connect
 
     try:
@@ -58,16 +60,16 @@ async def on_connect():
 
     logging.info("Loading extensions...")
     # Load cog extensions into the bot
-    bot.load_extension("commands.role_added")
+    # bot.load_extension("commands.role_added")
     bot.load_extension("commands.new_discord_members")
-    bot.load_extension("commands.link_ps2_discord")
+    # bot.load_extension("commands.link_ps2_discord")
     bot.load_extension("commands.squad_markup")
     bot.load_extension("commands.ps2_lookup")
     bot.load_extension("commands.arma_upload_map")
-    bot.load_extension("loggers.discord_logger")
-    bot.load_extension("loggers.ps2_outfit_members")
-    bot.load_extension("loggers.ps2_outfit_online_logger")
-    bot.load_extension("loggers.arma_server_logger")
+    # bot.load_extension("loggers.discord_logger")
+    # bot.load_extension("loggers.ps2_outfit_members")
+    # bot.load_extension("loggers.ps2_outfit_online_logger")
+    # bot.load_extension("loggers.arma_server_logger")
     bot.load_extension("send_intro")
     bot.load_extension("helpers.sync_commands")
 
@@ -79,15 +81,28 @@ async def on_ready():
 
 
 async def autocomplete_event(inter, string: str) -> list[str]:
-    events = ["Drill", "nFUc", "vFUs", "Casual", "FUAD", "FUAF", "FUBG", "FUEL", "FUGG", "Huntsmen", "ArmaOps", "CombinedArms"]
+    events = [
+        "Drill",
+        "nFUc",
+        "vFUs",
+        "Casual",
+        "FUAD",
+        "FUAF",
+        "FUBG",
+        "FUEL",
+        "FUGG",
+        "Huntsmen",
+        "ArmaOps",
+        "CombinedArms",
+    ]
     return [event for event in events if string.lower() in event.lower()]
 
 
 @bot.slash_command(dm_permission=False)
 async def announce_event(
-        inter: disnake.CommandInteraction,
-        event: str = commands.Param(autocomplete=autocomplete_event),
-        message_body: str = "Find us in game."
+    inter: disnake.CommandInteraction,
+    event: str = commands.Param(autocomplete=autocomplete_event),
+    message_body: str = "Find us in game.",
 ):
     """
     Post an event announcement to #ps2-announcements
@@ -112,12 +127,15 @@ async def announce_event(
 
 @bot.message_command(name="Add Reactions")
 @commands.default_member_permissions(manage_messages=True)
-async def add_reactions(inter: disnake.ApplicationCommandInteraction,
-                        message: disnake.Message):
+async def add_reactions(
+    inter: disnake.ApplicationCommandInteraction, message: disnake.Message
+):
     await inter.response.defer(ephemeral=True)
     # Permission checks
     # this is as a catch just in case the default_members_permissions fail
-    if not await dc.user_or_role_has_permission(inter=inter, manage_reactions=True, send_error=True):
+    if not await dc.user_or_role_has_permission(
+        inter=inter, manage_reactions=True, send_error=True
+    ):
         return
     if not await dc.bot_has_permission(inter=inter, react=True, send_error=True):
         return
@@ -132,7 +150,9 @@ async def add_reactions(inter: disnake.ApplicationCommandInteraction,
 
     for item in sorted_list:
         await message.add_reaction(item)
-    await inter.edit_original_message("reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url)
+    await inter.edit_original_message(
+        "reacted with:" + str(sorted_list) + "\nTo message:" + message.jump_url
+    )
 
 
 bot.run(discordClientToken)
