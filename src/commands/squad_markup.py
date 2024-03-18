@@ -7,7 +7,7 @@ class Ps2SquadMarkup(commands.Cog):
     Class cog for ps2 squad markup help message.
     """
 
-    @commands.slash_command(dm_permission=True)
+    @commands.slash_command(dm_permission=False, help="Print the markup for colourful squad names.")
     async def squad(self, inter):
         pass
 
