@@ -6,6 +6,10 @@ services:
     image: fubot${ENVIRONMENT}
     container_name: fubot-${ENVIRONMENT}
     restart: unless-stopped
+    logging:
+      driver: "journald"
+      options:
+        tag: "{{.Name}}/{{.ImageID}}"
     environment:
     - LOGLEVEL=${LOGLEVEL}
     - DISCORDTOKEN=${DISCORDTOKEN}
