@@ -1,6 +1,7 @@
 import os
 from typing import Type
 from beanie import init_beanie, Document
+import beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
@@ -40,6 +41,7 @@ async def init_database(mongo_uri: str, db_name: str):
     db_name:
         The name of the database to connect to.
     """
+
     db_list = get_all_documents()
     client = AsyncIOMotorClient(str(mongo_uri))
     await init_beanie(
