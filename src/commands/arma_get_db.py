@@ -5,6 +5,7 @@ import logging
 import os
 import pandas as pd
 
+
 async def get_players():
     """
     Gets the list of players that have played on the Arma server.
@@ -18,9 +19,9 @@ async def get_players():
     url = f"https://{host}/attendance"
 
     headers = {
-        'content-type': "application/json",
-        'x-apikey': api_key,
-        'cache-control': "no-cache"
+        "content-type": "application/json",
+        "x-apikey": api_key,
+        "cache-control": "no-cache",
     }
 
     # Open asynchronous HTTP session and get the collection of players.
@@ -37,11 +38,20 @@ async def get_players():
 
                 # Prepare the data for a pandas DataFrame.
                 for x, y in enumerate(records):
-                    new_records.append((y["Profile_Name"], y["Missions_Attended"],
-                                        y["Date_Of_Last_Mission"].split("T")[0], y["Steam_UID"]))
+                    new_records.append(
+                        (
+                            y["Profile_Name"],
+                            y["Missions_Attended"],
+                            y["Date_Of_Last_Mission"].split("T")[0],
+                            y["Steam_UID"],
+                        )
+                    )
 
-                df = pd.DataFrame(new_records, index=None,
-                                  columns=("Name", "Missions Attended", "Last Seen", "Steam UID"))
+                df = pd.DataFrame(
+                    new_records,
+                    index=None,
+                    columns=("Name", "Missions Attended", "Last Seen", "Steam UID"),
+                )
 
                 return f"```{df.to_string(index=False)}\nTotal Players Tracked: {len(df)}```"
 
@@ -56,14 +66,7 @@ class ArmAGetDB(commands.Cog):
     """
 
     @commands.slash_command(dm_permission=True)
-    async def arma(self, inter):
-        pass
-
-    @arma.sub_command()
-    async def get_players(
-            self,
-            inter: disnake.ApplicationCommandInteraction
-    ):
+    async def arma_get_players(self, inter: disnake.ApplicationCommandInteraction):
         """
         Display a list of players that have played on the Arma server.
         """

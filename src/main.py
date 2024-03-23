@@ -49,7 +49,6 @@ async def on_connect():
     # everything below here will only run on the first connect
 
     try:
-
         logging.info("Connected to Discord. Initializing Database.")
         await init_database(get_mongo_uri(), "FUBot")
     except Exception as e:
@@ -67,6 +66,7 @@ async def on_connect():
     bot.load_extension("commands.squad_markup")
     bot.load_extension("commands.ps2_lookup")
     bot.load_extension("commands.arma_upload_map")
+    bot.load_extension("commands.arma_get_db")
     # bot.load_extension("loggers.discord_logger")
     # bot.load_extension("loggers.ps2_outfit_members")
     # bot.load_extension("loggers.ps2_outfit_online_logger")
