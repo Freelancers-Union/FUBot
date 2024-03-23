@@ -25,6 +25,8 @@ jobs:
       MONGO_DATA_DIR: /var/lib/FUBot/mongodb
       MONGO_USERNAME: ${{ secrets.MONGO_USERNAME }}
       MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+      ARMA_DB_HOST: ${{ secrets.ARMA_DB_HOST }}
+      ARMA_DB_TOKEN: ${{ secrets.ARMA_DB_TOKEN }}
       ARMA_HOST: ${{ secrets.ARMA_HOST }}
       ARMA_QUERY_PORT: ${{ secrets.ARMA_QUERY_PORT }}
       ARMA_SFTP_HOST: ${{ secrets.ARMA_SFTP_HOST }}
