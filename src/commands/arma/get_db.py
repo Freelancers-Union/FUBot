@@ -59,23 +59,3 @@ async def get_players():
                 logging.error("Response is not a list.")
                 raise Exception("Response is not a list.")
 
-
-class ArmAGetDB(commands.Cog):
-    """
-    Class cog for ps2 squad markup help message.
-    """
-
-    @commands.slash_command(dm_permission=True)
-    async def arma_get_players(self, inter: disnake.ApplicationCommandInteraction):
-        """
-        Display a list of players that have played on the Arma server.
-        """
-        await inter.response.defer(ephemeral=True)
-
-        message = await get_players()
-
-        await inter.edit_original_message(content=message)
-
-
-def setup(bot: commands.Bot):
-    bot.add_cog(ArmAGetDB(bot))
