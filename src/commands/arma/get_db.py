@@ -27,7 +27,8 @@ async def get_players():
     # Open asynchronous HTTP session and get the collection of players.
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as response:
-            assert response.status == 200, f"Failed to get players: {response.status}"
+            if response.status != 200:
+                logging.error(f"Failed to get Arma players: {response.status}")
             records = await response.json()
             new_records = []
 
@@ -80,7 +81,9 @@ async def get_mapping():
     # Open asynchronous HTTP session and get the collection of players.
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as response:
-            assert response.status == 200, f"Failed to get records: {response.status}"
+            if response.status != 200:
+                logging.error(f"Failed to get mapping: {response.status}")
+                return "Failed to get mapping."
             records = await response.json()
             new_records = []
 
@@ -118,14 +121,14 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
 
     if len(steam_id) < 1:
         return "Steam ID cannot be empty."
-    
+
     host = os.getenv("ARMA_DB_HOST")
     api_key = os.getenv("ARMA_DB_TOKEN")
     if not (host and api_key):
         raise EnvironmentError("Missing configuration for Arma DB.")
 
     # Prepare the url and headers for the request.
-    url = f"https://{host}/mapping" + f'?q="Discord_ID":"{discord_id}"'
+    url = f"https://{host}/mapping" + "?q={" f'"Discord_ID":"{discord_id}"' + "}"
 
     headers = {
         "content-type": "application/json",
@@ -136,14 +139,17 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
     # Open asynchronous HTTP session and get the collection of players.
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url) as response:
-            assert response.status == 200, f"Failed to get records: {response.status}"
+            if response.status != 200:
+                logging.error(f"Failed to get mapping: {response.status}")
+                return "Failed to get mapping."
             records = await response.json()
 
             # Check if the response is a list and if it is empty.
             if type(records) is list:
                 if len(records) > 0:  # Check if the record already exists
                     id = records[0]["_id"]
-
+                    if records[0]["Steam_ID"] == steam_id:
+                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` already exists."
 
                     url = f"https://{host}/mapping/{id}"
 
@@ -154,8 +160,10 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
                     }
 
                     async with session.put(url, json=payload) as response_2:
-                        assert response_2.status == 201, f"Failed to update record: {response_2.status}"
-                        return "Record updated successfully."
+                        if response_2.status != 200:
+                            logging.error(f"Failed to update mapping: {response_2.status}")
+                            return "Failed to update mapping."
+                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` updated successfully."
 
 
                 else: # Create a new record
@@ -168,8 +176,10 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
                     }
 
                     async with session.post(url, json=payload) as response_2:
-                        assert response_2.status == 201, f"Failed to add record: {response_2.status}"
-                        return "Record added successfully."
+                        if response_2.status != 201:
+                            logging.error(f"Failed to add mapping: {response_2.status}")
+                            return "Failed to add mapping."
+                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` added successfully."
 
             else:
                 logging.error("Response is not a list.")

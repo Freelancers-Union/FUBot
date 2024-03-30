@@ -105,7 +105,7 @@ class ArmACog(commands.Cog):
         await inter.response.defer(ephemeral=False)
 
         username = inter.author.name
-        discord_id = inter.author.id
+        discord_id = str(inter.author.id)
 
         message = await add_mapping(username, discord_id, steam_id)
 
