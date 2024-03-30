@@ -3,7 +3,7 @@ import disnake
 from disnake.ext import commands
 import logging
 
-from commands.arma.get_db import get_players
+from commands.arma.get_db import get_players, get_mapping
 from commands.arma.upload_map import upload_mission
 
 class ArmACog(commands.Cog):
@@ -76,9 +76,20 @@ class ArmACog(commands.Cog):
         """
         Display a list of players that have played on the Arma server.
         """
-        await inter.response.defer(ephemeral=True)
+        await inter.response.defer(ephemeral=False)
 
         message = await get_players()
+
+        await inter.edit_original_message(content=message)
+
+    @arma.sub_command()
+    async def get_mapping(self, inter: disnake.ApplicationCommandInteraction):
+        """
+        Display the Discord <--> Steam user mapping.
+        """
+        await inter.response.defer(ephemeral=False)
+
+        message = await get_mapping()
 
         await inter.edit_original_message(content=message)
 
