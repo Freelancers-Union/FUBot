@@ -93,6 +93,24 @@ class ArmACog(commands.Cog):
 
         await inter.edit_original_message(content=message)
 
+    @arma.sub_command()
+    async def add_mapping(self, inter: disnake.ApplicationCommandInteraction, steam_id: str):
+        """
+        Add a Discord <--> Steam user mapping.
+        Parameters
+        ----------
+        steam_id: str
+            The Steam ID to add to the mapping.
+        """
+        await inter.response.defer(ephemeral=False)
+
+        username = inter.author.name
+        discord_id = inter.author.id
+
+        message = await add_mapping(username, discord_id, steam_id)
+
+        await inter.edit_original_message(content=message)
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(ArmACog(bot))
