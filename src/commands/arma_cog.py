@@ -3,7 +3,7 @@ import disnake
 from disnake.ext import commands
 import logging
 
-from commands.arma.get_db import get_players, get_mapping
+from commands.arma.get_db import get_players, get_mapping, add_mapping
 from commands.arma.upload_map import upload_mission
 
 class ArmACog(commands.Cog):

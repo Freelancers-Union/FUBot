@@ -116,6 +116,9 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
     Adds a Discord <--> Steam user mapping.
     """
 
+    if len(steam_id) < 1:
+        return "Steam ID cannot be empty."
+    
     host = os.getenv("ARMA_DB_HOST")
     api_key = os.getenv("ARMA_DB_TOKEN")
     if not (host and api_key):
