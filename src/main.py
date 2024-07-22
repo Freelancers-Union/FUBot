@@ -8,7 +8,7 @@ import helpers.discord_checks as dc
 import commands.ops as ops
 import emoji
 
-from database import init_database, get_mongo_uri
+# from database import init_database, get_mongo_uri
 
 logging.basicConfig(
     level=os.getenv("LOGLEVEL"),
@@ -36,7 +36,7 @@ bot = FUBot(
 
 @bot.event
 async def on_connect():
-    # Easyer to ask for forgiveness than permission
+    # Easierr to ask for forgiveness than permission
     # https://stackoverflow.com/a/610923
     try:
         if bot.first_time_connected:
@@ -48,13 +48,13 @@ async def on_connect():
         )
     # everything below here will only run on the first connect
 
-    try:
-        logging.info("Connected to Discord. Initializing Database.")
-        await init_database(get_mongo_uri(), "FUBot")
-    except Exception as e:
-        logging.exception(e)
-        logging.error("Failed to initialize database. Exiting...")
-        exit(1)
+    # try:
+    #     logging.info("Connected to Discord. Initializing Database.")
+    #     await init_database(get_mongo_uri(), "FUBot")
+    # except Exception as e:
+    #     logging.exception(e)
+    #     logging.error("Failed to initialize database. Exiting...")
+    #     exit(1)
 
     init_cron_jobs(bot)
 
@@ -73,7 +73,7 @@ async def on_connect():
     bot.load_extension("send_intro")
     bot.load_extension("helpers.sync_commands")
     bot.load_extension("services.a3_onboarding")
-
+    bot.load_extension("services.ps2_leader_messages")
 
 @bot.event
 async def on_ready():
