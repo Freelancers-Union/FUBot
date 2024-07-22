@@ -16,7 +16,7 @@ class PS2LeaderBoaed(Cog):
         self.leaderbpard_channel = "🏆-leaderboard"
         self.ps2_category = "═【 Planetside 2 】═"
 
-        self.api_url = "http://fu:3000"
+        self.api_url = "http://host.docker.internal:3000"
 
         self.sl_querry = f"{self.api_url}/api/card/4/query"
         self.pl_querry = f"{self.api_url}/api/card/5/query"
@@ -28,7 +28,8 @@ class PS2LeaderBoaed(Cog):
         try:
             logging.info("Creating Leaderboard channel")
             for guild in self.bot.guilds:
-                if not disnake.utils.get(guild.channels, name=self.leaderbpard_channel):
+                channels = await guild.fetch_channels()
+                if self.leaderbpard_channel not in [channel.name for channel in channels]:
                     category = disnake.utils.get(
                         guild.categories, name=self.ps2_category
                     )
@@ -121,11 +122,11 @@ class PS2LeaderBoaed(Cog):
                 if leaderboard_message:
                     await leaderboard_message.edit(embeds=embeds)
                 else:
-                    await leaderboard_channel.send(embed=embeds)
+                    await leaderboard_channel.send(embeds=embeds)
 
         except Exception as exception:
             logging.error(
-                "Something went wrong logging ArmA3 server", exc_info=exception
+                "Something went wrong with ps2 LLeaderboard update", exc_info=exception
             )
 
 
