@@ -64,7 +64,7 @@ class PS2LeaderBoaed(Cog):
             table += f"{index:>3}.{ribbons:>6}   {name}\n"
         return table
 
-    @tasks.loop(seconds=1)
+    @tasks.loop(minutes=10)
     async def update_leader_message(self):
         try:
             logging.info("Updating ps2 Leaderboard message")
