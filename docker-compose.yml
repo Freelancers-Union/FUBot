@@ -27,6 +27,8 @@ services:
     - ARMA_SFTP_PASSWORD=${ARMA_SFTP_PASSWORD}
     - ARMA_SFTP_MAP_PATH=${ARMA_SFTP_MAP_PATH}
     - METABASE_KEY=${METABASE_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       mongodb:
         condition: service_healthy

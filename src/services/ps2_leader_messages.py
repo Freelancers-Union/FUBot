@@ -16,7 +16,7 @@ class PS2LeaderBoaed(Cog):
         self.leaderbpard_channel = "🏆-leaderboard"
         self.ps2_category = "═【 Planetside 2 】═"
 
-        self.api_url = "http://fu:3000"
+        self.api_url = "http://host.docker.internal:3000"
 
         self.sl_querry = f"{self.api_url}/api/card/4/query"
         self.pl_querry = f"{self.api_url}/api/card/5/query"
