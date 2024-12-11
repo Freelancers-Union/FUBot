@@ -4,8 +4,6 @@ import os
 import disnake
 from disnake.ext.commands import Cog, Bot
 from disnake.ext import tasks
-import json
-import disnake
 import aiohttp
 
 
@@ -18,8 +16,8 @@ class PS2LeaderBoaed(Cog):
 
         self.api_url = "http://host.docker.internal:3000"
 
-        self.sl_querry = f"{self.api_url}/api/card/4/query"
-        self.pl_querry = f"{self.api_url}/api/card/5/query"
+        self.sl_query = f"{self.api_url}/api/card/4/query"
+        self.pl_query = f"{self.api_url}/api/card/5/query"
         self.api_key = os.getenv("METABASE_KEY")
 
     async def cog_load(self):
@@ -29,7 +27,9 @@ class PS2LeaderBoaed(Cog):
             logging.info("Creating Leaderboard channel")
             for guild in self.bot.guilds:
                 channels = await guild.fetch_channels()
-                if self.leaderbpard_channel not in [channel.name for channel in channels]:
+                if self.leaderbpard_channel not in [
+                    channel.name for channel in channels
+                ]:
                     category = disnake.utils.get(
                         guild.categories, name=self.ps2_category
                     )
@@ -62,7 +62,7 @@ class PS2LeaderBoaed(Cog):
         for index, row in enumerate(response_data["data"]["rows"]):
             name = row[0]
             ribbons = row[1]
-            table += f"{index:>3}.{ribbons:>6}   {name}\n"
+            table += f"{index + 1:>3}.{ribbons:>6}   {name}\n"
         return table
 
     @tasks.loop(minutes=10)
@@ -99,7 +99,7 @@ class PS2LeaderBoaed(Cog):
                         color=0xFF0000,
                         timestamp=datetime.now(),
                     )
-                    table = await self.response_to_text(self.sl_querry)
+                    table = await self.response_to_text(self.sl_query)
                     SL_embed.description += f"```{table}```"
                     embeds.append(SL_embed)
                 except Exception as e:
@@ -112,7 +112,7 @@ class PS2LeaderBoaed(Cog):
                         color=0xFF0000,
                         timestamp=datetime.now(),
                     )
-                    table = await self.response_to_text(self.pl_querry)
+                    table = await self.response_to_text(self.pl_query)
                     PL_embed.description += f"```{table}```"
                     embeds.append(PL_embed)
                 except Exception as e:
