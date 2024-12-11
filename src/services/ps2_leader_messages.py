@@ -4,7 +4,6 @@ import os
 import disnake
 from disnake.ext.commands import Cog, Bot
 from disnake.ext import tasks
-import json
 import disnake
 import aiohttp
 
@@ -17,10 +16,9 @@ class PS2LeaderBoaed(Cog):
         self.ps2_category = "═【 Planetside 2 】═"
 
         self.api_url = "http://host.docker.internal:3000"
-        self.api_url = "http://fu:3000"
 
-        self.sl_querry = f"{self.api_url}/api/card/4/query"
-        self.pl_querry = f"{self.api_url}/api/card/5/query"
+        self.sl_query = f"{self.api_url}/api/card/4/query"
+        self.pl_query = f"{self.api_url}/api/card/5/query"
         self.api_key = os.getenv("METABASE_KEY")
 
     async def cog_load(self):
@@ -102,7 +100,7 @@ class PS2LeaderBoaed(Cog):
                         color=0xFF0000,
                         timestamp=datetime.now(),
                     )
-                    table = await self.response_to_text(self.sl_querry)
+                    table = await self.response_to_text(self.sl_query)
                     SL_embed.description += f"```{table}```"
                     embeds.append(SL_embed)
                 except Exception as e:
@@ -115,7 +113,7 @@ class PS2LeaderBoaed(Cog):
                         color=0xFF0000,
                         timestamp=datetime.now(),
                     )
-                    table = await self.response_to_text(self.pl_querry)
+                    table = await self.response_to_text(self.pl_query)
                     PL_embed.description += f"```{table}```"
                     embeds.append(PL_embed)
                 except Exception as e:
