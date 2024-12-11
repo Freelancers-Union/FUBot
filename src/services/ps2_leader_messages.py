@@ -4,7 +4,6 @@ import os
 import disnake
 from disnake.ext.commands import Cog, Bot
 from disnake.ext import tasks
-import disnake
 import aiohttp
 
 
