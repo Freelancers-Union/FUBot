@@ -75,55 +75,56 @@ async def on_connect():
     bot.load_extension("services.a3_onboarding")
     bot.load_extension("services.ps2_leader_messages")
 
+
 @bot.event
 async def on_ready():
     logging.info("Logged in as " + str(bot.user) + " (ID: " + str(bot.user.id) + ")")
     logging.info("FUBot is ready!")
 
 
-async def autocomplete_event(inter, string: str) -> list[str]:
-    events = [
-        "Drill",
-        "nFUc",
-        "vFUs",
-        "Casual",
-        "FUAD",
-        "FUAF",
-        "FUBG",
-        "FUEL",
-        "FUGG",
-        "Huntsmen",
-        "ArmaOps",
-        "CombinedArms",
-    ]
-    return [event for event in events if string.lower() in event.lower()]
-
-
-@bot.slash_command(dm_permission=False)
-async def announce_event(
-    inter: disnake.CommandInteraction,
-    event: str = commands.Param(autocomplete=autocomplete_event),
-    message_body: str = "Find us in game.",
-):
-    """
-    Post an event announcement to #ps2-announcements
-
-    Parameters
-    ----------
-    inter:
-        The interaction object.
-    event:
-        The name of the event to announce.
-    message_body: The message to attach to the announcement.'
-
-    """
-
-    await inter.response.defer(ephemeral=True)
-    try:
-        await ops.event_message(inter, message_body, event)
-    except Exception as e:
-        await inter.edit_original_message("Hmm, looks like something went wrong.")
-        logging.exception(e)
+# async def autocomplete_event(inter, string: str) -> list[str]:
+#     events = [
+#         "Drill",
+#         "nFUc",
+#         "vFUs",
+#         "Casual",
+#         "FUAD",
+#         "FUAF",
+#         "FUBG",
+#         "FUEL",
+#         "FUGG",
+#         "Huntsmen",
+#         "ArmaOps",
+#         "CombinedArms",
+#     ]
+#     return [event for event in events if string.lower() in event.lower()]
+#
+#
+# @bot.slash_command(dm_permission=False)
+# async def announce_event(
+#     inter: disnake.CommandInteraction,
+#     event: str = commands.Param(autocomplete=autocomplete_event),
+#     message_body: str = "Find us in game.",
+# ):
+#     """
+#     Post an event announcement to #ps2-announcements
+#
+#     Parameters
+#     ----------
+#     inter:
+#         The interaction object.
+#     event:
+#         The name of the event to announce.
+#     message_body: The message to attach to the announcement.'
+#
+#     """
+#
+#     await inter.response.defer(ephemeral=True)
+#     try:
+#         await ops.event_message(inter, message_body, event)
+#     except Exception as e:
+#         await inter.edit_original_message("Hmm, looks like something went wrong.")
+#         logging.exception(e)
 
 
 @bot.message_command(name="Add Reactions")
