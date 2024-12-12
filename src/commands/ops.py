@@ -5,6 +5,7 @@ import random
 import glob
 import time
 import disnake
+import logging
 
 
 async def event_message(
@@ -66,7 +67,7 @@ async def event_message(
                 + str(teamspeak_channel),
                 label="Click to open TeamSpeak",
             )
-            Message = await message_embed(message_body, ops_dict[event])
+            Message = await message_embed(message_body, ops_dict[event], host=inter.author.name)
             Message.set_image(
                 file=disnake.File(
                     fp=random.choice(
@@ -97,7 +98,7 @@ async def event_message(
             await inter.edit_original_message("Hmm, looks like something went wrong.")
 
 
-async def message_embed(message_body, event):
+async def message_embed(message_body, event, host: str):
 
     if "arma" in str.lower(event["game"]):
         title = "Main Operation - Starting in 1 h"
@@ -109,6 +110,8 @@ async def message_embed(message_body, event):
         color=event["color"],
         description=str(message_body),
     )
+    logging.info(f"Host: {host}")
+    Message.set_author(name=host)
     await globals()[event["short_title"].lower()](Message)
     return Message
 
