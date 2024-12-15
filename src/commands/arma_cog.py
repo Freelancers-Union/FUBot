@@ -6,6 +6,7 @@ import logging
 from commands.arma.get_db import get_players, get_mapping, add_mapping
 from commands.arma.upload_map import upload_mission
 
+
 class ArmACog(commands.Cog):
     """
     Class cog for Arma commands.
@@ -21,10 +22,7 @@ class ArmACog(commands.Cog):
         pass
 
     @arma.sub_command()
-    async def upload_mission(
-            self,
-            inter: disnake.ApplicationCommandInteraction
-    ):
+    async def upload_mission(self, inter: disnake.ApplicationCommandInteraction):
         """
         Upload a map to the server.
         """
@@ -32,13 +30,13 @@ class ArmACog(commands.Cog):
         # check if user has arma/uploader role
         if not any(role.name == "Arma Uploader" for role in inter.author.roles):
             await inter.edit_original_message(
-                content="You do not have permission to upload missions.\n" +
-                        "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
+                content="You do not have permission to upload missions.\n"
+                + "https://www.govloop.com/wp-content/uploads/2015/02/data-star-trek-request-denied.gif"
             )
             return
         await inter.edit_original_message(
             content=f"Within {self.timeout_min} min reply to this message with the attached `.pbo` "
-                    "file to upload the mission to the server."
+            "file to upload the mission to the server."
         )
 
         interaction_message = await inter.original_message()
@@ -46,7 +44,9 @@ class ArmACog(commands.Cog):
 
         await asyncio.sleep(self.timeout_min * 60)
         await interaction_message.edit(
-            content="To upload again, run the command again." + "\n" + interaction_message.content
+            content="To upload again, run the command again."
+            + "\n"
+            + interaction_message.content
         )
         try:
             self.interactions.remove(interaction_message)
@@ -58,18 +58,29 @@ class ArmACog(commands.Cog):
         if not message.attachments or not self.interactions:
             return
         for interaction in self.interactions:
-            if interaction.id == message.reference.message_id:
+            if message.reference and interaction.id == message.reference.message_id:
                 self.interactions.remove(interaction)
-                await interaction.edit(content="Map upload request received." + "\n" + interaction.content)
+                await interaction.edit(
+                    content="Map upload request received."
+                    + "\n ~~"
+                    + interaction.content
+                    + "~~"
+                )
                 try:
-                    await message.reply("Uploading map to server...")
+                    uploading_message = await message.reply(
+                        "Uploading map to server..."
+                    )
                     await upload_mission(message.attachments[0].url)
-                    await message.reply("Map uploaded successfully.")
+                    if uploading_message:
+                        await uploading_message.edit(
+                            "Mission `"
+                            + message.attachments[0].filename
+                            + "` uploaded successfully."
+                        )
                 except Exception as ex:
                     logging.exception(f"Mission upload failed: {ex}")
                     await message.reply(f"Mission upload failed.\nWith error:\n{ex}")
                 return
-
 
     @arma.sub_command()
     async def get_players(self, inter: disnake.ApplicationCommandInteraction):
@@ -94,7 +105,9 @@ class ArmACog(commands.Cog):
         await inter.edit_original_message(content=message)
 
     @arma.sub_command()
-    async def add_mapping(self, inter: disnake.ApplicationCommandInteraction, steam_id: str):
+    async def add_mapping(
+        self, inter: disnake.ApplicationCommandInteraction, steam_id: str
+    ):
         """
         Add a Discord <--> Steam user mapping.
         Parameters
