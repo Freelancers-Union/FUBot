@@ -5,6 +5,7 @@ import logging
 
 from commands.arma.get_db import get_players, get_mapping, add_mapping
 from commands.arma.upload_map import upload_mission
+from commands.arma.server_query import get_server_info
 
 
 class ArmACog(commands.Cog):
@@ -122,6 +123,15 @@ class ArmACog(commands.Cog):
 
         message = await add_mapping(username, discord_id, steam_id)
 
+        await inter.edit_original_message(content=message)
+
+    @arma.sub_command()
+    async def get_server_info(self, inter: disnake.ApplicationCommandInteraction):
+        """
+        Display the server info.
+        """
+        await inter.response.defer(ephemeral=False)
+        message = await get_server_info()
         await inter.edit_original_message(content=message)
 
 

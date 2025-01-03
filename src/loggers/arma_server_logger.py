@@ -6,6 +6,8 @@ from disnake.ext.commands import Cog, Bot
 from disnake.ext import tasks
 from database.models.arma import OnlineFUArmaPlayers, ArmAPlayer
 
+### DEPRECATED ###
+### Please use the get_server_info command from commands/arma/server_query.py instead ###
 
 class ArmALogger(Cog):
 
