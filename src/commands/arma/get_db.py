@@ -16,7 +16,7 @@ async def get_players():
         raise EnvironmentError("Missing configuration for Arma DB.")
 
     # Prepare the url and headers for the request.
-    url = f"https://{host}/attendance"
+    url = f"https://{host}/rest/attendance"
 
     headers = {
         "content-type": "application/json",
@@ -39,19 +39,21 @@ async def get_players():
 
                 # Prepare the data for a pandas DataFrame.
                 for x, y in enumerate(records):
+                    if "Discord_UID" not in y.keys():
+                        y["Discord_UID"] = None
                     new_records.append(
                         (
                             y["Profile_Name"],
                             y["Missions_Attended"],
                             y["Date_Of_Last_Mission"].split("T")[0],
-                            y["Steam_UID"],
+                            y["Discord_UID"],
                         )
                     )
 
                 df = pd.DataFrame(
                     new_records,
                     index=None,
-                    columns=("Name", "Missions Attended", "Last Seen", "Steam UID"),
+                    columns=("Name", "Missions Attended", "Last Seen", "Discord UID"),
                 )
 
                 return f"```{df.to_string(index=False)}\nTotal Players Tracked: {len(df)}```"
