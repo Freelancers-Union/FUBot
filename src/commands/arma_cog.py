@@ -101,7 +101,8 @@ class ArmACog(commands.Cog):
         """
         await inter.response.defer(ephemeral=False)
 
-        message = await get_mapping()
+        #message = await get_mapping()
+        message = "Deprecated"
 
         await inter.edit_original_message(content=message)
 
@@ -121,7 +122,8 @@ class ArmACog(commands.Cog):
         username = inter.author.name
         discord_id = str(inter.author.id)
 
-        message = await add_mapping(username, discord_id, steam_id)
+        #message = await add_mapping(username, discord_id, steam_id)
+        message = "Deprecated"
 
         await inter.edit_original_message(content=message)
 
