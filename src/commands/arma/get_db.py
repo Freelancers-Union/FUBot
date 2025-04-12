@@ -55,6 +55,7 @@ async def get_players():
                     index=None,
                     columns=("Name", "Missions Attended", "Last Seen", "Discord UID"),
                 )
+                df.sort_values(by="Name", inplace=True, key=lambda x: x.str.lower())
 
                 return f"```{df.to_string(index=False)}\nTotal Players Tracked: {len(df)}```"
 
