@@ -117,12 +117,12 @@ async def get_mapping():
                 logging.error("Response is not a list.")
                 raise Exception("Response is not a list.")
 
-async def add_mapping(username: str, discord_id: str, steam_id: str):
+async def add_mapping(username: str, discord_id: str, profile_name: str):
     """
     Adds a Discord <--> Steam user mapping.
     """
 
-    if len(steam_id) < 1:
+    if len(profile_name) < 1:
         return "Steam ID cannot be empty."
 
     host = os.getenv("ARMA_DB_HOST")
@@ -151,22 +151,22 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
             if type(records) is list:
                 if len(records) > 0:  # Check if the record already exists
                     id = records[0]["_id"]
-                    if records[0]["Steam_ID"] == steam_id:
-                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` already exists."
+                    if records[0]["profile_name"] == profile_name:
+                        return f"Mapping for `{username} ({discord_id})` to `{profile_name}` already exists."
 
                     url = f"https://{host}/mapping/{id}"
 
                     payload = {
                         "Discord_Username": username,
                         "Discord_ID": discord_id,
-                        "Steam_ID": steam_id,
+                        "Profile_Name": profile_name,
                     }
 
                     async with session.put(url, json=payload) as response_2:
                         if response_2.status != 200:
                             logging.error(f"Failed to update mapping: {response_2.status}")
                             return "Failed to update mapping."
-                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` updated successfully."
+                        return f"Mapping for `{username} ({discord_id})` to `{profile_name}` updated successfully."
 
 
                 else: # Create a new record
@@ -175,14 +175,14 @@ async def add_mapping(username: str, discord_id: str, steam_id: str):
                     payload = {
                         "Discord_Username": username,
                         "Discord_ID": discord_id,
-                        "Steam_ID": steam_id,
+                        "profile_name": profile_name,
                     }
 
                     async with session.post(url, json=payload) as response_2:
                         if response_2.status != 201:
                             logging.error(f"Failed to add mapping: {response_2.status}")
                             return "Failed to add mapping."
-                        return f"Mapping for `{username} ({discord_id})` to `{steam_id}` added successfully."
+                        return f"Mapping for `{username} ({discord_id})` to `{profile_name}` added successfully."
 
             else:
                 logging.error("Response is not a list.")

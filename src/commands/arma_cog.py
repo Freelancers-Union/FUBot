@@ -88,7 +88,14 @@ class ArmACog(commands.Cog):
         """
         Display a list of players that have played on the Arma server.
         """
-        await inter.response.defer(ephemeral=False)
+        await inter.response.defer(ephemeral=True)
+
+        # Check if a user has the A3 officer role.
+        if not any(role.name == "Arma Division Officer" for role in inter.author.roles):
+            await inter.edit_original_message(
+                content="You do not have permission to run this command."
+            )
+            return
 
         message = await get_players()
 
@@ -99,31 +106,29 @@ class ArmACog(commands.Cog):
         """
         Display the Discord <--> Steam user mapping.
         """
-        await inter.response.defer(ephemeral=False)
+        await inter.response.defer(ephemeral=True)
 
-        #message = await get_mapping()
-        message = "Deprecated"
+        message = await get_mapping()
 
         await inter.edit_original_message(content=message)
 
     @arma.sub_command()
     async def add_mapping(
-        self, inter: disnake.ApplicationCommandInteraction, steam_id: str
+        self, inter: disnake.ApplicationCommandInteraction, profile_name: str
     ):
         """
         Add a Discord <--> Steam user mapping.
         Parameters
         ----------
-        steam_id: str
-            The Steam ID to add to the mapping.
+        profile_name: str
+            The A3 profile name to add to the mapping.
         """
-        await inter.response.defer(ephemeral=False)
+        await inter.response.defer(ephemeral=True)
 
         username = inter.author.name
         discord_id = str(inter.author.id)
 
-        #message = await add_mapping(username, discord_id, steam_id)
-        message = "Deprecated"
+        message = await add_mapping(username, discord_id, profile_name)
 
         await inter.edit_original_message(content=message)
 
@@ -133,7 +138,9 @@ class ArmACog(commands.Cog):
         Display the server info.
         """
         await inter.response.defer(ephemeral=False)
+
         message = await get_server_info()
+
         await inter.edit_original_message(content=message)
 
 
