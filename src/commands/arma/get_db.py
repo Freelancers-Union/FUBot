@@ -65,7 +65,7 @@ async def get_players():
 
 async def get_mapping():
     """
-    Gets the Discord <--> Steam user mapping.
+    Gets the Discord <--> Arma profile mapping.
     """
     host = os.getenv("ARMA_DB_HOST")
     api_key = os.getenv("ARMA_DB_TOKEN")
@@ -73,7 +73,7 @@ async def get_mapping():
         raise EnvironmentError("Missing configuration for Arma DB.")
 
     # Prepare the url and headers for the request.
-    url = f"https://{host}/mapping"
+    url = f"https://{host}/rest/mapping"
 
     headers = {
         "content-type": "application/json",
@@ -101,14 +101,14 @@ async def get_mapping():
                         (
                             y["Discord_Username"],
                             y["Discord_ID"],
-                            y["Steam_ID"],
+                            y["Profile_Name"],
                         )
                     )
 
                 df = pd.DataFrame(
                     new_records,
                     index=None,
-                    columns=("Username", "Discord ID", "Steam ID"),
+                    columns=("Username", "Discord ID", "Profile Name"),
                 )
 
                 return f"```{df.to_string(index=False)}\nTotal Players Mapped: {len(df)}```"
@@ -131,7 +131,7 @@ async def add_mapping(username: str, discord_id: str, profile_name: str):
         raise EnvironmentError("Missing configuration for Arma DB.")
 
     # Prepare the url and headers for the request.
-    url = f"https://{host}/mapping" + "?q={" f'"Discord_ID":"{discord_id}"' + "}"
+    url = f"https://{host}/rest/mapping" + "?q={" f'"Discord_ID":"{discord_id}"' + "}"
 
     headers = {
         "content-type": "application/json",
@@ -151,10 +151,10 @@ async def add_mapping(username: str, discord_id: str, profile_name: str):
             if type(records) is list:
                 if len(records) > 0:  # Check if the record already exists
                     id = records[0]["_id"]
-                    if records[0]["profile_name"] == profile_name:
+                    if records[0]["Profile_Name"] == profile_name:
                         return f"Mapping for `{username} ({discord_id})` to `{profile_name}` already exists."
 
-                    url = f"https://{host}/mapping/{id}"
+                    url = f"https://{host}/rest/mapping/{id}"
 
                     payload = {
                         "Discord_Username": username,
@@ -170,12 +170,12 @@ async def add_mapping(username: str, discord_id: str, profile_name: str):
 
 
                 else: # Create a new record
-                    url = f"https://{host}/mapping"
+                    url = f"https://{host}/rest/mapping"
 
                     payload = {
                         "Discord_Username": username,
                         "Discord_ID": discord_id,
-                        "profile_name": profile_name,
+                        "Profile_Name": profile_name,
                     }
 
                     async with session.post(url, json=payload) as response_2:

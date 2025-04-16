@@ -104,7 +104,7 @@ class ArmACog(commands.Cog):
     @arma.sub_command()
     async def get_mapping(self, inter: disnake.ApplicationCommandInteraction):
         """
-        Display the Discord <--> Steam user mapping.
+        Display the Discord <--> Arma profile mapping.
         """
         await inter.response.defer(ephemeral=True)
 
@@ -117,7 +117,7 @@ class ArmACog(commands.Cog):
         self, inter: disnake.ApplicationCommandInteraction, profile_name: str
     ):
         """
-        Add a Discord <--> Steam user mapping.
+        Add a Discord <--> Arma profile mapping.
         Parameters
         ----------
         profile_name: str
