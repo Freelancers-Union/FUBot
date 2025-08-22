@@ -13,7 +13,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: self-hosted
+    runs-on: karlish-basement
     # Create env vars for use by the build steps from GitHub secrets
     env:
       LOGLEVEL: INFO
