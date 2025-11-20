@@ -32,20 +32,3 @@ services:
     depends_on:
       mongodb-dev:
         condition: service_healthy
-
-  mongodb-dev:
-    image: mongo:5
-    container_name: mongodb-${ENVIRONMENT}
-    volumes:
-      - ${MONGO_DATA_DIR}:/data/db
-    ports:
-      - 127.0.0.1:27018:27017
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb-dev:27017/ --quiet
-      interval: 3s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
