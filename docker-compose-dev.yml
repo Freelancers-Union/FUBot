@@ -29,6 +29,3 @@ services:
     - METABASE_KEY=${METABASE_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    depends_on:
-      mongodb-dev:
-        condition: service_healthy
