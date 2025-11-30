@@ -14,8 +14,7 @@ class PS2LeaderBoaed(Cog):
         self.leaderbpard_channel = "🏆-leaderboard"
         self.ps2_category = "═【 Planetside 2 】═"
 
-        self.api_url = "http://host.docker.internal:3000"
-
+        self.api_url = os.getenv("METABASE_URL", "http://host.docker.internal:3000")
         self.sl_query = f"{self.api_url}/api/card/4/query"
         self.pl_query = f"{self.api_url}/api/card/5/query"
         self.api_key = os.getenv("METABASE_KEY")

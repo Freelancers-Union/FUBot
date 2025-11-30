@@ -147,7 +147,16 @@ async def add_reactions(
         e = str(_)
         if str(e) in message.content:
             discord_emojis.append(e)
+        else:
+            if len(message.embeds) > 0:
+                for embed in message.embeds:
+                    if str(e) in embed.description:
+                        discord_emojis.append(e)
+
     emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
+    if len(message.embeds) > 0:
+        for embed in message.embeds:
+            emoji_list += emoji.distinct_emoji_list(embed.description or "")
     sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
 
     for item in sorted_list:
