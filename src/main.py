@@ -142,22 +142,30 @@ async def add_reactions(
     if not await dc.bot_has_permission(inter=inter, react=True, send_error=True):
         return
 
-    discord_emojis = []
+    emojis = []
     for _ in message.guild.emojis:
         e = str(_)
         if str(e) in message.content:
-            discord_emojis.append(e)
+            emojis.append((e, 0, message.content.find(e)))
         else:
             if len(message.embeds) > 0:
-                for embed in message.embeds:
+                for index, embed in enumerate(message.embeds):
                     if str(e) in embed.description:
-                        discord_emojis.append(e)
+                        emojis.append((e, index + 1, embed.description.find(e)))
 
-    emoji_list: list[str] = emoji.distinct_emoji_list(message.content) + discord_emojis
+    for e in emoji.emoji_list(message.content):
+        emojis.append((e["emoji"], 0, e["match_start"]))
+
     if len(message.embeds) > 0:
-        for embed in message.embeds:
-            emoji_list += emoji.distinct_emoji_list(embed.description or "")
-    sorted_list = sorted(emoji_list, key=lambda i: message.content.rfind(i))
+        for index, embed in enumerate(message.embeds):
+            for e in emoji.emoji_list(embed.description or ""):
+                emojis.append((e["emoji"], index + 1, e["match_start"]))
+
+    sorted_emojis = sorted(emojis, key=lambda i: (i[1], i[2]))
+    sorted_list = []
+    for e in sorted_emojis:
+        if e[0] not in sorted_list:
+            sorted_list.append(e[0])
 
     for item in sorted_list:
         await message.add_reaction(item)
