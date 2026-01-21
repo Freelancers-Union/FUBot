@@ -28,6 +28,7 @@ jobs:
       ARMA_SFTP_PASSWORD: ${{ secrets.ARMA_SFTP_PASSWORD }}
       ARMA_SFTP_MAP_PATH: ${{ secrets.ARMA_SFTP_MAP_PATH }}
       METABASE_KEY: ${{ secrets.METABASE_KEY }}
+      METABASE_URL: ${{ secrets.METABASE_URL }}
 
     steps:
       - uses: actions/checkout@v3
