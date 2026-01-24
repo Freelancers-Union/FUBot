@@ -71,7 +71,7 @@ async def on_connect():
     # bot.load_extension("loggers.ps2_outfit_online_logger")
     # bot.load_extension("loggers.arma_server_logger")
     bot.load_extension("send_intro")
-    bot.load_extension("helpers.sync_commands")
+    # bot.load_extension("helpers.sync_commands")
     bot.load_extension("services.a3_onboarding")
     bot.load_extension("services.ps2_leader_messages")
 
